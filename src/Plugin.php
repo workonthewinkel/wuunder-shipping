@@ -6,7 +6,6 @@ use Wuunder\Shipping\WordPress\Assets;
 use Wuunder\Shipping\Models\Database\Migrations;
 use Wuunder\Shipping\Controllers\SettingsController;
 use Wuunder\Shipping\WooCommerce\ShippingMethodRegistry;
-use Wuunder\Shipping\WooCommerce\ShippingZoneDataFilter;
 use Wuunder\Shipping\WordPress\Admin;
 
 /**
@@ -50,9 +49,6 @@ class Plugin {
 
 		// Dynamic shipping method registry
 		( new ShippingMethodRegistry() )->register_hooks();
-
-		// Shipping zone data filter for JavaScript
-		( new ShippingZoneDataFilter() )->register_hooks();
 
 		// Admin settings
 		( new SettingsController() )->register_hooks();

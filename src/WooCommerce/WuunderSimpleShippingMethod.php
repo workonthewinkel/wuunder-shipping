@@ -73,7 +73,7 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 				'title' => __( 'Cost', 'wuunder-shipping' ),
 				'type' => 'text',
 				'placeholder' => '0',
-				'description' => __( 'Enter a cost (excluding tax) or leave blank to use carrier pricing.', 'wuunder-shipping' ),
+				'description' => __( 'Enter a cost (excluding tax).', 'wuunder-shipping' ),
 				'default' => '',
 				'desc_tip' => true,
 			],
