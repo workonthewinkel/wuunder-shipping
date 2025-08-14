@@ -1,1 +1,167 @@
+// Wuunder Admin Styles
+
+// Components
 @use 'components/licenses';
+
+// Wuunder specific styles
+#wuunder-carriers-section {
+    margin-top: 20px;
+
+    h2 {
+        margin-bottom: 15px;
+    }
+
+    .wuunder-shipping-settings-notice {
+        background: #e7f3ff;
+        border-left: 4px solid #0073aa;
+        padding: 12px 16px;
+        margin: 15px 0 20px;
+        font-size: 14px;
+        
+        a {
+            color: #0073aa;
+            text-decoration: none;
+            font-weight: 600;
+            
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+
+    .wuunder-carriers-table {
+        margin-top: 20px;
+        margin-bottom: 20px;
+
+        th,
+        td {
+            padding: 12px;
+        }
+
+        td {
+            &:first-child {
+                width: 100px;
+            }
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        input[type="checkbox"] {
+            margin: 0;
+        }
+
+        code {
+            background: #f1f1f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        &__checkbox-container {
+            &--inner {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+
+                .wuunder-carrier-logo {
+                    width: 40px;
+                    height: auto;
+                    margin-right: 8px;
+                    vertical-align: middle;
+                }
+            }
+        }
+
+        
+
+        // Carrier logo styling
+        .wuunder-carrier-logo {
+            width: 40px;
+            height: auto;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        // Service information styling
+        .wuunder-service-description {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .wuunder-service-code {
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        // Delivery information styling
+        .wuunder-delivery-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        // Service badges styling
+        .wuunder-service-badges {
+            font-size: 0.9em;
+        }
+
+        .wuunder-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-right: 4px;
+            display: inline-block;
+
+            &.wuunder-badge-modality {
+                background: #f0f0f0;
+                color: #333;
+            }
+
+            &.wuunder-badge-parcelshop {
+                background: #e7f3ff;
+                color: #0073aa;
+            }
+
+            &.wuunder-badge-pickup {
+                background: #fff2e7;
+                color: #d63638;
+            }
+        }
+
+        // Method ID styling
+        .wuunder-method-id {
+            color: #999;
+            font-size: 0.8em;
+            margin-top: 4px;
+        }
+    }
+
+    button {
+        margin-right: 10px;
+    }
+}
+
+#wuunder-test-result,
+#wuunder-carriers-result {
+    display: inline-block;
+    margin-left: 10px;
+    vertical-align: middle;
+
+    .spinner {
+        float: none;
+        margin: 0 5px 0 0;
+        vertical-align: middle;
+    }
+}
+
+// Settings page adjustments
+.woocommerce_page_wc-settings {
+    #wuunder-test-connection {
+        margin-top: 10px;
+    }
+
+    .wuunder-disconnect-btn {
+        margin-left: 10px;
+    }
+}

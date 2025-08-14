@@ -4,6 +4,10 @@ namespace Wuunder\Shipping;
 
 use Wuunder\Shipping\WordPress\Assets;
 use Wuunder\Shipping\Models\Database\Migrations;
+use Wuunder\Shipping\Controllers\SettingsController;
+use Wuunder\Shipping\WooCommerce\ShippingMethodRegistry;
+use Wuunder\Shipping\WooCommerce\ShippingZoneDataFilter;
+use Wuunder\Shipping\WordPress\Admin;
 
 /**
  * Plugin God class.
@@ -20,6 +24,8 @@ class Plugin {
 		// Run migrations.
 		( new Migrations() )->run();
 
+		// Set transient to redirect to settings after activation
+		set_transient( 'wuunder_activation_redirect', true, 30 );
 	}
 
 	/**
@@ -28,10 +34,7 @@ class Plugin {
 	 * @return void
 	 */
 	public function uninstall(): void {
-
-		// Roll back our migrations
-		( new Migrations() )->roll_back();
-
+		// For now, don't do anything on uninstall. In many cases the plugin is temporarily deactivated.
 	}
 
 	/**
@@ -40,8 +43,18 @@ class Plugin {
 	public function init(): void {
 
 		// General WordPress hooks.
-		( new Assets() )->register_hooks();
-		
-	}
+		( new Admin() )->register_hooks();
 
+		// General WordPress hooks.
+		( new Assets() )->register_hooks();
+
+		// Dynamic shipping method registry
+		( new ShippingMethodRegistry() )->register_hooks();
+
+		// Shipping zone data filter for JavaScript
+		( new ShippingZoneDataFilter() )->register_hooks();
+
+		// Admin settings
+		( new SettingsController() )->register_hooks();
+	}
 }

@@ -1,0 +1,179 @@
+<?php
+
+namespace Wuunder\Shipping\WooCommerce;
+
+use WC_Shipping_Method;
+use Wuunder\Shipping\Models\Carrier;
+
+/**
+ * Simple Wuunder shipping method that uses instance settings.
+ */
+class WuunderSimpleShippingMethod extends WC_Shipping_Method {
+
+	/**
+	 * Wuunder carrier data.
+	 *
+	 * @var array<string, mixed>
+	 */
+	public array $wuunder_carrier_data = [];
+
+	/**
+	 * Constructor.
+	 *
+	 * @param int $instance_id Instance ID.
+	 */
+	public function __construct( $instance_id = 0 ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		$this->id                 = 'wuunder_shipping';
+		$this->instance_id        = absint( $instance_id );
+		$this->method_title       = __( 'Wuunder Shipping', 'wuunder-shipping' );
+		$this->method_description = __( 'Shipping method provided by Wuunder', 'wuunder-shipping' );
+
+		$this->supports = [
+			'shipping-zones',
+			'instance-settings',
+			'instance-settings-modal',
+		];
+
+		$this->init();
+	}
+
+	/**
+	 * Initialize the shipping method.
+	 */
+	public function init(): void {
+		$this->init_form_fields();
+		$this->init_settings();
+
+		// Get instance-specific title with carrier name
+		$this->title = $this->get_option( 'title', $this->get_default_title() );
+
+		add_action( 'woocommerce_update_options_shipping_' . $this->id, [ $this, 'process_admin_options' ] );
+	}
+
+	/**
+	 * Initialize form fields.
+	 */
+	public function init_form_fields(): void {
+		$this->instance_form_fields = [
+			'title' => [
+				'title' => __( 'Method Title', 'wuunder-shipping' ),
+				'type' => 'text',
+				'description' => __( 'This controls the title which the user sees during checkout.', 'wuunder-shipping' ),
+				'default' => $this->get_default_title(),
+				'desc_tip' => true,
+			],
+			'wuunder_carrier' => [
+				'title' => __( 'Carrier', 'wuunder-shipping' ),
+				'type' => 'select',
+				'description' => __( 'Select which Wuunder carrier this method should use.', 'wuunder-shipping' ),
+				'options' => $this->get_available_carriers(),
+				'desc_tip' => true,
+			],
+			'cost' => [
+				'title' => __( 'Cost', 'wuunder-shipping' ),
+				'type' => 'text',
+				'placeholder' => '0',
+				'description' => __( 'Enter a cost (excluding tax) or leave blank to use carrier pricing.', 'wuunder-shipping' ),
+				'default' => '',
+				'desc_tip' => true,
+			],
+		];
+	}
+
+	/**
+	 * Get available carriers for the dropdown.
+	 *
+	 * @return array<string, string>
+	 */
+	private function get_available_carriers(): array {
+		$carriers = Carrier::get_all( true ); // Get only enabled carriers
+		$options  = [ '' => __( 'Select a carrier...', 'wuunder-shipping' ) ];
+
+		foreach ( $carriers as $carrier ) {
+			// Use product_name as primary label, fallback to carrier_name
+			$label = ! empty( $carrier->product_name ) ? $carrier->product_name : $carrier->carrier_name;
+
+			$options[ $carrier->get_method_id() ] = $label;
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Calculate shipping rate.
+	 *
+	 * @param array<string, mixed> $package Package data.
+	 */
+	public function calculate_shipping( $package = [] ): void {
+		$carrier_key = $this->get_option( 'wuunder_carrier' );
+
+		if ( empty( $carrier_key ) ) {
+			return; // No carrier selected
+		}
+
+		// Get carrier data from database
+		$carrier = Carrier::find_by_method_id( $carrier_key );
+
+		if ( ! $carrier || ! $carrier->enabled ) {
+			return; // Carrier not available
+		}
+
+		// Get cost - use custom cost or carrier price
+		$custom_cost = $this->get_option( 'cost' );
+		$cost        = ! empty( $custom_cost ) ? $custom_cost : $carrier->price;
+
+		// Use clean label - images added via woocommerce_cart_shipping_method_full_label filter
+		$label = $this->title;
+
+		$rate = [
+			'id' => $this->get_rate_id(),
+			'label' => $label,
+			'cost' => $cost,
+			'calc_tax' => 'per_item',
+			'meta_data' => [
+				'wuunder_method_id' => $carrier_key,
+				'wuunder_carrier_data' => [
+					'carrier_name' => $carrier->carrier_name,
+					'product_name' => $carrier->product_name,
+					'service_level' => $carrier->service_level,
+				],
+			],
+		];
+
+		$this->add_rate( $rate );
+	}
+
+	/**
+	 * Get the default title including carrier name.
+	 *
+	 * @return string
+	 */
+	private function get_default_title(): string {
+		$carrier_key = $this->get_option( 'wuunder_carrier' );
+
+		if ( empty( $carrier_key ) ) {
+			return $this->method_title;
+		}
+
+		// Get carrier data from database
+		$carrier = Carrier::find_by_method_id( $carrier_key );
+
+		if ( ! $carrier ) {
+			return $this->method_title;
+		}
+
+		// Prioritize product_name as the user-friendly delivery method title
+		$product_name = $carrier->product_name ?? '';
+		$carrier_name = $carrier->carrier_name ?? '';
+
+		if ( ! empty( $product_name ) ) {
+			return $product_name;
+		}
+
+		if ( ! empty( $carrier_name ) ) {
+			return $carrier_name;
+		}
+
+		return $this->method_title;
+	}
+}

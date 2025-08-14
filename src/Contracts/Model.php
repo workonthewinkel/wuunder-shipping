@@ -2,49 +2,39 @@
 
 namespace Wuunder\Shipping\Contracts;
 
-use Illuminate\Database\Capsule\Manager as Capsule;
-use Illuminate\Database\Eloquent\Model as OriginalModel;
-use Illuminate\Database\Query\Builder;
-
 /**
- * Class Model
+ * Base Model class for WordPress database operations.
  *
- * Represents a model in the application.
+ * This abstract class provides basic database functionality without external dependencies.
  */
-abstract class Model extends OriginalModel {
+abstract class Model {
 
 	/**
-	 * Custom prefix for this table. Default 'wp_woop_'.
-	 */
-	protected string $prefix = '';
-
-	/**
-	 * Name of the table this model gets or manipulates its data from.
+	 * Table name without prefix.
 	 *
 	 * @var string
 	 */
-	protected $table = '';
+	protected static string $table = '';
 
 	/**
-	 * Initializes a new instance of the class and sets its attributes.
+	 * Get the full table name with WordPress prefix.
 	 *
-	 * @param array<string|array|int|float> $attributes Mixed array of any variable in this Model that maps to the models' table.
+	 * @return string
 	 */
-	public function __construct( array $attributes = [] ) {
-		parent::__construct( $attributes );
-
+	public static function get_table_name(): string {
 		global $wpdb;
-		if ( ! \is_null( $wpdb ) ) {
-			$this->table = $wpdb->prefix . $this->table;
-		}
+		return $wpdb->prefix . static::$table;
 	}
 
 	/**
-	 * Returns the Query Builder for this models' table.
-	 * More info on the Query Builder: https://laravel.com/docs/11.x/queries
+	 * Check if the table exists in the database.
+	 *
+	 * @return bool
 	 */
-	public static function table( string $table_name ): Builder {
+	public static function table_exists(): bool {
 		global $wpdb;
-		return Capsule::table( $wpdb->prefix . $table_name );
+		$table = static::get_table_name();
+		$query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return $wpdb->get_var( $query ) === $table; // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
 	}
 }

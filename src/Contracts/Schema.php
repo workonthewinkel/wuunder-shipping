@@ -10,6 +10,13 @@ namespace Wuunder\Shipping\Contracts;
 abstract class Schema {
 
 	/**
+	 * Table name without prefix.
+	 *
+	 * @var string
+	 */
+	protected string $table_name = '';
+
+	/**
 	 * Get the complete table name.
 	 */
 	protected function get_table_name(): string {
@@ -33,18 +40,5 @@ abstract class Schema {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Roll back this table
-	 */
-	public function roll_back(): void {
-
-		$table_name = \esc_sql( $this->get_table_name() );
-		$query      = "DROP TABLE IF EXISTS $table_name";
-
-		// phpcs:ignore
-		global $wpdb;
-		$wpdb->query( $query );
 	}
 }

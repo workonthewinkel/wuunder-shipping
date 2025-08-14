@@ -2,7 +2,7 @@
 
 namespace Wuunder\Shipping\Models\Database;
 
-use Wuunder\Shipping\Models\Schema\AddExampleTable;
+use Wuunder\Shipping\Models\Schema\AddCarriersTable;
 
 /**
  * Migrations class
@@ -28,24 +28,6 @@ class Migrations {
 	}
 
 	/**
-	 * Revert the database migrations for this plugin
-	 */
-	public function roll_back(): void {
-
-		// Get the migrations and loop through them.
-		$migrations = $this->get_migrations();
-
-		// Reverse the migrations array, because roll-backs happen in the reverse order.
-		foreach ( \array_reverse( $migrations ) as $migration ) {
-
-			// Only delete the tables if they exist.
-			if ( $migration->exists() === true ) {
-				$migration->roll_back();
-			}
-		}
-	}
-
-	/**
 	 * Returns the available migrations as instances
 	 *
 	 * @return array<Schema>
@@ -53,7 +35,7 @@ class Migrations {
 	public function get_migrations(): array {
 
 		return [
-			new AddExampleTable()
+			new AddCarriersTable(),
 		];
 	}
 }

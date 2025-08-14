@@ -7,6 +7,9 @@ namespace Wuunder\Shipping\Contracts;
  */
 abstract class Controller {
 
-	public function __construct(){
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
 	}
 }

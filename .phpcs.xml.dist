@@ -1,52 +1,47 @@
 <?xml version="1.0"?>
-<ruleset name="Mind Blown Productions CS ruleset">
-    <!-- Include Yoast CS rules -->
-    <rule ref="Yoast">
-        <!-- Provide the plugin specific prefixes for all naming related sniffs. -->
-        <properties>
-            <property name="psr4_paths" type="array">
-                <element key="Wooping\ShopHealth\" value="src/"/>
-            </property>
-        </properties>
-
-        <!-- Exclude Yoast CS file naming convention -->
-        <!-- @todo: Replace with a custom sniff of our own that PSR-4 file names -->
-        <exclude name="Yoast.Files.FileName" />
-
-        <!-- Remove this specific Yoast sniff, since we are not using it -->
-        <exclude name="Yoast.Files.TestDoubles.MissingBasePath" />
-
-        <!-- Variable comments are not always necessary, so we're excluding this sniff -->
+<ruleset name="Wuunder Shipping CS ruleset">
+    <!-- Include WordPress CS rules -->
+    <rule ref="WordPress">
+        <!-- Exclude Yoda conditions - we prefer normal comparison order -->
+        <exclude name="WordPress.PHP.YodaConditions.NotYoda" />
+        
+        <!-- Allow direct database queries for custom models -->
+        <exclude name="WordPress.DB.DirectDatabaseQuery.DirectQuery"/>
+        
+        <!-- Variable comments are not always necessary with type hints -->
         <exclude name="Squiz.Commenting.VariableComment.Missing" />
-
-        <!-- @var is not always necessary. So no need to enforce it -->
         <exclude name="Squiz.Commenting.VariableComment.MissingVar" />
-
-        <!-- We will use return types, instead of @return tags in function comments -->
+        
+        <!-- We will use return types, instead of @return tags -->
         <exclude name="Squiz.Commenting.FunctionComment.MissingReturn" />
-
-        <!-- We don't want the @package tag in files -->
-        <exclude name="Yoast.Commenting.FileComment.MissingPackageTag"/>
-
+        
         <!-- Ignore missing params tags as we use type hinting -->
         <exclude name="Squiz.Commenting.FunctionComment.MissingParamTag"/>
-
-        <!-- Allow direct database queries -->
-        <exclude name="WordPress.DB.DirectDatabaseQuery.DirectQuery"/>
-
-        <!-- @todo - this removes PHP 7.3 warnings, but these shouldn't show as we're compatible with 7.4+ -->
-        <exclude name="PHPCompatibility.Classes.NewTypedProperties.Found"/>
-
-        <!-- Else on a new line? Come on.. no! -->
-        <exclude name="Universal.ControlStructures.IfElseDeclaration.NoNewLine" />
+        
+        <!-- Allow PSR-4 file naming (not WordPress file naming) -->
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName" />
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase" />
+        
+        <!-- Allow modern PHP features -->
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax.Found" />
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax.Found" />
+        
+        <!-- Allow modern type hints -->
+        <exclude name="PHPCompatibility.FunctionDeclarations.NewParamTypeDeclarations.stringFound" />
+        <exclude name="PHPCompatibility.FunctionDeclarations.NewParamTypeDeclarations.boolFound" />
+        
+        <!-- Allow debug logging in development -->
+        <exclude name="WordPress.PHP.DevelopmentFunctions.error_log_error_log" />
+        
+        <!-- Don't require file comments for simple files -->
+        <exclude name="Squiz.Commenting.FileComment.Missing" />
+        
+        <!-- Allow modern array alignment (less strict) -->
+        <exclude name="WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned" />
+        
+        <!-- Don't require inline comment punctuation -->
+        <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar" />
     </rule>
-
-    <rule ref="Yoast.NamingConventions.ObjectNameDepth">
-		<properties>
-			<property name="max_words" value="4" />
-			<property name="recommended_max_words" value="4" />
-		</properties>
-	</rule>
 
 	 <!-- Add manage_woocommerce as a valid capability to PHPCS  -->
         <rule ref="WordPress.WP.Capabilities">
