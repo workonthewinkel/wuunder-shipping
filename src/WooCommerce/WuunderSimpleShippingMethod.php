@@ -26,7 +26,13 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 		$this->id                 = 'wuunder_shipping';
 		$this->instance_id        = absint( $instance_id );
 		$this->method_title       = __( 'Wuunder Shipping', 'wuunder-shipping' );
-		$this->method_description = __( 'Shipping method provided by Wuunder', 'wuunder-shipping' );
+		
+		// Build dynamic link to Wuunder Settings - carriers tab
+		$settings_url = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=carriers' );
+		$this->method_description = sprintf(
+			__( 'Shipping method provided by <a href="%s"><strong>Wuunder</strong></a>', 'wuunder-shipping' ),
+			$settings_url
+		);
 
 		$this->supports = [
 			'shipping-zones',
