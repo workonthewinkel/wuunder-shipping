@@ -10,5 +10,5 @@ mix.sass('assets/src/scss/admin.scss', 'assets/dist/css/admin.css')
        processCssUrls: false
    });
 
-mix.js('assets/src/js/main.js', 'assets/dist/js/main.js');
+// mix.js('assets/src/js/main.js', 'assets/dist/js/main.js');
 mix.js('assets/src/js/admin.js', 'assets/dist/js/admin.js');
