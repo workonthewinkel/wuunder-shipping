@@ -129,7 +129,7 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 			'id' => $this->get_rate_id(),
 			'label' => $label,
 			'cost' => $cost,
-			'calc_tax' => 'per_item',
+			'calc_tax' => 'per_order',
 			'meta_data' => [
 				'wuunder_method_id' => $carrier_key,
 				'wuunder_carrier_data' => [
