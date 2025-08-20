@@ -1,0 +1,190 @@
+# Copyright (C) 2025 Work on The Winkel
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Wuunder Shipping 0.0.1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wuunder\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-08-20T14:57:23+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.11.0\n"
+"X-Domain: wuunder-shipping\n"
+
+#. Plugin Name of the plugin
+#: wuunder-shipping.php
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:28
+msgid "Wuunder Shipping"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: wuunder-shipping.php
+msgid "wearewuunder.com"
+msgstr ""
+
+#. Description of the plugin
+#: wuunder-shipping.php
+msgid "WooCommerce integration for Wuunder parcel delivery platform"
+msgstr ""
+
+#. Author of the plugin
+#: wuunder-shipping.php
+msgid "Work on The Winkel"
+msgstr ""
+
+#. Author URI of the plugin
+#: wuunder-shipping.php
+msgid "https://workonthewinkel.nl/"
+msgstr ""
+
+#: src/API/WuunderClient.php:49
+msgid "API key is not configured"
+msgstr ""
+
+#: src/Controllers/SettingsController.php:37
+msgid "Wuunder"
+msgstr ""
+
+#: src/Controllers/SettingsController.php:118
+msgid "Wuunder Settings"
+msgstr ""
+
+#: src/Controllers/SettingsController.php:120
+msgid "Configure your Wuunder API integration."
+msgstr ""
+
+#: src/Controllers/SettingsController.php:124
+msgid "API Key"
+msgstr ""
+
+#: src/Controllers/SettingsController.php:125
+msgid "Enter your Wuunder API key"
+msgstr ""
+
+#: src/Controllers/SettingsController.php:207
+msgid "Please provide an API key to test."
+msgstr ""
+
+#: src/Controllers/SettingsController.php:213
+msgid "Connection successful!"
+msgstr ""
+
+#: src/Controllers/SettingsController.php:215
+msgid "Connection failed. Please check your API key."
+msgstr ""
+
+#: src/Controllers/SettingsController.php:230
+msgid "Please configure your API key first."
+msgstr ""
+
+#: src/Controllers/SettingsController.php:239
+msgid "Carriers refreshed successfully!"
+msgstr ""
+
+#: src/Controllers/SettingsController.php:256
+msgid "Disconnected successfully. API key and carrier data have been cleared."
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:14
+msgid "Available Carriers"
+msgstr ""
+
+#. translators: %s: Link to WooCommerce Shipping Settings page
+#: src/Views/admin/carriers-section.php:22
+msgid "Enable carriers below, then configure shipping methods in %s to display them at checkout."
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:26
+msgid "WooCommerce Shipping Settings"
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:35
+msgid "No carriers found. Click \"Refresh Carriers\" to retrieve available shipping methods."
+msgstr ""
+
+#. translators: %s: Link to Settings tab
+#: src/Views/admin/carriers-section.php:41
+msgid "Please configure your API key in the %s first."
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:45
+msgid "Settings tab"
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:55
+msgid "Enabled"
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:56
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:72
+msgid "Carrier"
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:57
+msgid "Service"
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:58
+msgid "Method ID"
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:103
+msgid "Refresh Carriers"
+msgstr ""
+
+#: src/Views/admin/settings-section.php:16
+msgid "Test Connection"
+msgstr ""
+
+#: src/Views/admin/settings-section.php:20
+msgid "Disconnect"
+msgstr ""
+
+#. translators: %s: Contact us link
+#: src/Views/admin/settings-section.php:31
+msgid "Don't have an API key yet? <a href=\"%s\" target=\"_blank\">Contact us</a> to get one."
+msgstr ""
+
+#: src/Views/admin/settings-tabs.php:16
+msgid "Carriers"
+msgstr ""
+
+#: src/Views/admin/settings-tabs.php:20
+#: src/WordPress/Admin.php:53
+msgid "Settings"
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:33
+msgid "Shipping method provided by <a href=\"%s\"><strong>Wuunder</strong></a>"
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:65
+msgid "Method Title"
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:67
+msgid "This controls the title which the user sees during checkout."
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:74
+msgid "Select which Wuunder carrier this method should use."
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:79
+msgid "Cost"
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:82
+msgid "Enter a cost (excluding tax)."
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:96
+msgid "Select a carrier..."
+msgstr ""
+
+#: src/WordPress/Admin.php:38
+msgid "Wuunder Shipping requires WooCommerce to be installed and active."
+msgstr ""
