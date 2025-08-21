@@ -9,9 +9,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-08-20T14:57:23+00:00\n"
+"POT-Creation-Date: 2025-08-21T12:31:38+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.11.0\n"
+"X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wuunder-shipping\n"
 
 #. Plugin Name of the plugin
@@ -94,6 +94,7 @@ msgstr ""
 
 #. translators: %s: Link to WooCommerce Shipping Settings page
 #: src/Views/admin/carriers-section.php:22
+#, php-format
 msgid "Enable carriers below, then configure shipping methods in %s to display them at checkout."
 msgstr ""
 
@@ -107,6 +108,7 @@ msgstr ""
 
 #. translators: %s: Link to Settings tab
 #: src/Views/admin/carriers-section.php:41
+#, php-format
 msgid "Please configure your API key in the %s first."
 msgstr ""
 
@@ -119,7 +121,7 @@ msgid "Enabled"
 msgstr ""
 
 #: src/Views/admin/carriers-section.php:56
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:72
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:71
 msgid "Carrier"
 msgstr ""
 
@@ -145,6 +147,7 @@ msgstr ""
 
 #. translators: %s: Contact us link
 #: src/Views/admin/settings-section.php:31
+#, php-format
 msgid "Don't have an API key yet? <a href=\"%s\" target=\"_blank\">Contact us</a> to get one."
 msgstr ""
 
@@ -158,33 +161,74 @@ msgid "Settings"
 msgstr ""
 
 #: src/WooCommerce/WuunderSimpleShippingMethod.php:33
+#, php-format
 msgid "Shipping method provided by <a href=\"%s\"><strong>Wuunder</strong></a>"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:65
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:64
 msgid "Method Title"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:67
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:66
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:74
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:73
 msgid "Select which Wuunder carrier this method should use."
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:79
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:78
 msgid "Cost"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:82
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:81
 msgid "Enter a cost (excluding tax)."
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:96
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:95
 msgid "Select a carrier..."
 msgstr ""
 
 #: src/WordPress/Admin.php:38
 msgid "Wuunder Shipping requires WooCommerce to be installed and active."
+msgstr ""
+
+#: src/WordPress/Assets.php:70
+msgid "Please enter an API key first"
+msgstr ""
+
+#: src/WordPress/Assets.php:71
+msgid "Testing connection..."
+msgstr ""
+
+#: src/WordPress/Assets.php:72
+msgid "Connection test failed"
+msgstr ""
+
+#: src/WordPress/Assets.php:75
+msgid "Refreshing carriers..."
+msgstr ""
+
+#: src/WordPress/Assets.php:76
+msgid "Failed to refresh carriers"
+msgstr ""
+
+#: src/WordPress/Assets.php:79
+msgid "Are you sure you want to disconnect? This will clear your API key and all carrier data."
+msgstr ""
+
+#: src/WordPress/Assets.php:80
+msgid "Disconnecting..."
+msgstr ""
+
+#: src/WordPress/Assets.php:81
+msgid "Failed to disconnect"
+msgstr ""
+
+#: src/WordPress/Assets.php:84
+msgid "✓"
+msgstr ""
+
+#: src/WordPress/Assets.php:85
+msgid "✗"
 msgstr ""
