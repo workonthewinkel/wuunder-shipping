@@ -131,6 +131,30 @@
                 }
             });
         });
+
+        $(document.body).on('wc_backbone_modal_loaded', function(e, target) {
+            if (target === 'wc-modal-shipping-method-settings') {
+                $('#woocommerce_wuunder_shipping_wuunder_carrier').on('change', function() {
+                    const $carrierSelect = $(this);
+                    const selectedText = $carrierSelect.find('option:selected').text();
+                    const $titleField = $('#woocommerce_wuunder_shipping_title');
+                    const currentTitle = $titleField.val();
+                    
+                    // Get all carrier option values
+                    const carrierValues = [];
+                    $carrierSelect.find('option').each(function() {
+                        if ($(this).val()) {
+                            carrierValues.push($(this).text());
+                        }
+                    });
+                    
+                    // Update title if empty or if current value matches one of the carrier options
+                    if (!currentTitle || currentTitle.trim() === '' || carrierValues.includes(currentTitle)) {
+                        $titleField.val(selectedText);
+                    }
+                });
+            }
+        });
     });
 
 })(jQuery);
