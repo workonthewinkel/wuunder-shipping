@@ -29,9 +29,10 @@ class Assets implements Hookable {
 			return;
 		}
 
-		// Check if we're on the Wuunder tab
+		// We load our assets on the Wuunder and shipping pages.
 		$tab = sanitize_text_field( wp_unslash( $_GET['tab'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( $tab !== 'wuunder' ) {
+
+		if ( ! in_array( $tab, [ 'wuunder', 'shipping' ], true ) ) {
 			return;
 		}
 
