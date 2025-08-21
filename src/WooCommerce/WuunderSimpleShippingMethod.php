@@ -48,10 +48,9 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	 */
 	public function init(): void {
 		$this->init_form_fields();
-		$this->init_settings();
 
 		// Get instance-specific title with carrier name
-		$this->title = $this->get_option( 'title', $this->get_default_title() );
+		$this->title = $this->get_option( 'title' );
 
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, [ $this, 'process_admin_options' ] );
 	}
@@ -65,7 +64,7 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 				'title' => __( 'Method Title', 'wuunder-shipping' ),
 				'type' => 'text',
 				'description' => __( 'This controls the title which the user sees during checkout.', 'wuunder-shipping' ),
-				'default' => $this->get_default_title(),
+				'default' => '',
 				'desc_tip' => true,
 			],
 			'wuunder_carrier' => [
@@ -113,23 +112,8 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	public function calculate_shipping( $package = [] ): void {
 		$carrier_key = $this->get_option( 'wuunder_carrier' );
 
-		if ( empty( $carrier_key ) ) {
-			return; // No carrier selected
-		}
-
-		// Get carrier data from database
-		$carrier = Carrier::find_by_method_id( $carrier_key );
-
-		if ( ! $carrier || ! $carrier->enabled ) {
-			return; // Carrier not available
-		}
-
-		// Get cost - use custom cost or carrier price
-		$custom_cost = $this->get_option( 'cost' );
-		$cost        = ! empty( $custom_cost ) ? $custom_cost : $carrier->price;
-
-		// Use clean label - images added via woocommerce_cart_shipping_method_full_label filter
-		$label = $this->title;
+		$label = $this->get_option( 'title' );
+		$cost  = $this->get_option( 'cost' );
 
 		$rate = [
 			'id' => $this->get_rate_id(),
@@ -138,11 +122,6 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 			'calc_tax' => 'per_order',
 			'meta_data' => [
 				'wuunder_method_id' => $carrier_key,
-				'wuunder_carrier_data' => [
-					'carrier_name' => $carrier->carrier_name,
-					'product_name' => $carrier->product_name,
-					'service_level' => $carrier->service_level,
-				],
 			],
 		];
 
