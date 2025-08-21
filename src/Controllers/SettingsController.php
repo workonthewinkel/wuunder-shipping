@@ -92,16 +92,24 @@ class SettingsController extends Controller implements Hookable {
 		$has_api_key = ! empty( $api_key );
 
 		// Auto-load carriers if we have API key but no carriers
-		$carriers = Carrier::get_all();
-		if ( $has_api_key && empty( $carriers ) ) {
+		$carrier_methods = Carrier::get_all();
+		if ( $has_api_key && empty( $carrier_methods ) ) {
 			$this->load_carriers_from_api( $api_key );
-			$carriers = Carrier::get_all(); // Re-fetch after loading
+			$carrier_methods = Carrier::get_all(); // Re-fetch after loading
+		}
+
+		$carrier_names = [];
+		foreach ( $carrier_methods as $carrier ) {
+			if ( ! isset( $carrier_names[ $carrier->carrier_code ] ) ) {
+				$carrier_names[ $carrier->carrier_code ] = $carrier->carrier_name;
+			}
 		}
 
 		View::display(
 			'admin/carriers-section',
 			[
-				'carriers' => $carriers,
+				'carrier_methods' => $carrier_methods,
+				'carrier_names' => $carrier_names,
 				'has_api_key' => $has_api_key,
 			]
 		);

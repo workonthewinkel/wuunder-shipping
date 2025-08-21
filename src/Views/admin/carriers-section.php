@@ -10,27 +10,8 @@
 defined( 'ABSPATH' ) || exit;
 ?>
 
-<div id="wuunder-carriers-section">
-	<h2><?php esc_html_e( 'Available Carriers', 'wuunder-shipping' ); ?></h2>
-	
-	<?php if ( ! empty( $carriers ) ) : ?>
-		<p class="wuunder-shipping-settings-notice">
-			<?php
-			/* translators: %s: Link to WooCommerce Shipping Settings page */
-			printf(
-				/* translators: %s: Link to WooCommerce Shipping Settings page */
-				esc_html__( 'Enable carriers below, then configure shipping methods in %s to display them at checkout.', 'wuunder-shipping' ),
-				sprintf(
-					'<a href="%s">%s</a>',
-					esc_url( admin_url( 'admin.php?page=wc-settings&tab=shipping' ) ),
-					esc_html__( 'WooCommerce Shipping Settings', 'wuunder-shipping' )
-				)
-			);
-			?>
-		</p>
-	<?php endif; ?>
-	
-	<?php if ( empty( $carriers ) ) : ?>
+<div class="wuunder-carriers-section" id="wuunder-carriers-section">
+	<?php if ( empty( $carrier_methods ) ) : ?>
 		<?php if ( $has_api_key ) : ?>
 			<p><?php esc_html_e( 'No carriers found. Click "Refresh Carriers" to retrieve available shipping methods.', 'wuunder-shipping' ); ?></p>
 		<?php else : ?>
@@ -49,6 +30,41 @@ defined( 'ABSPATH' ) || exit;
 			</p>
 		<?php endif; ?>
 	<?php else : ?>
+		<h2><?php esc_html_e( 'Available Carriers', 'wuunder-shipping' ); ?></h2>
+		
+		<?php if ( ! empty( $carrier_methods ) ) : ?>
+			<p class="wuunder-shipping-settings-notice">
+				<?php
+				/* translators: %s: Link to WooCommerce Shipping Settings page */
+				printf(
+					/* translators: %s: Link to WooCommerce Shipping Settings page */
+					esc_html__( 'Enable carriers below, then configure shipping methods in %s to display them at checkout.', 'wuunder-shipping' ),
+					sprintf(
+						'<a href="%s">%s</a>',
+						esc_url( admin_url( 'admin.php?page=wc-settings&tab=shipping' ) ),
+						esc_html__( 'WooCommerce Shipping Settings', 'wuunder-shipping' )
+					)
+				);
+				?>
+			</p>
+		<?php endif; ?>
+		<div class="wuunder-carriers-section__actions">
+			<div class="wuunder-carriers-section__actions-filter">
+				<label for="wuunder_carrier_filter"><?php esc_html_e( 'Filter by: ', 'wuunder-shipping' ); ?></label>
+				<select name="wuunder_carrier_filter" id="wuunder_carrier_filter">
+					<option value=""><?php esc_html_e( 'Select a carrier...', 'wuunder-shipping' ); ?></option>
+					<?php foreach ( $carrier_names as $carrier_code => $carrier_name ) : ?>
+						<option value="<?php echo esc_attr( $carrier_code ); ?>"><?php echo esc_html( $carrier_name ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<?php if ( $has_api_key ) : ?>
+				<button type="button" id="wuunder-refresh-carriers" class="button button-secondary">
+					<?php esc_html_e( 'Refresh Carriers', 'wuunder-shipping' ); ?>
+					<span class="spinner"></span>
+				</button>
+			<?php endif; ?>
+		</div>
 		<table class="widefat wuunder-carriers-table">
 			<thead>
 				<tr>
@@ -59,17 +75,13 @@ defined( 'ABSPATH' ) || exit;
 				</tr>
 			</thead>
 			<tbody>
-				<?php foreach ( $carriers as $carrier ) : ?>
-					<tr>
+				<?php foreach ( $carrier_methods as $carrier ) : ?>
+					<tr data-carrier-code="<?php echo esc_attr( $carrier->carrier_code ); ?>">
 						<td class="wuunder-carriers-table__checkbox-container">
 							<div class="wuunder-carriers-table__checkbox-container--inner">
-							<?php if ( ! empty( $carrier->carrier_image_url ) ) : ?>
-								<img src="<?php echo esc_url( $carrier->carrier_image_url ); ?>" 
-									alt="<?php echo esc_attr( $carrier->carrier_name ); ?>" 
-									class="wuunder-carrier-logo" />
-							<?php endif; ?>
-							<div class="wuunder-toggle">
-								<input type="checkbox" 
+
+								<div class="wuunder-toggle">
+									<input type="checkbox" 
 									name="wuunder_enabled_carriers[<?php echo esc_attr( $carrier->get_method_id() ); ?>]" 
 									value="1" 
 									<?php checked( $carrier->enabled ); ?> />
@@ -77,6 +89,11 @@ defined( 'ABSPATH' ) || exit;
 										<span></span>
 									</label>
 								</div>
+								<?php if ( ! empty( $carrier->carrier_image_url ) ) : ?>
+									<img src="<?php echo esc_url( $carrier->carrier_image_url ); ?>" 
+										alt="<?php echo esc_attr( $carrier->carrier_name ); ?>" 
+										class="wuunder-carrier-logo" />
+								<?php endif; ?>
 							</div>
 						</td>
 						<td>
@@ -96,13 +113,4 @@ defined( 'ABSPATH' ) || exit;
 			</tbody>
 		</table>
 	<?php endif; ?>
-	
-	<p>
-		<?php if ( $has_api_key ) : ?>
-			<button type="button" id="wuunder-refresh-carriers" class="button button-secondary">
-				<?php esc_html_e( 'Refresh Carriers', 'wuunder-shipping' ); ?>
-			</button>
-			<span id="wuunder-carriers-result"></span>
-		<?php endif; ?>
-	</p>
 </div>

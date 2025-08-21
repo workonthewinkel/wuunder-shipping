@@ -54,6 +54,8 @@
             
             const $button = $(this);
             const $result = $('#wuunder-carriers-result');
+
+            $(this).find('.spinner').addClass('is-active');
             
             $button.prop('disabled', true);
             $result.html('<span class="spinner is-active"></span> Refreshing carriers...');
@@ -86,6 +88,26 @@
                     }, 5000);
                 }
             });
+        });
+
+        // Carrier select - filter wuunder-carriers-table rows by data-carrier-code
+        $('#wuunder_carrier_filter').on('change', function() {
+            const selectedValue = $(this).find('option:selected').val();
+            const $rows = $('.wuunder-carriers-table tbody tr');
+
+            if (!selectedValue || selectedValue === '') {
+                // Show all rows if nothing selected
+                $rows.show();
+            } else {
+                $rows.each(function() {
+                    const carrierCode = $(this).data('carrier-code');
+                    if (carrierCode == selectedValue) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
         });
         
         // Disconnect button
