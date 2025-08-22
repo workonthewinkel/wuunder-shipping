@@ -170,6 +170,7 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	 */
 	public function sanitize_cost( $value ) {
 		$value = is_null( $value ) ? '0' : $value;
+		$value = empty( $value ) ? '0' : $value;
 		$value = wp_kses_post( trim( wp_unslash( $value ) ) );
 		$value = str_replace( array( get_woocommerce_currency_symbol(), html_entity_decode( get_woocommerce_currency_symbol() ) ), '', $value );
 
