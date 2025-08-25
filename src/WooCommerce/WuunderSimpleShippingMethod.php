@@ -66,6 +66,7 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 				'description' => __( 'This controls the title which the user sees during checkout.', 'wuunder-shipping' ),
 				'default' => '',
 				'desc_tip' => true,
+				'sanitize_callback' => array( $this, 'sanitize_title' ),
 			],
 			'wuunder_carrier' => [
 				'title' => __( 'Carrier', 'wuunder-shipping' ),
@@ -73,6 +74,7 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 				'description' => __( 'Select which Wuunder carrier this method should use.', 'wuunder-shipping' ),
 				'options' => $this->get_available_carriers(),
 				'desc_tip' => true,
+				'sanitize_callback' => array( $this, 'sanitize_carrier' ),
 			],
 			'cost' => [
 				'title' => __( 'Cost', 'wuunder-shipping' ),
@@ -81,6 +83,7 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 				'description' => __( 'Enter a cost (excluding tax).', 'wuunder-shipping' ),
 				'default' => '',
 				'desc_tip' => true,
+				'sanitize_callback' => array( $this, 'sanitize_cost' ),
 			],
 		];
 	}
@@ -129,36 +132,61 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	}
 
 	/**
-	 * Get the default title including carrier name.
+	 * Sanitize the title by checking if the title is empty.
 	 *
-	 * @return string
+	 * @param mixed $value Title value.
+	 * @return string Sanitized title.
+	 * @throws Exception If the title is empty.
 	 */
-	private function get_default_title(): string {
-		$carrier_key = $this->get_option( 'wuunder_carrier' );
-
-		if ( empty( $carrier_key ) ) {
-			return $this->method_title;
+	public function sanitize_title( $value ) {
+		$value = sanitize_text_field( $value );
+		if ( empty( $value ) ) {
+			throw new \Exception( __( 'The title for a shipping method is required.', 'wuunder-shipping' ) );
 		}
+		return $value;
+	}
 
-		// Get carrier data from database
-		$carrier = Carrier::find_by_method_id( $carrier_key );
-
+	/**
+	 * Sanitize the carrier by checking if the carrier value exists in the database.
+	 *
+	 * @param mixed $value Carrier value.
+	 * @return string Sanitized carrier.
+	 * @throws Exception If the carrier is not valid.
+	 */	
+	public function sanitize_carrier( $value ) {
+		$carrier = Carrier::find_by_method_id( $value );
 		if ( ! $carrier ) {
-			return $this->method_title;
+			throw new \Exception( __( 'The selected carrier is not valid.', 'wuunder-shipping' ) );
 		}
+		return $value;
+	}
 
-		// Prioritize product_name as the user-friendly delivery method title
-		$product_name = $carrier->product_name ?? '';
-		$carrier_name = $carrier->carrier_name ?? '';
+	/**
+	 * Sanitize the cost, inspired by the WooCommerce shipping method sanitize_cost function.
+	 *
+	 * @param mixed $value Cost value.
+	 * @return string Sanitized cost.
+	 * @throws Exception If the cost is invalid.
+	 */
+	public function sanitize_cost( $value ) {
+		$value = is_null( $value ) ? '0' : $value;
+		$value = empty( $value ) ? '0' : $value;
+		$value = wp_kses_post( trim( wp_unslash( $value ) ) );
+		$value = str_replace( array( get_woocommerce_currency_symbol(), html_entity_decode( get_woocommerce_currency_symbol() ) ), '', $value );
 
-		if ( ! empty( $product_name ) ) {
-			return $product_name;
+		// Get the current locale and all possible decimal separators.
+		$locale   = localeconv();
+		$decimals = array( wc_get_price_decimal_separator(), $locale['decimal_point'], $locale['mon_decimal_point'], ',' );
+
+		// Remove whitespace, then decimals, and then invalid start/end characters.
+		$value = preg_replace( '/\s+/', '', $value );
+		$value = str_replace( $decimals, '.', $value );
+		$value = rtrim( ltrim( $value, "\t\n\r\0\x0B+*/" ), "\t\n\r\0\x0B+-*/" );
+
+		// If the value is not numeric, then throw an exception.
+		if ( ! is_numeric( $value ) ) {
+			throw new \Exception( __( 'Invalid cost entered.', 'wuunder-shipping' ) );
 		}
-
-		if ( ! empty( $carrier_name ) ) {
-			return $carrier_name;
-		}
-
-		return $this->method_title;
+		return $value;
 	}
 }

@@ -9,9 +9,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-08-20T14:57:23+00:00\n"
+"POT-Creation-Date: 2025-08-25T10:22:18+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.11.0\n"
+"X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wuunder-shipping\n"
 
 #. Plugin Name of the plugin
@@ -48,91 +48,102 @@ msgstr ""
 msgid "Wuunder"
 msgstr ""
 
-#: src/Controllers/SettingsController.php:118
+#: src/Controllers/SettingsController.php:126
 msgid "Wuunder Settings"
 msgstr ""
 
-#: src/Controllers/SettingsController.php:120
+#: src/Controllers/SettingsController.php:128
 msgid "Configure your Wuunder API integration."
 msgstr ""
 
-#: src/Controllers/SettingsController.php:124
+#: src/Controllers/SettingsController.php:132
 msgid "API Key"
 msgstr ""
 
-#: src/Controllers/SettingsController.php:125
+#: src/Controllers/SettingsController.php:133
 msgid "Enter your Wuunder API key"
 msgstr ""
 
-#: src/Controllers/SettingsController.php:207
+#: src/Controllers/SettingsController.php:215
 msgid "Please provide an API key to test."
 msgstr ""
 
-#: src/Controllers/SettingsController.php:213
+#: src/Controllers/SettingsController.php:221
 msgid "Connection successful!"
 msgstr ""
 
-#: src/Controllers/SettingsController.php:215
+#: src/Controllers/SettingsController.php:223
 msgid "Connection failed. Please check your API key."
 msgstr ""
 
-#: src/Controllers/SettingsController.php:230
+#: src/Controllers/SettingsController.php:238
 msgid "Please configure your API key first."
 msgstr ""
 
-#: src/Controllers/SettingsController.php:239
+#: src/Controllers/SettingsController.php:247
 msgid "Carriers refreshed successfully!"
 msgstr ""
 
-#: src/Controllers/SettingsController.php:256
+#: src/Controllers/SettingsController.php:264
 msgid "Disconnected successfully. API key and carrier data have been cleared."
 msgstr ""
 
-#: src/Views/admin/carriers-section.php:14
-msgid "Available Carriers"
-msgstr ""
-
-#. translators: %s: Link to WooCommerce Shipping Settings page
-#: src/Views/admin/carriers-section.php:22
-msgid "Enable carriers below, then configure shipping methods in %s to display them at checkout."
-msgstr ""
-
-#: src/Views/admin/carriers-section.php:26
-msgid "WooCommerce Shipping Settings"
-msgstr ""
-
-#: src/Views/admin/carriers-section.php:35
+#: src/Views/admin/carriers-section.php:16
 msgid "No carriers found. Click \"Refresh Carriers\" to retrieve available shipping methods."
 msgstr ""
 
 #. translators: %s: Link to Settings tab
-#: src/Views/admin/carriers-section.php:41
+#: src/Views/admin/carriers-section.php:22
+#, php-format
 msgid "Please configure your API key in the %s first."
 msgstr ""
 
-#: src/Views/admin/carriers-section.php:45
+#: src/Views/admin/carriers-section.php:26
 msgid "Settings tab"
 msgstr ""
 
+#: src/Views/admin/carriers-section.php:33
+msgid "Available Carriers"
+msgstr ""
+
+#. translators: %s: Link to WooCommerce Shipping Settings page
+#: src/Views/admin/carriers-section.php:41
+#, php-format
+msgid "Enable carriers below, then configure shipping methods in %s to display them at checkout."
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:45
+msgid "WooCommerce Shipping Settings"
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:53
+msgid "Filter by: "
+msgstr ""
+
 #: src/Views/admin/carriers-section.php:55
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:98
+msgid "Select a carrier..."
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:63
+msgid "Refresh Carriers"
+msgstr ""
+
+#: src/Views/admin/carriers-section.php:71
 msgid "Enabled"
 msgstr ""
 
-#: src/Views/admin/carriers-section.php:56
+#: src/Views/admin/carriers-section.php:72
 #: src/WooCommerce/WuunderSimpleShippingMethod.php:72
 msgid "Carrier"
 msgstr ""
 
-#: src/Views/admin/carriers-section.php:57
+#: src/Views/admin/carriers-section.php:73
 msgid "Service"
 msgstr ""
 
-#: src/Views/admin/carriers-section.php:58
+#: src/Views/admin/carriers-section.php:74
 msgid "Method ID"
-msgstr ""
-
-#: src/Views/admin/carriers-section.php:103
-msgid "Refresh Carriers"
 msgstr ""
 
 #: src/Views/admin/settings-section.php:16
@@ -145,6 +156,7 @@ msgstr ""
 
 #. translators: %s: Contact us link
 #: src/Views/admin/settings-section.php:31
+#, php-format
 msgid "Don't have an API key yet? <a href=\"%s\" target=\"_blank\">Contact us</a> to get one."
 msgstr ""
 
@@ -158,14 +170,15 @@ msgid "Settings"
 msgstr ""
 
 #: src/WooCommerce/WuunderSimpleShippingMethod.php:33
+#, php-format
 msgid "Shipping method provided by <a href=\"%s\"><strong>Wuunder</strong></a>"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:65
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:64
 msgid "Method Title"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:67
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:66
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 
@@ -173,18 +186,74 @@ msgstr ""
 msgid "Select which Wuunder carrier this method should use."
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:79
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:80
 msgid "Cost"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:82
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:83
 msgid "Enter a cost (excluding tax)."
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:96
-msgid "Select a carrier..."
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:144
+msgid "The title for a shipping method is required."
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:159
+msgid "The selected carrier is not valid."
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:188
+msgid "Invalid cost entered."
 msgstr ""
 
 #: src/WordPress/Admin.php:38
 msgid "Wuunder Shipping requires WooCommerce to be installed and active."
+msgstr ""
+
+#: src/WordPress/Assets.php:70
+msgid "Please enter an API key first"
+msgstr ""
+
+#: src/WordPress/Assets.php:71
+msgid "Testing connection..."
+msgstr ""
+
+#: src/WordPress/Assets.php:72
+msgid "Connection test failed"
+msgstr ""
+
+#: src/WordPress/Assets.php:75
+msgid "Refreshing carriers..."
+msgstr ""
+
+#: src/WordPress/Assets.php:76
+msgid "Failed to refresh carriers"
+msgstr ""
+
+#: src/WordPress/Assets.php:79
+msgid "Are you sure you want to disconnect? This will clear your API key and all carrier data."
+msgstr ""
+
+#: src/WordPress/Assets.php:80
+msgid "Disconnecting..."
+msgstr ""
+
+#: src/WordPress/Assets.php:81
+msgid "Failed to disconnect"
+msgstr ""
+
+#: src/WordPress/Assets.php:84
+msgid "Title is required"
+msgstr ""
+
+#: src/WordPress/Assets.php:85
+msgid "Carrier selection is required"
+msgstr ""
+
+#: src/WordPress/Assets.php:88
+msgid "✓"
+msgstr ""
+
+#: src/WordPress/Assets.php:89
+msgid "✗"
 msgstr ""
