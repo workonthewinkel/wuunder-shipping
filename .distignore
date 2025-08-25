@@ -1,3 +1,35 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+.github
+.distignore
+
+# source files
+assets/src
+
+# local node modules
+node_modules
+
+# config files
+.editorconfig
+.phpcs.xml.dist
+composer.lock
+composer.json
+mix-manifest.json
+package-lock.json
+package.json
+webpack.mix.js
+
+# docs
+CLI.MD
+NOTES.MD
+README.MD
+
+# auto generated files
+.DS_Store
+
+# Other often used files that should be excluded from releases
 .babelrc
 .deployignore
 .distignore
@@ -14,7 +46,6 @@
 Thumbs.db
 behat.yml
 bitbucket-pipelines.yml
-bin
 .circleci/config.yml
 composer.json
 composer.lock
@@ -24,19 +55,14 @@ package.json
 package-lock.json
 phpunit.xml
 phpunit.xml.dist
-multisite.xml
-multisite.xml.dist
 .phpcs.xml
 phpcs.xml
 .phpcs.xml.dist
 phpcs.xml.dist
-README.md
 webpack.config.js
 wp-cli.local.yml
 yarn.lock
 tests
-vendor
-node_modules
 *.sql
 *.tar.gz
 *.zip
