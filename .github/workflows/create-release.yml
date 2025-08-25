@@ -1,9 +1,12 @@
 name: Build Release Package
 
-# This workflow creates a production-ready release package for the Wuunder Shipping plugin.
-# It can be triggered by:
-# - Creating a GitHub release (via web UI or API)
-# - Manual workflow dispatch from GitHub Actions UI
+# This workflow creates a production-ready release package for the Wuunder Shipping plugin
+# and optionally deploys it to WordPress.org SVN repository.
+#
+# Triggers:
+# - Creating a GitHub release (builds and attaches package)
+# - Publishing a GitHub release (builds, attaches, and deploys to SVN)
+# - Manual workflow dispatch with optional SVN deployment
 # - Local testing with act: `act workflow_dispatch`
 #
 # The workflow:
@@ -12,12 +15,19 @@ name: Build Release Package
 # 3. Builds production assets (CSS/JS)
 # 4. Creates a distribution package excluding development files (via .distignore)
 # 5. Generates SHA256 checksum for security
-# 6. Uploads the package to the existing GitHub release
+# 6. Uploads the package to GitHub release (if triggered by release)
+# 7. Deploys to WordPress.org SVN (if release is published or deploy_to_svn=true)
 
 on:
   release:
-    types: [created]  # Triggers when a release is created
+    types: [created, published]  # Triggers when a release is created or published
   workflow_dispatch:  # Allows manual triggering for testing
+    inputs:
+      deploy_to_svn:
+        description: 'Deploy to WordPress.org SVN'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write  # Required for creating releases
@@ -105,7 +115,7 @@ jobs:
       
       - name: Upload artifacts (manual trigger)
         # When manually triggered, save artifacts for download
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && !inputs.deploy_to_svn
         uses: actions/upload-artifact@v4
         with:
           name: release-package-${{ steps.get_version.outputs.version }}
@@ -113,3 +123,38 @@ jobs:
             wuunder-shipping-*.zip
             wuunder-shipping-*.zip.sha256
           retention-days: 7
+
+      - name: Prepare for SVN deployment
+        # Deploy to SVN when: release is published OR manual trigger with deploy_to_svn=true
+        if: github.event.action == 'published' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_svn)
+        run: |
+          PLUGIN_NAME="wuunder-shipping"
+          VERSION="${{ steps.get_version.outputs.version }}"
+          
+          # Extract the built package for SVN deployment
+          unzip -q "${PLUGIN_NAME}-${VERSION}.zip" -d ./svn-deploy
+          
+          # Prepare WordPress.org assets directory
+          mkdir -p .wordpress-org
+          
+          # Copy WordPress.org assets if they exist
+          if [ -d "assets/wordpress-org" ]; then
+            cp -r assets/wordpress-org/* .wordpress-org/ 2>/dev/null || true
+          fi
+          
+          echo "Prepared for SVN deployment"
+
+      - name: Deploy to WordPress.org SVN (DRY RUN)
+        # Deploy to SVN when: release is published OR manual trigger with deploy_to_svn=true
+        # Currently in dry-run mode until SVN access is configured
+        if: github.event.action == 'published' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_svn)
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          dry-run: true  # Enable dry-run until SVN credentials are available
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME || 'dummy' }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD || 'dummy' }}
+          SLUG: wuunder-shipping
+          VERSION: ${{ steps.get_version.outputs.version }}
+          BUILD_DIR: svn-deploy/wuunder-shipping
+          ASSETS_DIR: .wordpress-org
