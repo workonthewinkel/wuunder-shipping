@@ -1,0 +1,115 @@
+name: Build Release Package
+
+# This workflow creates a production-ready release package for the Wuunder Shipping plugin.
+# It can be triggered by:
+# - Creating a GitHub release (via web UI or API)
+# - Manual workflow dispatch from GitHub Actions UI
+# - Local testing with act: `act workflow_dispatch`
+#
+# The workflow:
+# 1. Reads version from the main plugin file (wuunder-shipping.php)
+# 2. Installs production dependencies (PHP/Node)
+# 3. Builds production assets (CSS/JS)
+# 4. Creates a distribution package excluding development files (via .distignore)
+# 5. Generates SHA256 checksum for security
+# 6. Uploads the package to the existing GitHub release
+
+on:
+  release:
+    types: [created]  # Triggers when a release is created
+  workflow_dispatch:  # Allows manual triggering for testing
+
+permissions:
+  contents: write  # Required for creating releases
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from plugin file
+        id: get_version
+        run: |
+          # Extract version from the plugin header comment
+          # This ensures consistency - the plugin file is the single source of truth
+          VERSION=$(grep "Version:" wuunder-shipping.php | sed 's/.*Version: //' | tr -d ' ')
+          TAG_NAME="v${VERSION}"
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Building release for version: $VERSION"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          tools: composer:v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup WP-CLI with dist-archive
+        run: |
+          # Download and install WP-CLI
+          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x wp-cli.phar
+          sudo mv wp-cli.phar /usr/local/bin/wp
+          
+          # Install the dist-archive package for creating distribution packages
+          wp package install wp-cli/dist-archive-command --allow-root
+
+      - name: Install dependencies and build assets
+        run: |
+          # Install production PHP dependencies (excludes dev dependencies)
+          composer install --no-dev --optimize-autoloader
+          
+          # Install Node dependencies and build production assets
+          npm ci
+          
+          # Build production CSS/JS and generate translation files
+          # WP_CLI_ALLOW_ROOT=1 allows wp i18n commands in the build script
+          WP_CLI_ALLOW_ROOT=1 npm run build
+
+      - name: Create distribution package
+        run: |
+          PLUGIN_NAME="wuunder-shipping"
+          VERSION="${{ steps.get_version.outputs.version }}"
+          
+          # Create a distribution archive using WP-CLI
+          # - Uses .distignore to exclude development files
+          # - Sets the plugin directory name inside the zip
+          # - Creates a properly formatted WordPress plugin package
+          wp dist-archive . "./${PLUGIN_NAME}-${VERSION}.zip" \
+            --plugin-dirname="${PLUGIN_NAME}" \
+            --allow-root
+          
+          # Generate SHA256 checksum for security verification
+          sha256sum "${PLUGIN_NAME}-${VERSION}.zip" > "${PLUGIN_NAME}-${VERSION}.zip.sha256"
+
+      - name: Upload assets to release
+        # When triggered by release event, upload to that release
+        # When triggered manually, only create artifacts (no release to upload to)
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            wuunder-shipping-*.zip
+            wuunder-shipping-*.zip.sha256
+          fail_on_unmatched_files: true
+      
+      - name: Upload artifacts (manual trigger)
+        # When manually triggered, save artifacts for download
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package-${{ steps.get_version.outputs.version }}
+          path: |
+            wuunder-shipping-*.zip
+            wuunder-shipping-*.zip.sha256
+          retention-days: 7
