@@ -2,11 +2,12 @@
  * Wuunder Admin JavaScript - Main Module
  * Orchestrates all admin functionality through components
  */
-import ConnectionTester from './components/CarrierList.js';
+import ConnectionTester from './components/ConnectionTester.js';
 import CarrierList from './components/CarrierList.js';
 import DisconnectManager from './components/DisconnectManager.js';
 import ShippingMethods from './components/ShippingMethods.js';
 import Validation from './components/Validation.js';
+import CarrierFilter from './components/CarrierFilter.js';
 
 (function($) {
     'use strict';
@@ -22,6 +23,7 @@ import Validation from './components/Validation.js';
         new DisconnectManager();
         new ShippingMethods();
         new Validation();
+        new CarrierFilter();
     });
 
 })(jQuery);

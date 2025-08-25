@@ -1,11 +1,38 @@
 // Wuunder Admin Styles
 
 // Wuunder specific styles
-#wuunder-carriers-section {
+.wuunder-carriers-section {
     margin-top: 20px;
 
     h2 {
         margin-bottom: 15px;
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+
+        button {
+            .spinner {
+                display: none;
+                &.is-active {
+                    display: block;
+                }
+            }
+        }
+
+        &-filter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            select {
+                max-width: 230px;
+            }
+        }
     }
 
     .wuunder-shipping-settings-notice {
@@ -132,10 +159,6 @@
             font-size: 0.8em;
             margin-top: 4px;
         }
-    }
-
-    button {
-        margin-right: 10px;
     }
 }
 
