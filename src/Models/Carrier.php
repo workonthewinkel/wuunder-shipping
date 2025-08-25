@@ -346,7 +346,7 @@ class Carrier extends Model {
 		);
 
 		if ( $exists ) {
-			return $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			return $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 				$table,
 				$data,
 				[
@@ -368,7 +368,7 @@ class Carrier extends Model {
 		global $wpdb;
 		$table = self::get_table_name();
 
-		return $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		return $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$table,
 			[
 				'carrier_code'         => $this->carrier_code,

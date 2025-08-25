@@ -24,7 +24,6 @@ class Admin {
 
 		// Handle activation redirect
 		add_action( 'admin_init', [ $this, 'handle_activation_redirect' ] );
-		
 	}
 
 	/**

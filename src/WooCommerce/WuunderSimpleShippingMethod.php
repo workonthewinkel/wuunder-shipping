@@ -23,13 +23,14 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	 * @param int $instance_id Instance ID.
 	 */
 	public function __construct( $instance_id = 0 ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-		$this->id                 = 'wuunder_shipping';
-		$this->instance_id        = absint( $instance_id );
-		$this->method_title       = __( 'Wuunder Shipping', 'wuunder-shipping' );
-		
+		$this->id           = 'wuunder_shipping';
+		$this->instance_id  = absint( $instance_id );
+		$this->method_title = __( 'Wuunder Shipping', 'wuunder-shipping' );
+
 		// Build dynamic link to Wuunder Settings - carriers tab
-		$settings_url = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=carriers' );
+		$settings_url             = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=carriers' );
 		$this->method_description = sprintf(
+			/* translators: %s: URL to Wuunder settings page */
 			__( 'Shipping method provided by <a href="%s"><strong>Wuunder</strong></a>', 'wuunder-shipping' ),
 			$settings_url
 		);
@@ -136,12 +137,12 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	 *
 	 * @param mixed $value Title value.
 	 * @return string Sanitized title.
-	 * @throws Exception If the title is empty.
+	 * @throws \Exception If the title is empty.
 	 */
 	public function sanitize_title( $value ) {
 		$value = sanitize_text_field( $value );
 		if ( empty( $value ) ) {
-			throw new \Exception( __( 'The title for a shipping method is required.', 'wuunder-shipping' ) );
+			throw new \Exception( esc_html__( 'The title for a shipping method is required.', 'wuunder-shipping' ) );
 		}
 		return $value;
 	}
@@ -151,12 +152,12 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	 *
 	 * @param mixed $value Carrier value.
 	 * @return string Sanitized carrier.
-	 * @throws Exception If the carrier is not valid.
-	 */	
+	 * @throws \Exception If the carrier is not valid.
+	 */
 	public function sanitize_carrier( $value ) {
 		$carrier = Carrier::find_by_method_id( $value );
 		if ( ! $carrier ) {
-			throw new \Exception( __( 'The selected carrier is not valid.', 'wuunder-shipping' ) );
+			throw new \Exception( esc_html__( 'The selected carrier is not valid.', 'wuunder-shipping' ) );
 		}
 		return $value;
 	}
@@ -166,7 +167,7 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	 *
 	 * @param mixed $value Cost value.
 	 * @return string Sanitized cost.
-	 * @throws Exception If the cost is invalid.
+	 * @throws \Exception If the cost is invalid.
 	 */
 	public function sanitize_cost( $value ) {
 		$value = is_null( $value ) ? '0' : $value;
@@ -185,7 +186,7 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 
 		// If the value is not numeric, then throw an exception.
 		if ( ! is_numeric( $value ) ) {
-			throw new \Exception( __( 'Invalid cost entered.', 'wuunder-shipping' ) );
+			throw new \Exception( esc_html__( 'Invalid cost entered.', 'wuunder-shipping' ) );
 		}
 		return $value;
 	}

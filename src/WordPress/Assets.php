@@ -70,20 +70,20 @@ class Assets implements Hookable {
 						'please_enter_api_key' => __( 'Please enter an API key first', 'wuunder-shipping' ),
 						'testing_connection'   => __( 'Testing connection...', 'wuunder-shipping' ),
 						'connection_test_failed' => __( 'Connection test failed', 'wuunder-shipping' ),
-						
+
 						// CarrierList component strings
 						'refreshing_carriers' => __( 'Refreshing carriers...', 'wuunder-shipping' ),
 						'failed_refresh_carriers' => __( 'Failed to refresh carriers', 'wuunder-shipping' ),
-						
+
 						// DisconnectManager component strings
 						'confirm_disconnect' => __( 'Are you sure you want to disconnect? This will clear your API key and all carrier data.', 'wuunder-shipping' ),
 						'disconnecting' => __( 'Disconnecting...', 'wuunder-shipping' ),
 						'failed_disconnect' => __( 'Failed to disconnect', 'wuunder-shipping' ),
-						
+
 						// Validation component strings
 						'title_required' => __( 'Title is required', 'wuunder-shipping' ),
 						'carrier_required' => __( 'Carrier selection is required', 'wuunder-shipping' ),
-						
+
 						// Common UI strings
 						'success_prefix' => __( '✓', 'wuunder-shipping' ),
 						'error_prefix'   => __( '✗', 'wuunder-shipping' ),
@@ -91,6 +91,5 @@ class Assets implements Hookable {
 				]
 			);
 		}
-
 	}
 }
