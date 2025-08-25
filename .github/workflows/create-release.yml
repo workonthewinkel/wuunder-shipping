@@ -144,10 +144,24 @@ jobs:
           
           echo "Prepared for SVN deployment"
 
-      - name: Deploy to WordPress.org SVN (DRY RUN)
-        # Deploy to SVN when: release is published OR manual trigger with deploy_to_svn=true
-        # Currently in dry-run mode until SVN access is configured
+      - name: Check SVN repository exists
+        # Check if the WordPress.org SVN repository exists before attempting deployment
         if: github.event.action == 'published' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_svn)
+        id: check_svn
+        run: |
+          # Check if the SVN repository exists
+          if curl -s --head "https://plugins.svn.wordpress.org/wuunder-shipping/" | head -n 1 | grep -q "200 OK"; then
+            echo "svn_exists=true" >> $GITHUB_OUTPUT
+            echo "✅ SVN repository exists"
+          else
+            echo "svn_exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ SVN repository does not exist yet - plugin not approved/published on WordPress.org"
+            echo "This is expected for new plugins before WordPress.org approval"
+          fi
+
+      - name: Deploy to WordPress.org SVN (DRY RUN)
+        # Only run if SVN repository exists
+        if: (github.event.action == 'published' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_svn)) && steps.check_svn.outputs.svn_exists == 'true'
         uses: 10up/action-wordpress-plugin-deploy@stable
         with:
           dry-run: true  # Enable dry-run until SVN credentials are available
@@ -158,3 +172,14 @@ jobs:
           VERSION: ${{ steps.get_version.outputs.version }}
           BUILD_DIR: svn-deploy/wuunder-shipping
           ASSETS_DIR: .wordpress-org
+      
+      - name: SVN deployment skipped
+        # Show message when SVN deployment is skipped
+        if: (github.event.action == 'published' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_svn)) && steps.check_svn.outputs.svn_exists == 'false'
+        run: |
+          echo "🔄 SVN deployment skipped - repository not available yet"
+          echo "To deploy to WordPress.org:"
+          echo "1. Submit plugin for review at https://wordpress.org/plugins/developers/add/"
+          echo "2. Wait for approval and SVN repository creation"
+          echo "3. Set up SVN_USERNAME and SVN_PASSWORD secrets"
+          echo "4. Change dry-run to false in the workflow"
