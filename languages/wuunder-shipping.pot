@@ -2,16 +2,16 @@
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Wuunder Shipping 0.0.1\n"
+"Project-Id-Version: Wuunder Shipping 0.6.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wuunder\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-08-25T10:22:18+00:00\n"
+"POT-Creation-Date: 2025-08-31T18:10:39+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.12.0\n"
+"X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: wuunder-shipping\n"
 
 #. Plugin Name of the plugin
@@ -94,7 +94,6 @@ msgstr ""
 
 #. translators: %s: Link to Settings tab
 #: src/Views/admin/carriers-section.php:22
-#, php-format
 msgid "Please configure your API key in the %s first."
 msgstr ""
 
@@ -103,12 +102,12 @@ msgid "Settings tab"
 msgstr ""
 
 #: src/Views/admin/carriers-section.php:33
+#: src/WooCommerce/WuunderPickupShippingMethod.php:85
 msgid "Available Carriers"
 msgstr ""
 
 #. translators: %s: Link to WooCommerce Shipping Settings page
 #: src/Views/admin/carriers-section.php:41
-#, php-format
 msgid "Enable carriers below, then configure shipping methods in %s to display them at checkout."
 msgstr ""
 
@@ -121,7 +120,7 @@ msgid "Filter by: "
 msgstr ""
 
 #: src/Views/admin/carriers-section.php:55
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:98
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:99
 msgid "Select a carrier..."
 msgstr ""
 
@@ -134,7 +133,7 @@ msgid "Enabled"
 msgstr ""
 
 #: src/Views/admin/carriers-section.php:72
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:72
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:73
 msgid "Carrier"
 msgstr ""
 
@@ -156,7 +155,6 @@ msgstr ""
 
 #. translators: %s: Contact us link
 #: src/Views/admin/settings-section.php:31
-#, php-format
 msgid "Don't have an API key yet? <a href=\"%s\" target=\"_blank\">Contact us</a> to get one."
 msgstr ""
 
@@ -165,95 +163,262 @@ msgid "Carriers"
 msgstr ""
 
 #: src/Views/admin/settings-tabs.php:20
-#: src/WordPress/Admin.php:53
+#: src/WordPress/Admin.php:52
 msgid "Settings"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:33
-#, php-format
-msgid "Shipping method provided by <a href=\"%s\"><strong>Wuunder</strong></a>"
+#: src/WooCommerce/BlocksIntegration.php:89
+#: src/WooCommerce/BlocksIntegration.php:130
+#: src/WordPress/Assets.php:142
+#: src/WordPress/Assets.php:143
+#: src/pickup-location-selector.js:141
+#: src/pickup-location-selector.js:164
+#: src/pickup-location-selector.js:178
+msgid "Select pick-up location"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:64
+#: src/WooCommerce/BlocksIntegration.php:90
+#: src/WooCommerce/BlocksIntegration.php:131
+#: src/WordPress/Assets.php:144
+#: src/pickup-location-selector.js:155
+msgid "Change"
+msgstr ""
+
+#: src/WooCommerce/BlocksIntegration.php:91
+#: src/WooCommerce/BlocksIntegration.php:132
+#: src/pickup-location-selector.js:168
+msgid "Close"
+msgstr ""
+
+#: src/WooCommerce/BlocksIntegration.php:92
+#: src/WooCommerce/BlocksIntegration.php:133
+#: src/WordPress/Assets.php:145
+msgid "Loading..."
+msgstr ""
+
+#: src/WooCommerce/BlocksIntegration.php:93
+#: src/WooCommerce/BlocksIntegration.php:134
+#: src/WordPress/Assets.php:146
+msgid "Error loading pickup points"
+msgstr ""
+
+#. translators: %1$s: pickup point name, %2$s: street, %3$s: postcode, %4$s: city
+#: src/WooCommerce/BlocksIntegration.php:268
+#: src/WooCommerce/CheckoutHandler.php:214
+msgid "Pickup point selected: %1$s, %2$s, %3$s %4$s"
+msgstr ""
+
+#: src/WooCommerce/BlocksIntegration.php:318
+msgid "Selected pickup point data"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:119
+#: src/WooCommerce/CheckoutHandler.php:394
+#: src/WooCommerce/CheckoutHandler.php:418
+msgid "Pickup at"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:247
+msgid "Please select a pickup location for your delivery."
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:286
+msgid "Invalid pickup location data. Please select a pickup location again. Debug: %s"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:325
+#: src/WooCommerce/CheckoutHandler.php:509
+#: src/WooCommerce/CheckoutHandler.php:567
+msgid "Pickup Location"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:332
+#: src/WooCommerce/CheckoutHandler.php:516
+#: src/WooCommerce/CheckoutHandler.php:561
+#: src/WooCommerce/CheckoutHandler.php:574
+msgid "Carrier:"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:335
+msgid "ID:"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:379
+msgid "Carrier: %s"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:382
+msgid "ID: %s"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:555
+msgid "PICKUP LOCATION:"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:613
+msgid "Pick up at %s"
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:31
+msgid "Wuunder Pick-up"
+msgstr ""
+
+#. translators: %s: URL to Wuunder settings page
+#: src/WooCommerce/WuunderPickupShippingMethod.php:37
+msgid "Pick-up point shipping method provided by <a href=\"%s\"><strong>Wuunder</strong></a>"
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:68
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:65
 msgid "Method Title"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:66
+#: src/WooCommerce/WuunderPickupShippingMethod.php:70
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:67
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:74
-msgid "Select which Wuunder carrier this method should use."
+#: src/WooCommerce/WuunderPickupShippingMethod.php:71
+msgid "Pick-up at parcel shop"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:80
+#: src/WooCommerce/WuunderPickupShippingMethod.php:76
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:81
 msgid "Cost"
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:83
+#: src/WooCommerce/WuunderPickupShippingMethod.php:79
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:84
 msgid "Enter a cost (excluding tax)."
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:144
+#: src/WooCommerce/WuunderPickupShippingMethod.php:87
+msgid "Select which carriers should be available for pick-up points."
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:94
+msgid "Primary Color"
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:96
+msgid "Primary color for the shop locator (hex color code, e.g., #52ba69)."
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:103
+msgid "Language"
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:105
+msgid "Language for the shop locator interface."
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:107
+msgid "Dutch"
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:108
+msgid "English"
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:109
+msgid "German"
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:110
+msgid "French"
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:196
+msgid "Shop Locator Preview"
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:199
+msgid "This preview updates automatically when you change the settings above."
+msgstr ""
+
+#: src/WooCommerce/WuunderPickupShippingMethod.php:305
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:145
 msgid "The title for a shipping method is required."
 msgstr ""
 
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:159
-msgid "The selected carrier is not valid."
-msgstr ""
-
-#: src/WooCommerce/WuunderSimpleShippingMethod.php:188
+#: src/WooCommerce/WuunderPickupShippingMethod.php:334
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:189
 msgid "Invalid cost entered."
 msgstr ""
 
-#: src/WordPress/Admin.php:38
+#: src/WooCommerce/WuunderPickupShippingMethod.php:356
+msgid "At least one carrier must be selected."
+msgstr ""
+
+#. translators: %s: URL to Wuunder settings page
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:34
+msgid "Shipping method provided by <a href=\"%s\"><strong>Wuunder</strong></a>"
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:75
+msgid "Select which Wuunder carrier this method should use."
+msgstr ""
+
+#: src/WooCommerce/WuunderSimpleShippingMethod.php:160
+msgid "The selected carrier is not valid."
+msgstr ""
+
+#: src/WordPress/Admin.php:37
 msgid "Wuunder Shipping requires WooCommerce to be installed and active."
 msgstr ""
 
-#: src/WordPress/Assets.php:70
+#: src/WordPress/Assets.php:75
 msgid "Please enter an API key first"
 msgstr ""
 
-#: src/WordPress/Assets.php:71
+#: src/WordPress/Assets.php:76
 msgid "Testing connection..."
 msgstr ""
 
-#: src/WordPress/Assets.php:72
+#: src/WordPress/Assets.php:77
 msgid "Connection test failed"
 msgstr ""
 
-#: src/WordPress/Assets.php:75
+#: src/WordPress/Assets.php:80
 msgid "Refreshing carriers..."
 msgstr ""
 
-#: src/WordPress/Assets.php:76
+#: src/WordPress/Assets.php:81
 msgid "Failed to refresh carriers"
 msgstr ""
 
-#: src/WordPress/Assets.php:79
+#: src/WordPress/Assets.php:84
 msgid "Are you sure you want to disconnect? This will clear your API key and all carrier data."
 msgstr ""
 
-#: src/WordPress/Assets.php:80
+#: src/WordPress/Assets.php:85
 msgid "Disconnecting..."
 msgstr ""
 
-#: src/WordPress/Assets.php:81
+#: src/WordPress/Assets.php:86
 msgid "Failed to disconnect"
 msgstr ""
 
-#: src/WordPress/Assets.php:84
+#: src/WordPress/Assets.php:89
 msgid "Title is required"
 msgstr ""
 
-#: src/WordPress/Assets.php:85
+#: src/WordPress/Assets.php:90
 msgid "Carrier selection is required"
 msgstr ""
 
-#: src/WordPress/Assets.php:88
+#: src/WordPress/Assets.php:93
 msgid "✓"
 msgstr ""
 
-#: src/WordPress/Assets.php:89
+#: src/WordPress/Assets.php:94
 msgid "✗"
+msgstr ""
+
+#: assets/dist/js/checkout-extension.js:178
+msgid "Choose pickup location"
+msgstr ""
+
+#: assets/dist/js/checkout-extension.js:187
+msgid "Selected location:"
 msgstr ""

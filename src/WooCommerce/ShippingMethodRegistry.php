@@ -28,6 +28,9 @@ class ShippingMethodRegistry implements Hookable {
 	public function register_shipping_methods( array $methods ): array {
 		// Register our single shipping method that can handle all carriers
 		$methods['wuunder_shipping'] = WuunderSimpleShippingMethod::class;
+		
+		// Register the pick-up point shipping method
+		$methods['wuunder_pickup'] = WuunderPickupShippingMethod::class;
 
 		return $methods;
 	}

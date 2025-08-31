@@ -18,6 +18,7 @@ class Assets implements Hookable {
 	 */
 	public function register_hooks(): void {
 		\add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+		\add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_assets' ] );
 	}
 
 	/**
@@ -35,6 +36,10 @@ class Assets implements Hookable {
 		if ( ! in_array( $tab, [ 'wuunder', 'shipping' ], true ) ) {
 			return;
 		}
+		
+		// Enqueue color picker for shipping method settings
+		\wp_enqueue_script( 'wp-color-picker' );
+		\wp_enqueue_style( 'wp-color-picker' );
 
 		$url = \plugin_dir_url( \WUUNDER_PLUGIN_FILE ) . 'assets/dist';
 
@@ -87,6 +92,58 @@ class Assets implements Hookable {
 						// Common UI strings
 						'success_prefix' => __( '✓', 'wuunder-shipping' ),
 						'error_prefix'   => __( '✗', 'wuunder-shipping' ),
+					],
+				]
+			);
+		}
+	}
+
+	/**
+	 * Enqueue frontend assets for checkout
+	 *
+	 * @return void
+	 */
+	public function enqueue_frontend_assets(): void {
+		// Only load on checkout pages
+		if ( ! is_checkout() ) {
+			return;
+		}
+
+		$url = \plugin_dir_url( \WUUNDER_PLUGIN_FILE ) . 'assets/dist';
+
+		// Enqueue checkout CSS
+		if ( file_exists( WUUNDER_PLUGIN_PATH . '/assets/dist/css/checkout.css' ) ) {
+			\wp_enqueue_style(
+				'wuunder_checkout_css',
+				$url . '/css/checkout.css',
+				[],
+				\WUUNDER_PLUGIN_VERSION
+			);
+		}
+
+		// Enqueue checkout JavaScript
+		if ( file_exists( WUUNDER_PLUGIN_PATH . '/assets/dist/js/checkout.js' ) ) {
+			\wp_enqueue_script(
+				'wuunder_checkout_js',
+				$url . '/js/checkout.js',
+				[ 'jquery' ],
+				\WUUNDER_PLUGIN_VERSION,
+				[ 'in_footer' => true ]
+			);
+
+			// Localize script
+			\wp_localize_script(
+				'wuunder_checkout_js',
+				'wuunder_checkout',
+				[
+					'ajax_url' => \admin_url( 'admin-ajax.php' ),
+					'nonce'    => \wp_create_nonce( 'wuunder-checkout' ),
+					'i18n'     => [
+						'select_pickup_point' => __( 'Select pick-up location', 'wuunder-shipping' ),
+						'select_pickup_location' => __( 'Select pick-up location', 'wuunder-shipping' ),
+						'change' => __( 'Change', 'wuunder-shipping' ),
+						'loading' => __( 'Loading...', 'wuunder-shipping' ),
+						'error_loading' => __( 'Error loading pickup points', 'wuunder-shipping' ),
 					],
 				]
 			);
