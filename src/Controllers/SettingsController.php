@@ -50,18 +50,31 @@ class SettingsController extends Controller implements Hookable {
 		// Default section depends on whether API key is set
 		$default_section = $has_api_key ? 'carriers' : 'settings';
 		$current_section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : $default_section; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		
+		// Get available sections from filter
+		$available_sections = apply_filters( 'wuunder_settings_sections', [ 'carriers', 'settings' ] );
+		
+		// Validate current section exists
+		if ( ! in_array( $current_section, $available_sections, true ) ) {
+			$current_section = $default_section;
+		}
 
 		View::display(
 			'admin/settings-tabs',
 			[
 				'current_section' => $current_section,
 				'has_api_key' => $has_api_key,
+				'available_sections' => $available_sections,
 			]
 		);
 
+		// Allow sections to render their own content
+		do_action( 'wuunder_settings_section_' . $current_section, $current_section );
+		
+		// Fallback to built-in sections
 		if ( $current_section === 'carriers' ) {
 			$this->display_carriers_section();
-		} else {
+		} elseif ( $current_section === 'settings' ) {
 			$this->display_settings_section();
 		}
 	}
