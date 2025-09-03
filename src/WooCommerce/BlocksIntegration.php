@@ -4,6 +4,7 @@ namespace Wuunder\Shipping\WooCommerce;
 
 use Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface;
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
+use Wuunder\Shipping\WooCommerce\CheckoutHandler;
 
 /**
  * Class for integrating with WooCommerce Blocks.
@@ -29,11 +30,12 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		add_action( 'woocommerce_blocks_checkout_block_registration', [ $this, 'register_with_integration_registry' ] );
 		add_action( 'woocommerce_blocks_cart_block_registration', [ $this, 'register_with_integration_registry' ] );
 		
-		// Handle Store API extension data
-		add_action( 'woocommerce_store_api_checkout_update_order_from_request', [ $this, 'update_order_from_request' ], 10, 2 );
-		
 		// Extend Store API with pickup point data
 		add_action( 'woocommerce_blocks_loaded', [ $this, 'extend_store_api' ] );
+		
+		// AJAX handler for storing pickup point in session (for block checkout)
+		add_action( 'wp_ajax_wuunder_store_pickup_point', [ $this, 'ajax_store_pickup_point' ] );
+		add_action( 'wp_ajax_nopriv_wuunder_store_pickup_point', [ $this, 'ajax_store_pickup_point' ] );
 	}
 
 	/**
@@ -99,10 +101,10 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 	 * Register scripts for the block checkout integration.
 	 */
 	private function register_scripts(): void {
-		$script_path = 'build/index.js';
+		$script_path = 'assets/dist/js/blocks.js';
 		$script_url  = plugin_dir_url( WUUNDER_PLUGIN_FILE ) . $script_path;
 		$script_file = WUUNDER_PLUGIN_PATH . '/' . $script_path;
-		$asset_file = WUUNDER_PLUGIN_PATH . '/build/index.asset.php';
+		$asset_file = WUUNDER_PLUGIN_PATH . '/assets/dist/js/blocks.asset.php';
 
 		// Load asset file for dependencies and version
 		$asset = file_exists( $asset_file ) ? include $asset_file : array(
@@ -126,6 +128,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 				[
 					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 					'nonce' => wp_create_nonce( 'wuunder-pickup-block' ),
+					'methodSettings' => $this->get_pickup_method_settings(),
 					'i18n' => [
 						'selectPickupLocation' => __( 'Select pick-up location', 'wuunder-shipping' ),
 						'change' => __( 'Change', 'wuunder-shipping' ),
@@ -143,10 +146,10 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 	 */
 	private function register_editor_scripts(): void {
 		// Use the same script for editor and frontend
-		$script_path = 'build/index.js';
+		$script_path = 'assets/dist/js/blocks.js';
 		$script_url  = plugin_dir_url( WUUNDER_PLUGIN_FILE ) . $script_path;
 		$script_file = WUUNDER_PLUGIN_PATH . '/' . $script_path;
-		$asset_file = WUUNDER_PLUGIN_PATH . '/build/index.asset.php';
+		$asset_file = WUUNDER_PLUGIN_PATH . '/assets/dist/js/blocks.asset.php';
 
 		// Load asset file for dependencies and version
 		$asset = file_exists( $asset_file ) ? include $asset_file : array(
@@ -169,7 +172,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 	 * Register styles for the block checkout integration.
 	 */
 	private function register_styles(): void {
-		$style_path = 'assets/dist/css/blocks/checkout-pickup.css';
+		$style_path = 'assets/dist/css/blocks.css';
 		$style_url  = plugin_dir_url( WUUNDER_PLUGIN_FILE ) . $style_path;
 		$style_file = WUUNDER_PLUGIN_PATH . '/' . $style_path;
 
@@ -203,78 +206,6 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 			'wp-data',
 			'wp-plugins',
 		];
-	}
-
-	/**
-	 * Update order with pickup point data from block checkout.
-	 *
-	 * @param \WC_Order $order Order object.
-	 * @param \WP_REST_Request $request Request object.
-	 */
-	public function update_order_from_request( $order, $request ): void {
-		// Check if this order uses pickup shipping
-		$shipping_methods = $order->get_shipping_methods();
-		$is_pickup_method = false;
-
-		foreach ( $shipping_methods as $shipping_method ) {
-			if ( strpos( $shipping_method->get_method_id(), 'wuunder_pickup' ) !== false ) {
-				$is_pickup_method = true;
-				break;
-			}
-		}
-
-		if ( ! $is_pickup_method ) {
-			return;
-		}
-
-		// Get extension data from request
-		$extensions = $request->get_param( 'extensions' );
-		
-		if ( isset( $extensions['wuunder-pickup']['pickup_point'] ) ) {
-			$pickup_point = $extensions['wuunder-pickup']['pickup_point'];
-			
-			// Save pickup point data as order meta
-			$order->update_meta_data( '_wuunder_pickup_point', $pickup_point );
-			
-			// Save individual fields for easy access
-			if ( isset( $pickup_point['id'] ) ) {
-				$order->update_meta_data( '_wuunder_pickup_point_id', $pickup_point['id'] );
-			}
-			if ( isset( $pickup_point['name'] ) ) {
-				$order->update_meta_data( '_wuunder_pickup_point_name', $pickup_point['name'] );
-			}
-			if ( isset( $pickup_point['street'] ) ) {
-				$order->update_meta_data( '_wuunder_pickup_point_street', $pickup_point['street'] );
-			}
-			if ( isset( $pickup_point['postcode'] ) ) {
-				$order->update_meta_data( '_wuunder_pickup_point_postcode', $pickup_point['postcode'] );
-			}
-			if ( isset( $pickup_point['city'] ) ) {
-				$order->update_meta_data( '_wuunder_pickup_point_city', $pickup_point['city'] );
-			}
-			if ( isset( $pickup_point['country'] ) ) {
-				$order->update_meta_data( '_wuunder_pickup_point_country', $pickup_point['country'] );
-			}
-			if ( isset( $pickup_point['carrier'] ) ) {
-				$order->update_meta_data( '_wuunder_pickup_point_carrier', $pickup_point['carrier'] );
-			}
-			if ( isset( $pickup_point['opening_hours'] ) ) {
-				$order->update_meta_data( '_wuunder_pickup_point_opening_hours', $pickup_point['opening_hours'] );
-			}
-			
-			// Add order note
-			$note = sprintf(
-				/* translators: %1$s: pickup point name, %2$s: street, %3$s: postcode, %4$s: city */
-				__( 'Pickup point selected: %1$s, %2$s, %3$s %4$s', 'wuunder-shipping' ),
-				$pickup_point['name'] ?? '',
-				$pickup_point['street'] ?? '',
-				$pickup_point['postcode'] ?? '',
-				$pickup_point['city'] ?? ''
-			);
-			$order->add_order_note( $note );
-			
-			$order->save();
-		}
 	}
 
 	/**
@@ -345,5 +276,80 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 				],
 			],
 		];
+	}
+
+	/**
+	 * Handle AJAX request to store pickup point in session.
+	 *
+	 * @return void
+	 */
+	public function ajax_store_pickup_point(): void {
+		// Verify nonce
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'wuunder-pickup-block' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid security token', 'wuunder-shipping' ) ] );
+			return;
+		}
+
+		// Get pickup point data
+		if ( ! isset( $_POST['pickup_point'] ) ) {
+			wp_send_json_error( [ 'message' => __( 'No pickup point data provided', 'wuunder-shipping' ) ] );
+			return;
+		}
+
+		$pickup_point = json_decode( wp_unslash( $_POST['pickup_point'] ), true );
+		
+		if ( ! $pickup_point || ! is_array( $pickup_point ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid pickup point data', 'wuunder-shipping' ) ] );
+			return;
+		}
+
+		// Store in WooCommerce session
+		if ( WC()->session ) {
+			WC()->session->set( 'wuunder_selected_pickup_point', $pickup_point );
+			
+			// Trigger cart recalculation to update shipping method meta
+			WC()->cart->calculate_shipping();
+			WC()->cart->calculate_totals();
+			
+			wp_send_json_success( [ 
+				'message' => __( 'Pickup point stored successfully', 'wuunder-shipping' ),
+				'pickup_point' => $pickup_point
+			] );
+		} else {
+			wp_send_json_error( [ 'message' => __( 'WooCommerce session not available', 'wuunder-shipping' ) ] );
+		}
+	}
+
+	/**
+	 * Get pickup method settings for all instances.
+	 *
+	 * @return array
+	 */
+	private function get_pickup_method_settings(): array {
+		$settings = [];
+		
+		// Get all shipping zones
+		$zones = \WC_Shipping_Zones::get_zones();
+		$zones[0] = \WC_Shipping_Zones::get_zone( 0 ); // Add default zone
+		
+		foreach ( $zones as $zone ) {
+			if ( is_array( $zone ) ) {
+				$zone = \WC_Shipping_Zones::get_zone( $zone['zone_id'] );
+			}
+			
+			$shipping_methods = $zone->get_shipping_methods();
+			
+			foreach ( $shipping_methods as $method ) {
+				if ( $method->id === 'wuunder_pickup' ) {
+					$settings[ $method->get_instance_id() ] = [
+						'primary_color' => $method->get_option( 'primary_color', '#52ba69' ),
+						'available_carriers' => $method->get_option( 'available_carriers', [ 'dhl', 'postnl', 'ups' ] ),
+						'language' => $method->get_option( 'language', 'nl' ),
+					];
+				}
+			}
+		}
+		
+		return $settings;
 	}
 }
