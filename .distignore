@@ -21,6 +21,9 @@ package-lock.json
 package.json
 webpack.mix.js
 
+# Debug files
+src/Debug/
+
 # docs
 CLI.MD
 NOTES.MD

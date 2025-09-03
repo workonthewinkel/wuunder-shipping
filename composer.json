@@ -16,6 +16,12 @@
       "Wuunder\\Shipping\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Wuunder\\Shipping\\Debug\\": "src/Debug/"
+    },
+    "files": ["src/Debug/init.php"]
+  },
   "require": {
     "php": ">=7.4"
   },
