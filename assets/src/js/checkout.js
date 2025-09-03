@@ -81,13 +81,32 @@
             const $checkedInput = $('input[name="shipping_method[0]"]:checked');
             const methodId = $checkedInput.val();
             
-            // Try to get data from hidden fields or data attributes
-            const $methodLi = $checkedInput.closest('li');
+            // Extract instance ID from method ID (e.g., "wuunder_pickup:5" -> instance ID 5)
+            const methodParts = methodId.split(':');
+            const instanceId = methodParts.length > 1 ? methodParts[1] : null;
+            
+            // Default settings
+            const defaults = {
+                carriers: 'dhl,postnl,ups',
+                primaryColor: '52ba69',
+                language: 'nl'
+            };
+            
+            // Check if method settings are available
+            if (typeof wuunder_checkout === 'undefined' || !wuunder_checkout.pickup_settings) {
+                return defaults;
+            }
+            
+            // Get settings for the selected instance
+            const methodSettings = wuunder_checkout.pickup_settings[instanceId];
+            if (!methodSettings) {
+                return defaults;
+            }
             
             return {
-                carriers: $methodLi.data('carriers') || 'dhl,postnl,ups',
-                primaryColor: $methodLi.data('primary-color') || '52ba69',
-                language: $methodLi.data('language') || 'nl'
+                carriers: (methodSettings.available_carriers || defaults.carriers.split(',')).join(','),
+                primaryColor: (methodSettings.primary_color || '#' + defaults.primaryColor).replace('#', ''),
+                language: methodSettings.language || defaults.language
             };
         },
 

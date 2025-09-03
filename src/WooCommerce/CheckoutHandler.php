@@ -29,8 +29,6 @@ class CheckoutHandler implements Hookable {
 		// Validate pickup point selection
 		add_action( 'woocommerce_after_checkout_validation', [ $this, 'validate_pickup_selection' ], 10, 2 );
 		
-		// Add data attributes to shipping methods on checkout
-		add_filter( 'woocommerce_shipping_rate_html', [ $this, 'add_shipping_rate_data_attributes' ], 10, 2 );
 		
 		// Replace shipping address with pickup point address for pickup orders
 		add_filter( 'woocommerce_order_formatted_shipping_address', [ $this, 'replace_shipping_address_with_pickup' ], 10, 2 );
@@ -43,56 +41,6 @@ class CheckoutHandler implements Hookable {
 		add_filter( 'woocommerce_order_shipping_to_display', [ $this, 'customize_shipping_display_for_pickup' ], 10, 2 );
 	}
 
-	/**
-	 * Add data attributes to shipping rate HTML for JavaScript access.
-	 *
-	 * @param string $label HTML label.
-	 * @param object $rate Shipping rate object.
-	 * @return string
-	 */
-	public function add_shipping_rate_data_attributes( $label, $rate ): string {
-		// Check if this is a pickup method
-		if ( strpos( $rate->id, 'wuunder_pickup' ) === false ) {
-			return $label;
-		}
-
-		// Get shipping method instance to access configuration
-		$shipping_methods = WC()->shipping->get_shipping_methods();
-		$pickup_method = isset( $shipping_methods['wuunder_pickup'] ) ? $shipping_methods['wuunder_pickup'] : null;
-		
-		// Build data attributes with defaults
-		$carriers = 'dhl,postnl,ups';
-		$color = '#52ba69';
-		$language = 'nl';
-		
-		if ( $pickup_method ) {
-			$available_carriers = $pickup_method->get_option( 'available_carriers', ['dhl', 'postnl', 'ups'] );
-			$carriers = is_array( $available_carriers ) ? implode( ',', $available_carriers ) : $carriers;
-			$color = $pickup_method->get_option( 'primary_color', '#52ba69' );
-			$language = $pickup_method->get_option( 'language', 'nl' );
-		}
-
-		// Add script to inject data attributes
-		$script = sprintf(
-			"<script>
-			jQuery(document).ready(function($) {
-				var input = $('input[value=\"%s\"]');
-				if (input.length) {
-					var li = input.closest('li');
-					li.attr('data-carriers', '%s');
-					li.attr('data-primary-color', '%s');
-					li.attr('data-language', '%s');
-				}
-			});
-			</script>",
-			esc_js( $rate->id ),
-			esc_js( $carriers ),
-			esc_js( $color ),
-			esc_js( $language )
-		);
-
-		return $label . $script;
-	}
 
 	/**
 	 * Add pickup point information to the shipping method label if selected.
