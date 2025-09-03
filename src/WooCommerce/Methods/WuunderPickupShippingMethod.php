@@ -1,6 +1,6 @@
 <?php
 
-namespace Wuunder\Shipping\WooCommerce;
+namespace Wuunder\Shipping\WooCommerce\Methods;
 
 use WC_Shipping_Method;
 
@@ -92,11 +92,10 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 			],
 			'primary_color' => [
 				'title' => __( 'Primary Color', 'wuunder-shipping' ),
-				'type' => 'text',
-				'description' => __( 'Primary color for the shop locator (hex color code, e.g., #52ba69).', 'wuunder-shipping' ),
+				'type' => 'wuunder_color',
+				'description' => __( 'Primary color for the shop locator.', 'wuunder-shipping' ),
 				'default' => '#52ba69',
 				'desc_tip' => true,
-				'placeholder' => '#52ba69',
 				'sanitize_callback' => array( $this, 'sanitize_color' ),
 			],
 			'language' => [
@@ -279,14 +278,56 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 		$label = $this->get_option( 'title' );
 		$cost  = $this->get_option( 'cost' );
 
+		$meta_data = [];
+
+		// Add pickup point info if available in session
+		$pickup_point = WC()->session ? WC()->session->get( 'wuunder_selected_pickup_point' ) : null;
+		if ( $pickup_point && is_array( $pickup_point ) ) {
+			// Always save the ID and name if available
+			if ( ! empty( $pickup_point['id'] ) ) {
+				$meta_data['pickup_point_id'] = $pickup_point['id'];
+			}
+			if ( ! empty( $pickup_point['name'] ) ) {
+				$meta_data['pickup_point_name'] = $pickup_point['name'];
+			}
+			
+			// Save address components
+			if ( ! empty( $pickup_point['street'] ) ) {
+				$meta_data['pickup_point_street'] = $pickup_point['street'];
+			}
+			if ( ! empty( $pickup_point['street_name'] ) ) {
+				$meta_data['pickup_point_street_name'] = $pickup_point['street_name'];
+			}
+			if ( ! empty( $pickup_point['house_number'] ) ) {
+				$meta_data['pickup_point_house_number'] = $pickup_point['house_number'];
+			}
+			if ( ! empty( $pickup_point['postcode'] ) ) {
+				$meta_data['pickup_point_postcode'] = $pickup_point['postcode'];
+			}
+			if ( ! empty( $pickup_point['city'] ) ) {
+				$meta_data['pickup_point_city'] = $pickup_point['city'];
+			}
+			if ( ! empty( $pickup_point['country'] ) ) {
+				$meta_data['pickup_point_country'] = $pickup_point['country'];
+			}
+			
+			// Save carrier information
+			if ( ! empty( $pickup_point['carrier'] ) ) {
+				$meta_data['pickup_point_carrier'] = $pickup_point['carrier'];
+			}
+			
+			// Save opening hours
+			if ( ! empty( $pickup_point['opening_hours'] ) ) {
+				$meta_data['pickup_point_opening_hours'] = json_encode( $pickup_point['opening_hours'] );
+			}
+		}
+
 		$rate = [
 			'id' => $this->get_rate_id(),
 			'label' => $label,
 			'cost' => $cost,
 			'calc_tax' => 'per_order',
-			'meta_data' => [
-				'wuunder_pickup' => true,
-			],
+			'meta_data' => $meta_data,
 		];
 
 		$this->add_rate( $rate );
@@ -358,6 +399,48 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 		
 		return $value;
 	}
+
+	/**
+	 * Generate custom color field HTML.
+	 *
+	 * @param string $key Field key.
+	 * @param array  $data Field data.
+	 * @return string
+	 */
+	public function generate_wuunder_color_html( $key, $data ): string {
+		$field_key = $this->get_field_key( $key );
+		$defaults = [
+			'title'             => '',
+			'disabled'          => false,
+			'class'             => '',
+			'css'               => '',
+			'placeholder'       => '',
+			'desc_tip'          => false,
+			'description'       => '',
+			'custom_attributes' => [],
+		];
+
+		$data = wp_parse_args( $data, $defaults );
+
+		ob_start();
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label for="<?php echo esc_attr( $field_key ); ?>"><?php echo wp_kses_post( $data['title'] ); ?> <?php echo $this->get_tooltip_html( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
+			</th>
+			<td class="forminp">
+				<fieldset>
+					<legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
+					<input class="wuunder-color-picker <?php echo esc_attr( $data['class'] ); ?>" type="color" name="<?php echo esc_attr( $field_key ); ?>" id="<?php echo esc_attr( $field_key ); ?>" style="<?php echo esc_attr( $data['css'] ); ?>" value="<?php echo esc_attr( $this->get_option( $key ) ); ?>" <?php disabled( $data['disabled'], true ); ?> <?php echo $this->get_custom_attribute_html( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> />
+					<?php echo $this->get_description_html( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</fieldset>
+			</td>
+		</tr>
+		<?php
+
+		return ob_get_clean();
+	}
+
 
 	/**
 	 * Sanitize color value.

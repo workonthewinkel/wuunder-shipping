@@ -1,6 +1,6 @@
 <?php
 
-namespace Wuunder\Shipping\WooCommerce;
+namespace Wuunder\Shipping\WooCommerce\Methods;
 
 use WC_Shipping_Method;
 use Wuunder\Shipping\Models\Carrier;
