@@ -144,6 +144,7 @@ class Assets implements Hookable {
 					'ajax_url' => \admin_url( 'admin-ajax.php' ),
 					'nonce'    => \wp_create_nonce( 'wuunder-checkout' ),
 					'pickup_settings' => $pickup_settings,
+					'saved_pickup_point' => \WC()->session ? \WC()->session->get( 'wuunder_selected_pickup_point', null ) : null,
 					'iframe_config' => Pickup::get_iframe_config(),
 					'i18n'     => [
 						'select_pickup_point' => __( 'Select pick-up location', 'wuunder-shipping' ),
@@ -164,6 +165,7 @@ class Assets implements Hookable {
 	 * Render pickup point template in footer.
 	 */
 	public function render_pickup_template(): void {
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Template content is safe and controlled.
 		echo View::render( 'frontend/pickup-point-display' );
 	}
 

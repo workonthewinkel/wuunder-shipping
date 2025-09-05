@@ -12,6 +12,7 @@ import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, f
 
         init: function() {
             this.bindEvents();
+            this.loadSavedPickupPoint();
             this.checkSelectedShipping();
         },
 
@@ -44,6 +45,13 @@ import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, f
 
         onCheckoutUpdated: function() {
             this.checkSelectedShipping();
+        },
+
+        loadSavedPickupPoint: function() {
+            // Load pickup point from localized script data (no AJAX needed!)
+            if (typeof wuunder_checkout !== 'undefined' && wuunder_checkout.saved_pickup_point) {
+                this.selectedPickupPoint = wuunder_checkout.saved_pickup_point;
+            }
         },
 
         checkSelectedShipping: function() {
@@ -184,6 +192,7 @@ import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, f
                             id="wuunder-pickup-iframe" 
                             src="${iframeUrl}"
                             class="wuunder-pickup-iframe"
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                             title="${wuunder_checkout.i18n.select_pickup_location}">
                         </iframe>
                     </div>
@@ -205,13 +214,19 @@ import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, f
         
 
         storePickupPoint: function(pickupPoint) {
-            // Remove any existing hidden field
+            // Store in session via AJAX (same as block checkout)
+            if (typeof wuunder_checkout !== 'undefined' && wuunder_checkout.ajax_url) {
+                $.post(wuunder_checkout.ajax_url, {
+                    action: 'wuunder_store_pickup_point_classic',
+                    nonce: wuunder_checkout.nonce,
+                    pickup_point: JSON.stringify(pickupPoint)
+                });
+            }
+            
+            // Also store in hidden field for form submission (fallback)
             $('#wuunder_selected_pickup_point').remove();
             
-            // Create JSON string
             const jsonString = JSON.stringify(pickupPoint);
-            
-            // Create hidden field using jQuery to properly handle special characters
             const hiddenField = $('<input>', {
                 type: 'hidden',
                 id: 'wuunder_selected_pickup_point',

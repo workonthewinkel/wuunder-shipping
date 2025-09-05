@@ -9,14 +9,14 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-09-03T18:51:31+00:00\n"
+"POT-Creation-Date: 2025-09-05T14:10:47+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: wuunder-shipping\n"
 
 #. Plugin Name of the plugin
 #: wuunder-shipping.php
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:28
+#: src/WooCommerce/Methods/Shipping.php:31
 msgid "Wuunder Shipping"
 msgstr ""
 
@@ -88,32 +88,41 @@ msgstr ""
 msgid "Disconnected successfully. API key and carrier data have been cleared."
 msgstr ""
 
-#: src/Debug/DebugController.php:62
+#: src/Debug/DebugController.php:64
 msgid "Debug"
 msgstr ""
 
-#: src/Debug/DebugController.php:76
+#: src/Debug/DebugController.php:78
 msgid "Debug Information"
 msgstr ""
 
-#: src/Debug/DebugController.php:77
+#: src/Debug/DebugController.php:79
 msgid "Debug tools for development. This section is only available in development mode."
 msgstr ""
 
-#: src/Debug/DebugController.php:94
+#: src/Debug/DebugController.php:96
 msgid "REST API Output"
 msgstr ""
 
-#: src/Debug/DebugController.php:98
+#: src/Debug/DebugController.php:100
 msgid "Last 10 Orders (as seen by external services via WC REST API)"
 msgstr ""
 
-#: src/Debug/DebugController.php:223
+#: src/Debug/DebugController.php:227
 msgid "No orders found"
 msgstr ""
 
-#: src/Debug/DebugController.php:234
+#. translators: %s: Order ID
+#: src/Debug/DebugController.php:240
 msgid "Order #%s"
+msgstr ""
+
+#: src/Traits/ShippingMethodSanitization.php:20
+msgid "The title for a shipping method is required."
+msgstr ""
+
+#: src/Traits/ShippingMethodSanitization.php:49
+msgid "Invalid cost entered."
 msgstr ""
 
 #: src/Views/admin/carriers-section.php:16
@@ -130,7 +139,7 @@ msgid "Settings tab"
 msgstr ""
 
 #: src/Views/admin/carriers-section.php:33
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:85
+#: src/WooCommerce/Methods/Pickup.php:110
 msgid "Available Carriers"
 msgstr ""
 
@@ -148,7 +157,7 @@ msgid "Filter by: "
 msgstr ""
 
 #: src/Views/admin/carriers-section.php:55
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:99
+#: src/WooCommerce/Methods/Shipping.php:102
 msgid "Select a carrier..."
 msgstr ""
 
@@ -161,7 +170,7 @@ msgid "Enabled"
 msgstr ""
 
 #: src/Views/admin/carriers-section.php:72
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:73
+#: src/WooCommerce/Methods/Shipping.php:76
 msgid "Carrier"
 msgstr ""
 
@@ -186,80 +195,77 @@ msgstr ""
 msgid "Don't have an API key yet? <a href=\"%s\" target=\"_blank\">Contact us</a> to get one."
 msgstr ""
 
-#: src/Views/admin/settings-tabs.php:15
+#: src/Views/admin/settings-tabs.php:17
 msgid "Carriers"
 msgstr ""
 
-#: src/Views/admin/settings-tabs.php:16
+#: src/Views/admin/settings-tabs.php:18
 #: src/WordPress/Admin.php:52
 msgid "Settings"
 msgstr ""
 
-#: src/WooCommerce/BlocksIntegration.php:94
-#: src/WooCommerce/BlocksIntegration.php:136
-#: src/WordPress/Assets.php:142
-#: src/WordPress/Assets.php:143
+#: src/WooCommerce/BlocksIntegration.php:101
+#: src/WooCommerce/BlocksIntegration.php:148
+#: src/WordPress/Assets.php:150
+#: src/WordPress/Assets.php:151
 #: assets/dist/blocks/checkout-pickup.js:146
 #: assets/dist/blocks/checkout-pickup.js:173
 #: assets/dist/blocks/checkout-pickup.js:186
-#: assets/dist/js/blocks.js:249
-#: assets/src/js/blocks.js:119
+#: assets/dist/js/blocks.js:478
+#: assets/src/js/blocks.js:133
 #: assets/dist/blocks/checkout-pickup.js:141
 #: assets/dist/blocks/checkout-pickup.js:164
 #: assets/dist/blocks/checkout-pickup.js:178
-#: assets/dist/js/blocks.js:173
+#: assets/dist/js/blocks.js:398
 msgid "Select pick-up location"
 msgstr ""
 
-#: src/WooCommerce/BlocksIntegration.php:95
-#: src/WooCommerce/BlocksIntegration.php:137
-#: src/WordPress/Assets.php:144
+#: src/WooCommerce/BlocksIntegration.php:102
+#: src/WooCommerce/BlocksIntegration.php:149
+#: src/WordPress/Assets.php:152
 #: assets/dist/blocks/checkout-pickup.js:162
-#: assets/dist/js/blocks.js:280
-#: assets/src/js/blocks.js:154
+#: assets/dist/js/blocks.js:506
+#: assets/src/js/blocks.js:165
 #: assets/dist/blocks/checkout-pickup.js:155
-#: assets/dist/js/blocks.js:208
+#: assets/dist/js/blocks.js:430
 msgid "Change"
 msgstr ""
 
-#: src/WooCommerce/BlocksIntegration.php:96
-#: src/WooCommerce/BlocksIntegration.php:138
+#: src/WooCommerce/BlocksIntegration.php:103
+#: src/WooCommerce/BlocksIntegration.php:150
 #: assets/dist/blocks/checkout-pickup.js:177
 #: assets/dist/blocks/checkout-pickup.js:168
 msgid "Close"
 msgstr ""
 
-#: src/WooCommerce/BlocksIntegration.php:97
-#: src/WooCommerce/BlocksIntegration.php:139
-#: src/WordPress/Assets.php:145
+#: src/WooCommerce/BlocksIntegration.php:104
+#: src/WooCommerce/BlocksIntegration.php:151
+#: src/WordPress/Assets.php:153
 msgid "Loading..."
 msgstr ""
 
-#: src/WooCommerce/BlocksIntegration.php:98
-#: src/WooCommerce/BlocksIntegration.php:140
-#: src/WordPress/Assets.php:146
+#: src/WooCommerce/BlocksIntegration.php:105
+#: src/WooCommerce/BlocksIntegration.php:152
+#: src/WordPress/Assets.php:154
 msgid "Error loading pickup points"
 msgstr ""
 
-#. translators: %1$s: pickup point name, %2$s: street, %3$s: postcode, %4$s: city
-#: src/WooCommerce/BlocksIntegration.php:308
-#: src/WooCommerce/CheckoutHandler.php:245
-msgid "Pickup point selected: %1$s, %2$s, %3$s %4$s"
-msgstr ""
-
-#: src/WooCommerce/BlocksIntegration.php:356
+#: src/WooCommerce/BlocksIntegration.php:291
 msgid "Selected pickup point data"
 msgstr ""
 
-#: src/WooCommerce/BlocksIntegration.php:396
+#: src/WooCommerce/BlocksIntegration.php:394
+#: src/WooCommerce/CheckoutHandler.php:416
 msgid "Invalid security token"
 msgstr ""
 
-#: src/WooCommerce/BlocksIntegration.php:402
+#: src/WooCommerce/BlocksIntegration.php:400
+#: src/WooCommerce/CheckoutHandler.php:422
 msgid "No pickup point data provided"
 msgstr ""
 
-#: src/WooCommerce/BlocksIntegration.php:409
+#: src/WooCommerce/BlocksIntegration.php:408
+#: src/WooCommerce/CheckoutHandler.php:430
 msgid "Invalid pickup point data"
 msgstr ""
 
@@ -267,154 +273,141 @@ msgstr ""
 msgid "Pickup point stored successfully"
 msgstr ""
 
-#: src/WooCommerce/BlocksIntegration.php:426
+#: src/WooCommerce/BlocksIntegration.php:427
+#: src/WooCommerce/CheckoutHandler.php:445
 msgid "WooCommerce session not available"
 msgstr ""
 
-#: src/WooCommerce/CheckoutHandler.php:119
-#: src/WooCommerce/CheckoutHandler.php:364
-#: src/WooCommerce/CheckoutHandler.php:388
-msgid "Pickup at"
-msgstr ""
-
-#: src/WooCommerce/CheckoutHandler.php:278
+#: src/WooCommerce/CheckoutHandler.php:124
 msgid "Please select a pickup location for your delivery."
 msgstr ""
 
-#: src/WooCommerce/CheckoutHandler.php:317
+#. translators: %s: Debug information
+#: src/WooCommerce/CheckoutHandler.php:159
 msgid "Invalid pickup location data. Please select a pickup location again. Debug: %s"
 msgstr ""
 
-#: src/WooCommerce/CheckoutHandler.php:349
-#: src/WooCommerce/CheckoutHandler.php:534
-#: src/WooCommerce/CheckoutHandler.php:561
+#. translators: %s: Carrier name
+#: src/WooCommerce/CheckoutHandler.php:190
+#: src/WooCommerce/CheckoutHandler.php:332
 msgid "Carrier: %s"
 msgstr ""
 
-#: src/WooCommerce/CheckoutHandler.php:352
+#. translators: %s: Pickup point ID
+#: src/WooCommerce/CheckoutHandler.php:194
 msgid "ID: %s"
 msgstr ""
 
-#: src/WooCommerce/CheckoutHandler.php:431
-#: src/WooCommerce/CheckoutHandler.php:474
-msgid "Pickup Location"
+#: src/WooCommerce/CheckoutHandler.php:206
+#: src/WooCommerce/CheckoutHandler.php:230
+msgid "Pickup at"
 msgstr ""
 
-#: src/WooCommerce/CheckoutHandler.php:438
-#: src/WooCommerce/CheckoutHandler.php:468
-#: src/WooCommerce/CheckoutHandler.php:481
-msgid "Carrier:"
-msgstr ""
-
-#: src/WooCommerce/CheckoutHandler.php:462
+#: src/WooCommerce/CheckoutHandler.php:258
 msgid "PICKUP LOCATION:"
 msgstr ""
 
-#: src/WooCommerce/CheckoutHandler.php:505
+#: src/WooCommerce/CheckoutHandler.php:264
+#: src/WooCommerce/CheckoutHandler.php:277
+msgid "Carrier:"
+msgstr ""
+
+#: src/WooCommerce/CheckoutHandler.php:270
+msgid "Pickup Location"
+msgstr ""
+
+#. translators: %s: Pickup point name
+#: src/WooCommerce/CheckoutHandler.php:302
 msgid "Pick up at %s"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:31
+#: src/WooCommerce/CheckoutHandler.php:440
+msgid "Pickup point stored successfully in classic checkout"
+msgstr ""
+
+#: src/WooCommerce/Methods/Pickup.php:56
 msgid "Wuunder Pick-up"
 msgstr ""
 
 #. translators: %s: URL to Wuunder settings page
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:37
+#: src/WooCommerce/Methods/Pickup.php:62
 msgid "Pick-up point shipping method provided by <a href=\"%s\"><strong>Wuunder</strong></a>"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:68
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:65
+#: src/WooCommerce/Methods/Pickup.php:93
+#: src/WooCommerce/Methods/Shipping.php:68
 msgid "Method Title"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:70
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:67
+#: src/WooCommerce/Methods/Pickup.php:95
+#: src/WooCommerce/Methods/Shipping.php:70
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:71
+#: src/WooCommerce/Methods/Pickup.php:96
 msgid "Pick-up at parcel shop"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:76
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:81
+#: src/WooCommerce/Methods/Pickup.php:101
+#: src/WooCommerce/Methods/Shipping.php:84
 msgid "Cost"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:79
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:84
+#: src/WooCommerce/Methods/Pickup.php:104
+#: src/WooCommerce/Methods/Shipping.php:87
 msgid "Enter a cost (excluding tax)."
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:87
+#: src/WooCommerce/Methods/Pickup.php:112
 msgid "Select which carriers should be available for pick-up points."
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:94
+#: src/WooCommerce/Methods/Pickup.php:119
 msgid "Primary Color"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:96
+#: src/WooCommerce/Methods/Pickup.php:121
 msgid "Primary color for the shop locator."
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:102
+#: src/WooCommerce/Methods/Pickup.php:127
 msgid "Language"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:104
+#: src/WooCommerce/Methods/Pickup.php:129
 msgid "Language for the shop locator interface."
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:106
+#: src/WooCommerce/Methods/Pickup.php:131
 msgid "Dutch"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:107
+#: src/WooCommerce/Methods/Pickup.php:132
 msgid "English"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:108
+#: src/WooCommerce/Methods/Pickup.php:133
 msgid "German"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:109
+#: src/WooCommerce/Methods/Pickup.php:134
 msgid "French"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:195
-msgid "Shop Locator Preview"
-msgstr ""
-
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:198
-msgid "This preview updates automatically when you change the settings above."
-msgstr ""
-
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:354
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:145
-msgid "The title for a shipping method is required."
-msgstr ""
-
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:383
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:189
-msgid "Invalid cost entered."
-msgstr ""
-
-#: src/WooCommerce/Methods/WuunderPickupShippingMethod.php:405
+#: src/WooCommerce/Methods/Pickup.php:310
 msgid "At least one carrier must be selected."
 msgstr ""
 
 #. translators: %s: URL to Wuunder settings page
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:34
+#: src/WooCommerce/Methods/Shipping.php:37
 msgid "Shipping method provided by <a href=\"%s\"><strong>Wuunder</strong></a>"
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:75
+#: src/WooCommerce/Methods/Shipping.php:78
 msgid "Select which Wuunder carrier this method should use."
 msgstr ""
 
-#: src/WooCommerce/Methods/WuunderSimpleShippingMethod.php:160
+#: src/WooCommerce/Methods/Shipping.php:149
 msgid "The selected carrier is not valid."
 msgstr ""
 
@@ -422,50 +415,50 @@ msgstr ""
 msgid "Wuunder Shipping requires WooCommerce to be installed and active."
 msgstr ""
 
-#: src/WordPress/Assets.php:75
+#: src/WordPress/Assets.php:77
 msgid "Please enter an API key first"
 msgstr ""
 
-#: src/WordPress/Assets.php:76
+#: src/WordPress/Assets.php:78
 msgid "Testing connection..."
 msgstr ""
 
-#: src/WordPress/Assets.php:77
+#: src/WordPress/Assets.php:79
 msgid "Connection test failed"
 msgstr ""
 
-#: src/WordPress/Assets.php:80
+#: src/WordPress/Assets.php:82
 msgid "Refreshing carriers..."
 msgstr ""
 
-#: src/WordPress/Assets.php:81
+#: src/WordPress/Assets.php:83
 msgid "Failed to refresh carriers"
 msgstr ""
 
-#: src/WordPress/Assets.php:84
+#: src/WordPress/Assets.php:86
 msgid "Are you sure you want to disconnect? This will clear your API key and all carrier data."
 msgstr ""
 
-#: src/WordPress/Assets.php:85
+#: src/WordPress/Assets.php:87
 msgid "Disconnecting..."
 msgstr ""
 
-#: src/WordPress/Assets.php:86
+#: src/WordPress/Assets.php:88
 msgid "Failed to disconnect"
 msgstr ""
 
-#: src/WordPress/Assets.php:89
+#: src/WordPress/Assets.php:91
 msgid "Title is required"
 msgstr ""
 
-#: src/WordPress/Assets.php:90
+#: src/WordPress/Assets.php:92
 msgid "Carrier selection is required"
 msgstr ""
 
-#: src/WordPress/Assets.php:93
+#: src/WordPress/Assets.php:95
 msgid "✓"
 msgstr ""
 
-#: src/WordPress/Assets.php:94
+#: src/WordPress/Assets.php:96
 msgid "✗"
 msgstr ""

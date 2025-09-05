@@ -150,5 +150,4 @@ class Shipping extends WC_Shipping_Method {
 		}
 		return $value;
 	}
-
 }

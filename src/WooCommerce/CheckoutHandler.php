@@ -35,6 +35,10 @@ class CheckoutHandler implements Hookable {
 
 		// Override shipping method display in admin to show pickup point details
 		add_filter( 'woocommerce_order_shipping_to_display', [ $this, 'customize_shipping_display_for_pickup' ], 10, 2 );
+
+		// AJAX handler for classic checkout pickup point storage
+		add_action( 'wp_ajax_wuunder_store_pickup_point_classic', [ $this, 'ajax_store_pickup_point_classic' ] );
+		add_action( 'wp_ajax_nopriv_wuunder_store_pickup_point_classic', [ $this, 'ajax_store_pickup_point_classic' ] );
 	}
 
 	/**
@@ -399,5 +403,47 @@ class CheckoutHandler implements Hookable {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Handle AJAX request to store pickup point in session for classic checkout.
+	 *
+	 * @return void
+	 */
+	public function ajax_store_pickup_point_classic(): void {
+		// Verify nonce for classic checkout
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'wuunder-checkout' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid security token', 'wuunder-shipping' ) ] );
+			return;
+		}
+
+		// Get pickup point data
+		if ( ! isset( $_POST['pickup_point'] ) ) {
+			wp_send_json_error( [ 'message' => __( 'No pickup point data provided', 'wuunder-shipping' ) ] );
+			return;
+		}
+
+		// Decode pickup point data
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON string will be sanitized after decoding.
+		$pickup_point = json_decode( wp_unslash( $_POST['pickup_point'] ), true );
+
+		if ( ! $pickup_point || ! is_array( $pickup_point ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid pickup point data', 'wuunder-shipping' ) ] );
+			return;
+		}
+
+		// Store in WooCommerce session
+		if ( WC()->session ) {
+			WC()->session->set( 'wuunder_selected_pickup_point', $pickup_point );
+
+			wp_send_json_success(
+				[
+					'message' => __( 'Pickup point stored successfully in classic checkout', 'wuunder-shipping' ),
+					'pickup_point' => $pickup_point,
+				]
+			);
+		} else {
+			wp_send_json_error( [ 'message' => __( 'WooCommerce session not available', 'wuunder-shipping' ) ] );
+		}
 	}
 }

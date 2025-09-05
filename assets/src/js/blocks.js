@@ -15,6 +15,7 @@ import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, f
 const WuunderPickupIntegration = ({ cart, extensions, components }) => {
     const [ selectedPickupPoint, setSelectedPickupPoint ] = useState( null );
     const [ isModalOpen, setIsModalOpen ] = useState( false );
+    const [ isInitialized, setIsInitialized ] = useState( false );
     
     // Check if Wuunder pickup method is selected
     const isPickupMethodSelected = () => {
@@ -26,12 +27,52 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
         );
     };
 
+    // Load saved pickup point from localized script data (no AJAX needed!)
+    const loadSavedPickupPoint = () => {
+        if ( typeof wuunderPickupBlock !== 'undefined' && wuunderPickupBlock.savedPickupPoint ) {
+            setSelectedPickupPoint( wuunderPickupBlock.savedPickupPoint );
+            return wuunderPickupBlock.savedPickupPoint;
+        }
+        return null;
+    };
+
+    // Initialize component and load saved pickup point
+    useEffect(() => {
+        if ( ! isInitialized ) {
+            setIsInitialized( true );
+            
+            const savedPickupPoint = loadSavedPickupPoint();
+            
+            // If we have a saved pickup point and pickup method is selected, show it
+            if ( savedPickupPoint && isPickupMethodSelected() ) {
+                setTimeout(() => {
+                    injectPickupSelector();
+                    updatePickupDisplay( savedPickupPoint );
+                }, 100); // Small delay to ensure DOM is ready
+            }
+        }
+    }, [ isInitialized ]);
+
     // Listen for shipping method changes
     useEffect(() => {
         const unsubscribe = subscribe(() => {
-            if ( isPickupMethodSelected() && ! selectedPickupPoint ) {
-                // Show pickup selector when method is selected
-                injectPickupSelector();
+            if ( isPickupMethodSelected() ) {
+                if ( ! selectedPickupPoint ) {
+                    // Try to load saved pickup point if we don't have one
+                    const savedPickupPoint = loadSavedPickupPoint();
+                    if ( savedPickupPoint ) {
+                        // Show selector with saved pickup point
+                        injectPickupSelector();
+                        updatePickupDisplay( savedPickupPoint );
+                    } else {
+                        // Show pickup selector when method is selected
+                        injectPickupSelector();
+                    }
+                } else {
+                    // Already have pickup point, just ensure selector is shown with display
+                    injectPickupSelector();
+                    updatePickupDisplay( selectedPickupPoint );
+                }
             } else if ( ! isPickupMethodSelected() ) {
                 // Hide selector when method is deselected
                 removePickupSelector();
@@ -39,7 +80,7 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
         });
 
         return unsubscribe;
-    }, [ selectedPickupPoint ]);
+    }, [ selectedPickupPoint, isInitialized ]);
 
     // Handle iframe messages for pickup point selection using shared handler
     useEffect(() => {
@@ -47,8 +88,8 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
             onPickupSelected: ( pickupPoint ) => {
                 setSelectedPickupPoint( pickupPoint );
                 
-                // Store pickup point in WooCommerce session via AJAX
-                storePickupPointInSession( pickupPoint );
+                // Store pickup point in Store API extension data
+                storePickupPointInStoreAPI( pickupPoint );
                 
                 closeModal();
                 updatePickupDisplay( pickupPoint );
@@ -143,7 +184,8 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
         const modalHtml = `
             <div class="wuunder-pickup-modal-overlay" id="wuunder-pickup-modal">
                 <div class="wuunder-pickup-modal">
-                    <iframe src="${ iframeUrl }" class="wuunder-pickup-iframe"></iframe>
+                    <iframe src="${ iframeUrl }" class="wuunder-pickup-iframe" 
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
                 </div>
             </div>
         `;
@@ -178,8 +220,37 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
         };
     };
 
+    const storePickupPointInStoreAPI = ( pickupPoint ) => {
+        // Try Store API integration with better error handling
+        const { dispatch } = wp.data;
+        
+        try {
+            // Set extension data using the WooCommerce Store API
+            dispatch( 'wc/store/checkout' ).setExtensionData( 'wuunder-pickup', {
+                pickup_point: pickupPoint
+            });
+            
+            // Try applyExtensionCartUpdate method to trigger actual API call
+            dispatch( 'wc/store/cart' ).applyExtensionCartUpdate( {
+                namespace: 'wuunder-pickup',
+                data: { pickup_point: pickupPoint }
+            })
+            .then( ( response ) => {
+                // Store API update successful
+            })
+            .catch( ( error ) => {
+                // Fallback to AJAX method
+                storePickupPointInSession( pickupPoint );
+            });
+            
+        } catch ( error ) {
+            // Store API integration failed, fallback to AJAX method
+            storePickupPointInSession( pickupPoint );
+        }
+    };
+
     const storePickupPointInSession = ( pickupPoint ) => {
-        // Store pickup point in WooCommerce session via AJAX
+        // Fallback: Store pickup point in WooCommerce session via AJAX
         if ( typeof wuunderPickupBlock !== 'undefined' && wuunderPickupBlock.ajaxUrl ) {
             fetch( wuunderPickupBlock.ajaxUrl, {
                 method: 'POST',
@@ -192,7 +263,7 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
                     pickup_point: JSON.stringify( pickupPoint )
                 })
             })
-            .then( response => response.json() )
+            .then( response => response.json())
             .then( data => {
                 if ( data.success ) {
                     // Trigger checkout update to refresh shipping rates
@@ -201,6 +272,9 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
                         dispatch( 'wc/store/cart' ).invalidateResolutionForStore();
                     }
                 }
+            })
+            .catch( error => {
+                // Handle AJAX error silently
             });
         }
     };

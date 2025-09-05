@@ -135,7 +135,7 @@ class Pickup extends WC_Shipping_Method {
 				],
 				'default' => 'nl',
 				'desc_tip' => true,
-			]
+			],
 		];
 	}
 

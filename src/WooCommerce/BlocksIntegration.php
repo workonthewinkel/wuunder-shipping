@@ -35,7 +35,14 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		// Extend Store API with pickup point data
 		add_action( 'woocommerce_blocks_loaded', [ $this, 'extend_store_api' ] );
 
-		// AJAX handler for storing pickup point in session (for block checkout)
+		// Register update callback for Store API extension updates - try earlier hook
+		add_action( 'woocommerce_blocks_loaded', [ $this, 'register_update_callback' ], 5 );
+		add_action( 'init', [ $this, 'register_update_callback' ], 20 );
+
+		// Hook into Store API checkout data processing
+		add_action( 'woocommerce_store_api_checkout_update_order_from_request', [ $this, 'save_pickup_point_from_request' ], 10, 2 );
+
+		// AJAX handler for storing pickup point in session (for block checkout) - keeping for now as fallback
 		add_action( 'wp_ajax_wuunder_store_pickup_point', [ $this, 'ajax_store_pickup_point' ] );
 		add_action( 'wp_ajax_nopriv_wuunder_store_pickup_point', [ $this, 'ajax_store_pickup_point' ] );
 	}
@@ -89,6 +96,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		return [
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 			'nonce' => wp_create_nonce( 'wuunder-pickup-block' ),
+			'savedPickupPoint' => WC()->session ? WC()->session->get( 'wuunder_selected_pickup_point', null ) : null,
 			'i18n' => [
 				'selectPickupLocation' => __( 'Select pick-up location', 'wuunder-shipping' ),
 				'change' => __( 'Change', 'wuunder-shipping' ),
@@ -130,6 +138,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 				[
 					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 					'nonce' => wp_create_nonce( 'wuunder-pickup-block' ),
+					'savedPickupPoint' => WC()->session ? WC()->session->get( 'wuunder_selected_pickup_point', null ) : null,
 					'methodSettings' => $this->get_pickup_method_settings(),
 					'iframeConfig' => [
 						'baseUrl' => Pickup::IFRAME_BASE_URL,
@@ -154,6 +163,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 	 * Render pickup point template in footer.
 	 */
 	public function render_pickup_template(): void {
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Template content is safe and controlled.
 		echo View::render( 'frontend/pickup-point-display' );
 	}
 
@@ -235,7 +245,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 			return;
 		}
 
-		woocommerce_store_api_register_endpoint_data(
+		$result = woocommerce_store_api_register_endpoint_data(
 			[
 				'endpoint' => 'checkout',
 				'namespace' => 'wuunder-pickup',
@@ -244,6 +254,20 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 				'schema_type' => ARRAY_A,
 			]
 		);
+
+		// Also register for cart endpoint
+		$cart_result = woocommerce_store_api_register_endpoint_data(
+			[
+				'endpoint' => 'cart',
+				'namespace' => 'wuunder-pickup',
+				'data_callback' => [ $this, 'get_pickup_data' ],
+				'schema_callback' => [ $this, 'get_pickup_schema' ],
+				'schema_type' => ARRAY_A,
+			]
+		);
+
+		// Register update callback here too
+		$this->register_update_callback();
 	}
 
 	/**
@@ -295,6 +319,71 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 				],
 			],
 		];
+	}
+
+	/**
+	 * Register update callback for Store API extension updates.
+	 *
+	 * @return void
+	 */
+	public function register_update_callback(): void {
+		if ( ! function_exists( 'woocommerce_store_api_register_update_callback' ) ) {
+			return;
+		}
+
+		$result = woocommerce_store_api_register_update_callback(
+			[
+				'namespace' => 'wuunder-pickup',
+				'callback' => [ $this, 'handle_pickup_point_update' ],
+			]
+		);
+	}
+
+	/**
+	 * Handle pickup point update from Store API.
+	 *
+	 * @param array $data Extension data from Store API.
+	 * @return void
+	 */
+	public function handle_pickup_point_update( $data ): void {
+		if ( ! empty( $data['pickup_point'] ) && is_array( $data['pickup_point'] ) ) {
+			$pickup_point = $data['pickup_point'];
+
+			// Validate pickup point data
+			if ( ! empty( $pickup_point['id'] ) ) {
+				// Store in WooCommerce session
+				if ( WC()->session ) {
+					WC()->session->set( 'wuunder_selected_pickup_point', $pickup_point );
+
+					// Force cart calculation to persist session changes
+					WC()->cart->calculate_shipping();
+					WC()->cart->calculate_totals();
+				}
+			}
+		}
+	}
+
+	/**
+	 * Save pickup point data from Store API request.
+	 *
+	 * @param \WC_Order        $order Order object.
+	 * @param \WP_REST_Request $request REST request object.
+	 * @return void
+	 */
+	public function save_pickup_point_from_request( $order, $request ): void {
+		$extensions = $request->get_param( 'extensions' );
+
+		if ( ! empty( $extensions['wuunder-pickup']['pickup_point'] ) ) {
+			$pickup_point = $extensions['wuunder-pickup']['pickup_point'];
+
+			// Validate pickup point data
+			if ( is_array( $pickup_point ) && ! empty( $pickup_point['id'] ) ) {
+				// Store in WooCommerce session for consistency
+				if ( WC()->session ) {
+					WC()->session->set( 'wuunder_selected_pickup_point', $pickup_point );
+				}
+			}
+		}
 	}
 
 	/**
