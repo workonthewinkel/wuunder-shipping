@@ -30,12 +30,14 @@ class DebugController implements Hookable {
 			return;
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a read-only operation for loading CSS.
 		$tab = sanitize_text_field( wp_unslash( $_GET['tab'] ?? '' ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a read-only operation for loading CSS.
 		$section = sanitize_text_field( wp_unslash( $_GET['section'] ?? '' ) );
 
 		if ( $tab === 'wuunder' && $section === 'debug' ) {
 			$url = plugin_dir_url( WUUNDER_PLUGIN_FILE ) . 'assets/dist/css/debug.css';
-			
+
 			if ( file_exists( WUUNDER_PLUGIN_PATH . '/assets/dist/css/debug.css' ) ) {
 				wp_enqueue_style(
 					'wuunder-debug-css',
@@ -87,7 +89,7 @@ class DebugController implements Hookable {
 	 */
 	public function render_rest_output(): void {
 		$orders_data = $this->get_orders_rest_data();
-		
+
 		?>
 		<tr valign="top">
 			<th scope="row" class="titledesc">
@@ -110,12 +112,14 @@ class DebugController implements Hookable {
 	 * Get orders data as it appears in REST API
 	 */
 	private function get_orders_rest_data(): array {
-		$orders = wc_get_orders([
-			'limit' => 10,
-			'orderby' => 'date',
-			'order' => 'DESC',
-			'status' => 'any'
-		]);
+		$orders = wc_get_orders(
+			[
+				'limit' => 10,
+				'orderby' => 'date',
+				'order' => 'DESC',
+				'status' => 'any',
+			]
+		);
 
 		error_log( 'Wuunder Debug: Found ' . count( $orders ) . ' orders' );
 
@@ -156,7 +160,7 @@ class DebugController implements Hookable {
 				'shipping_lines' => $this->format_shipping_lines( $order ),
 				'meta_data' => $this->format_meta_data( $order ),
 			];
-			
+
 			error_log( 'Wuunder Debug: Successfully processed order ' . $order->get_id() );
 			$orders_data[] = $order_data;
 		}
@@ -169,7 +173,7 @@ class DebugController implements Hookable {
 	 */
 	private function format_shipping_lines( \WC_Order $order ): array {
 		$shipping_lines = [];
-		
+
 		foreach ( $order->get_shipping_methods() as $shipping_item ) {
 			$shipping_lines[] = [
 				'id' => $shipping_item->get_id(),
@@ -179,7 +183,7 @@ class DebugController implements Hookable {
 				'meta_data' => $this->format_item_meta_data( $shipping_item ),
 			];
 		}
-		
+
 		return $shipping_lines;
 	}
 
@@ -188,14 +192,14 @@ class DebugController implements Hookable {
 	 */
 	private function format_meta_data( \WC_Order $order ): array {
 		$meta_data = [];
-		
+
 		foreach ( $order->get_meta_data() as $meta ) {
 			$meta_data[] = [
 				'key' => $meta->key,
 				'value' => $meta->value,
 			];
 		}
-		
+
 		return $meta_data;
 	}
 
@@ -204,14 +208,14 @@ class DebugController implements Hookable {
 	 */
 	private function format_item_meta_data( \WC_Order_Item $item ): array {
 		$meta_data = [];
-		
+
 		foreach ( $item->get_meta_data() as $meta ) {
 			$meta_data[] = [
 				'key' => $meta->key,
 				'value' => $meta->value,
 			];
 		}
-		
+
 		return $meta_data;
 	}
 
@@ -225,13 +229,16 @@ class DebugController implements Hookable {
 		}
 
 		foreach ( $orders_data as $order_data ) {
-			$order_id = $order_data['id'] ?? 'N/A';
+			$order_id   = $order_data['id'] ?? 'N/A';
 			$has_pickup = $this->has_pickup_shipping( $order_data );
-			
+
 			?>
 			<div class="debug-order">
 				<h4 class="order-header">
-					<?php printf( esc_html__( 'Order #%s', 'wuunder-shipping' ), esc_html( $order_id ) ); ?>
+					<?php
+					/* translators: %s: Order ID */
+					printf( esc_html__( 'Order #%s', 'wuunder-shipping' ), esc_html( $order_id ) );
+					?>
 					<?php if ( $has_pickup ) : ?>
 						<span class="pickup-badge">PICKUP</span>
 					<?php endif; ?>

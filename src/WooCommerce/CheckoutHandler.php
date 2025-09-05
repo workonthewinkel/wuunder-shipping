@@ -18,25 +18,24 @@ class CheckoutHandler implements Hookable {
 
 		// Add pickup point data to shipping method label
 		add_filter( 'woocommerce_cart_shipping_method_full_label', [ $this, 'add_pickup_data_to_label' ], 10, 2 );
-		
+
 		// Add pickup point meta to shipping item when it's created
 		add_action( 'woocommerce_checkout_create_order_shipping_item', [ $this, 'add_pickup_point_to_shipping_item' ], 10, 4 );
-		
+
 		// Update shipping address after order is created (both classic and block checkout)
 		add_action( 'woocommerce_checkout_order_created', [ $this, 'update_pickup_order_shipping_address' ], 10 );
 		add_action( 'woocommerce_store_api_checkout_order_processed', [ $this, 'update_pickup_order_shipping_address' ], 10 );
-		
+
 		// Validate pickup point selection
 		add_action( 'woocommerce_after_checkout_validation', [ $this, 'validate_pickup_selection' ], 10, 2 );
-		
-		
+
 		// Replace shipping address with pickup point address for pickup orders
 		add_filter( 'woocommerce_order_formatted_shipping_address', [ $this, 'replace_shipping_address_with_pickup' ], 10, 2 );
 		add_filter( 'woocommerce_formatted_address_replacements', [ $this, 'format_pickup_address_replacements' ], 10, 2 );
-		
+
 		// Add pickup point information to emails only (address replacement handles confirmation page)
 		add_action( 'woocommerce_email_customer_details', [ $this, 'display_pickup_point_in_email' ], 15, 4 );
-		
+
 		// Override shipping method display in admin to show pickup point details
 		add_filter( 'woocommerce_order_shipping_to_display', [ $this, 'customize_shipping_display_for_pickup' ], 10, 2 );
 	}
@@ -57,7 +56,7 @@ class CheckoutHandler implements Hookable {
 
 		// Check if we have a selected pickup point in session
 		$pickup_point = WC()->session->get( 'wuunder_selected_pickup_point' );
-		
+
 		if ( $pickup_point && is_array( $pickup_point ) ) {
 			$pickup_info = sprintf(
 				'<div class="wuunder-selected-pickup-info"><small>%s: %s, %s %s</small></div>',
@@ -66,7 +65,7 @@ class CheckoutHandler implements Hookable {
 				esc_html( $pickup_point['street'] ?? '' ),
 				esc_html( $pickup_point['city'] ?? '' )
 			);
-			
+
 			$label .= $pickup_info;
 		}
 
@@ -90,7 +89,7 @@ class CheckoutHandler implements Hookable {
 
 		// Get pickup point from session
 		$pickup_point = WC()->session ? WC()->session->get( 'wuunder_selected_pickup_point' ) : null;
-		
+
 		if ( ! $pickup_point || ! is_array( $pickup_point ) ) {
 			return;
 		}
@@ -124,7 +123,7 @@ class CheckoutHandler implements Hookable {
 			$item->add_meta_data( 'pickup_point_carrier', $pickup_point['carrier'], true );
 		}
 		if ( ! empty( $pickup_point['opening_hours'] ) ) {
-			$item->add_meta_data( 'pickup_point_opening_hours', json_encode( $pickup_point['opening_hours'] ), true );
+			$item->add_meta_data( 'pickup_point_opening_hours', wp_json_encode( $pickup_point['opening_hours'] ), true );
 		}
 	}
 
@@ -149,6 +148,7 @@ class CheckoutHandler implements Hookable {
 		}
 
 		// Check if pickup point was selected
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified by WooCommerce's checkout handler.
 		if ( ! isset( $_POST['wuunder_selected_pickup_point'] ) || empty( $_POST['wuunder_selected_pickup_point'] ) ) {
 			$errors->add(
 				'pickup_point_required',
@@ -158,21 +158,22 @@ class CheckoutHandler implements Hookable {
 		}
 
 		// Get raw data and try different unslashing approaches
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Nonce verified by WooCommerce, sanitization happens after JSON decode.
 		$raw_data = $_POST['wuunder_selected_pickup_point'];
-		
+
 		// Try to decode without unslashing first
 		$pickup_point = json_decode( $raw_data, true );
-		
+
 		// If that fails, try with wp_unslash
 		if ( ! $pickup_point ) {
 			$pickup_point = json_decode( wp_unslash( $raw_data ), true );
 		}
-		
+
 		// If still fails, try with stripslashes
 		if ( ! $pickup_point ) {
 			$pickup_point = json_decode( stripslashes( $raw_data ), true );
 		}
-		
+
 		$debug_info = sprintf(
 			'Raw data length: %d, JSON decode result: %s, Is array: %s, Has ID: %s',
 			strlen( $raw_data ),
@@ -180,11 +181,12 @@ class CheckoutHandler implements Hookable {
 			is_array( $pickup_point ) ? 'yes' : 'no',
 			( is_array( $pickup_point ) && isset( $pickup_point['id'] ) ) ? 'yes' : 'no'
 		);
-		
+
 		if ( ! $pickup_point || ! is_array( $pickup_point ) || empty( $pickup_point['id'] ) ) {
 			$errors->add(
 				'pickup_point_invalid',
 				sprintf(
+					/* translators: %s: Debug information */
 					__( 'Invalid pickup location data. Please select a pickup location again. Debug: %s', 'wuunder-shipping' ),
 					$debug_info
 				)
@@ -204,23 +206,25 @@ class CheckoutHandler implements Hookable {
 		if ( ! is_array( $address ) ) {
 			$address = [];
 		}
-		
+
 		// Get pickup point data from shipping method meta
 		$pickup_point = $this->get_pickup_point_from_order( $order );
-		
+
 		if ( ! $pickup_point ) {
 			return $address;
 		}
-		
+
 		// Build address_2 field with carrier and optionally ID for admin
 		$address_2_parts = [];
 		if ( ! empty( $pickup_point['carrier'] ) ) {
+			/* translators: %s: Carrier name */
 			$address_2_parts[] = sprintf( __( 'Carrier: %s', 'wuunder-shipping' ), strtoupper( $pickup_point['carrier'] ) );
 		}
 		if ( is_admin() && ! empty( $pickup_point['id'] ) ) {
+			/* translators: %s: Pickup point ID */
 			$address_2_parts[] = sprintf( __( 'ID: %s', 'wuunder-shipping' ), $pickup_point['id'] );
 		}
-		
+
 		// Replace with pickup point address
 		$pickup_address = [
 			'company'    => $pickup_point['name'] ?? '',
@@ -233,7 +237,7 @@ class CheckoutHandler implements Hookable {
 			'first_name' => __( 'Pickup at', 'wuunder-shipping' ),
 			'last_name'  => '',
 		];
-		
+
 		return $pickup_address;
 	}
 
@@ -252,46 +256,17 @@ class CheckoutHandler implements Hookable {
 		if ( ! is_array( $args ) ) {
 			$args = [];
 		}
-		
+
 		// Check if this is a pickup address replacement
 		if ( isset( $args['first_name'] ) && $args['first_name'] === __( 'Pickup at', 'wuunder-shipping' ) ) {
 			// Customize the formatting for pickup addresses
-			$replacements['{name}'] = $args['first_name'];
-			$replacements['{company}'] = $args['company'];
+			$replacements['{name}']       = $args['first_name'];
+			$replacements['{company}']    = $args['company'];
 			$replacements['{first_name}'] = '';
-			$replacements['{last_name}'] = '';
+			$replacements['{last_name}']  = '';
 		}
-		
-		return $replacements;
-	}
 
-	/**
-	 * Display pickup point information on order confirmation page.
-	 *
-	 * @param \WC_Order $order Order object.
-	 * @return void
-	 */
-	public function display_pickup_point_on_confirmation( $order ): void {
-		$pickup_point = $this->get_pickup_point_from_order( $order );
-		
-		if ( ! $pickup_point ) {
-			return;
-		}
-		
-		?>
-		<section class="woocommerce-pickup-details">
-			<h2 class="woocommerce-column__title"><?php esc_html_e( 'Pickup Location', 'wuunder-shipping' ); ?></h2>
-			<address>
-				<strong><?php echo esc_html( $pickup_point['name'] ?? '' ); ?></strong><br>
-				<?php echo esc_html( $pickup_point['street'] ?? '' ); ?><br>
-				<?php echo esc_html( $pickup_point['postcode'] ?? '' ); ?> <?php echo esc_html( $pickup_point['city'] ?? '' ); ?><br>
-				<?php echo esc_html( $pickup_point['country'] ?? '' ); ?>
-				<?php if ( ! empty( $pickup_point['carrier'] ) ) : ?>
-					<br><em><?php esc_html_e( 'Carrier:', 'wuunder-shipping' ); ?> <?php echo esc_html( strtoupper( $pickup_point['carrier'] ) ); ?></em>
-				<?php endif; ?>
-			</address>
-		</section>
-		<?php
+		return $replacements;
 	}
 
 	/**
@@ -305,11 +280,11 @@ class CheckoutHandler implements Hookable {
 	 */
 	public function display_pickup_point_in_email( $order, $sent_to_admin, $plain_text, $email ): void {
 		$pickup_point = $this->get_pickup_point_from_order( $order );
-		
+
 		if ( ! $pickup_point ) {
 			return;
 		}
-		
+
 		if ( $plain_text ) {
 			echo "\n" . esc_html__( 'PICKUP LOCATION:', 'wuunder-shipping' ) . "\n";
 			echo esc_html( $pickup_point['name'] ?? '' ) . "\n";
@@ -341,22 +316,23 @@ class CheckoutHandler implements Hookable {
 	/**
 	 * Customize shipping method display to show simple pickup point name in totals.
 	 *
-	 * @param string $shipping_display The shipping display string.
+	 * @param string   $shipping_display The shipping display string.
 	 * @param WC_Order $order The order object.
 	 * @return string Modified shipping display.
 	 */
 	public function customize_shipping_display_for_pickup( $shipping_display, $order ): string {
 		$pickup_point = $this->get_pickup_point_from_order( $order );
-		
+
 		if ( ! $pickup_point ) {
 			return $shipping_display;
 		}
-		
+
 		// Simple display for order totals - just "Pick up at {name}"
 		if ( ! empty( $pickup_point['name'] ) ) {
+			/* translators: %s: Pickup point name */
 			return sprintf( __( 'Pick up at %s', 'wuunder-shipping' ), esc_html( $pickup_point['name'] ) );
 		}
-		
+
 		return $shipping_display;
 	}
 
@@ -370,25 +346,26 @@ class CheckoutHandler implements Hookable {
 	public function update_pickup_order_shipping_address( $order ): void {
 		// Get pickup point data from shipping method meta
 		$pickup_point = $this->get_pickup_point_from_order( $order );
-		
+
 		if ( ! $pickup_point ) {
 			return;
 		}
-		
+
 		// Update shipping address with pickup point data
 		// Keep customer's first and last name (required fields)
-		
+
 		// Set shipping company to pickup point name
 		$order->set_shipping_company( $pickup_point['name'] ?? '' );
-		
+
 		// Set address fields
 		$order->set_shipping_address_1( $pickup_point['street'] ?? '' );
+		/* translators: %s: Carrier name */
 		$order->set_shipping_address_2( ! empty( $pickup_point['carrier'] ) ? sprintf( __( 'Carrier: %s', 'wuunder-shipping' ), strtoupper( $pickup_point['carrier'] ) ) : '' );
 		$order->set_shipping_city( $pickup_point['city'] ?? '' );
 		$order->set_shipping_postcode( $pickup_point['postcode'] ?? '' );
 		$order->set_shipping_country( $pickup_point['country'] ?? '' );
 		$order->set_shipping_state( '' ); // Clear state for pickup points
-		
+
 		// Save the changes
 		$order->save();
 	}
@@ -401,20 +378,20 @@ class CheckoutHandler implements Hookable {
 	 */
 	private function get_pickup_point_from_order( $order ): ?array {
 		$shipping_methods = $order->get_shipping_methods();
-		
+
 		foreach ( $shipping_methods as $shipping_method ) {
 			if ( strpos( $shipping_method->get_method_id(), 'wuunder_pickup' ) !== false ) {
 				// Build pickup point data from individual meta fields
 				$pickup_point = [];
-				
+
 				// Get all meta data from the shipping method
 				$meta_data = $shipping_method->get_meta_data();
-				
+
 				// Extract pickup point data from meta
 				foreach ( $meta_data as $meta ) {
-					$key = $meta->key;
+					$key   = $meta->key;
 					$value = $meta->value;
-					
+
 					switch ( $key ) {
 						case 'pickup_point_id':
 							$pickup_point['id'] = $value;
@@ -448,14 +425,14 @@ class CheckoutHandler implements Hookable {
 							break;
 					}
 				}
-				
+
 				// Return pickup point data if we found any
 				if ( ! empty( $pickup_point ) ) {
 					return $pickup_point;
 				}
 			}
 		}
-		
+
 		return null;
 	}
 }

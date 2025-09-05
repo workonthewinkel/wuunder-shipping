@@ -36,7 +36,7 @@ class Assets implements Hookable {
 		if ( ! in_array( $tab, [ 'wuunder', 'shipping' ], true ) ) {
 			return;
 		}
-		
+
 		// Enqueue color picker for shipping method settings
 		\wp_enqueue_script( 'wp-color-picker' );
 		\wp_enqueue_style( 'wp-color-picker' );
@@ -161,18 +161,18 @@ class Assets implements Hookable {
 	 */
 	private function get_pickup_method_settings(): array {
 		$settings = [];
-		
+
 		// Get all shipping zones
-		$zones = \WC_Shipping_Zones::get_zones();
+		$zones    = \WC_Shipping_Zones::get_zones();
 		$zones[0] = \WC_Shipping_Zones::get_zone( 0 ); // Add default zone
-		
+
 		foreach ( $zones as $zone ) {
 			if ( is_array( $zone ) ) {
 				$zone = \WC_Shipping_Zones::get_zone( $zone['zone_id'] );
 			}
-			
+
 			$shipping_methods = $zone->get_shipping_methods();
-			
+
 			foreach ( $shipping_methods as $method ) {
 				if ( $method->id === 'wuunder_pickup' ) {
 					$settings[ $method->get_instance_id() ] = [
@@ -183,7 +183,7 @@ class Assets implements Hookable {
 				}
 			}
 		}
-		
+
 		return $settings;
 	}
 }

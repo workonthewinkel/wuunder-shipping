@@ -111,13 +111,14 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 				'default' => 'nl',
 				'desc_tip' => true,
 			],
+			// phpcs:ignore Squiz.PHP.CommentedOutCode.Found -- Commented out preview section for future implementation.
 			// 'preview_section' => [
-			// 	'title' => __( 'Shop Locator Preview', 'wuunder-shipping' ),
-			// 	'type' => 'title',
-			// 	'description' => __( 'Preview of the shop locator that customers will see:', 'wuunder-shipping' ),
+			// 'title' => __( 'Shop Locator Preview', 'wuunder-shipping' ),
+			// 'type' => 'title',
+			// 'description' => __( 'Preview of the shop locator that customers will see:', 'wuunder-shipping' ),
 			// ],
 			// 'preview' => [
-			// 	'type' => 'preview_iframe',
+			// 'type' => 'preview_iframe',
 			// ],
 		];
 	}
@@ -133,7 +134,7 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 		$field_key = $this->get_field_key( $key );
 		$defaults  = $this->get_option( $key, $data['default'] ?? [] );
 		$options   = $data['options'] ?? [];
-		
+
 		ob_start();
 		?>
 		<tr valign="top">
@@ -160,67 +161,6 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 				</fieldset>
 			</td>
 		</tr>
-		<?php
-		return ob_get_clean();
-	}
-
-	/**
-	 * Generate preview iframe HTML.
-	 *
-	 * @param string $key Field key.
-	 * @param array  $data Field data.
-	 * @return string
-	 */
-	public function generate_preview_iframe_html( $key, $data ): string {
-		$field_key = $this->get_field_key( $key );
-		
-		// Get current settings or defaults
-		$carriers = $this->get_option( 'available_carriers', array_keys( $this->available_carriers ) );
-		$color = $this->get_option( 'primary_color', '#52ba69' );
-		$language = $this->get_option( 'language', 'nl' );
-		
-		// Build iframe URL
-		$iframe_url = $this->build_iframe_url( 'Amsterdam, Netherlands', $carriers, $color, $language );
-		
-		ob_start();
-		?>
-		<tr valign="top">
-			<th scope="row" class="titledesc"></th>
-			<td class="forminp">
-				<div id="wuunder-pickup-preview" style="border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
-					<iframe 
-						id="wuunder-pickup-iframe-preview"
-						src="<?php echo esc_url( $iframe_url ); ?>" 
-						style="width: 100%; height: 500px; border: 0;"
-						title="<?php esc_attr_e( 'Shop Locator Preview', 'wuunder-shipping' ); ?>">
-					</iframe>
-				</div>
-				<p class="description"><?php esc_html_e( 'This preview updates automatically when you change the settings above.', 'wuunder-shipping' ); ?></p>
-			</td>
-		</tr>
-		<script type="text/javascript">
-			jQuery(document).ready(function($) {
-				function updatePreview() {
-					var carriers = $('#woocommerce_wuunder_pickup_available_carriers').val() || [];
-					var color = $('#woocommerce_wuunder_pickup_primary_color').val() || '#52ba69';
-					var language = $('#woocommerce_wuunder_pickup_language').val() || 'nl';
-					
-					// Remove # from color if present
-					color = color.replace('#', '');
-					
-					var url = 'https://my.wearewuunder.com/parcelshop_locator/iframe'
-						+ '?address=Amsterdam,Netherlands'
-						+ '&availableCarriers=' + carriers.join(',')
-						+ '&primary_color=' + color
-						+ '&language=' + language;
-					
-					$('#wuunder-pickup-iframe-preview').attr('src', url);
-				}
-				
-				// Update preview when settings change
-				$('#woocommerce_wuunder_pickup_available_carriers, #woocommerce_wuunder_pickup_primary_color, #woocommerce_wuunder_pickup_language').on('change', updatePreview);
-			});
-		</script>
 		<?php
 		return ob_get_clean();
 	}
@@ -253,19 +193,19 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 	 * @param string $language Language code.
 	 * @return string
 	 */
-	public function build_iframe_url( string $address, array $carriers, string $color, string $language ): string {
+	public function build_iframe_url( $address, array $carriers, $color, $language ): string {
 		$base_url = 'https://my.wearewuunder.com/parcelshop_locator/iframe';
-		
+
 		// Remove # from color if present
 		$color = ltrim( $color, '#' );
-		
+
 		$params = [
 			'address' => $address,
 			'availableCarriers' => implode( ',', $carriers ),
 			'primary_color' => $color,
 			'language' => $language,
 		];
-		
+
 		return add_query_arg( $params, $base_url );
 	}
 
@@ -290,7 +230,7 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 			if ( ! empty( $pickup_point['name'] ) ) {
 				$meta_data['pickup_point_name'] = $pickup_point['name'];
 			}
-			
+
 			// Save address components
 			if ( ! empty( $pickup_point['street'] ) ) {
 				$meta_data['pickup_point_street'] = $pickup_point['street'];
@@ -310,15 +250,15 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 			if ( ! empty( $pickup_point['country'] ) ) {
 				$meta_data['pickup_point_country'] = $pickup_point['country'];
 			}
-			
+
 			// Save carrier information
 			if ( ! empty( $pickup_point['carrier'] ) ) {
 				$meta_data['pickup_point_carrier'] = $pickup_point['carrier'];
 			}
-			
+
 			// Save opening hours
 			if ( ! empty( $pickup_point['opening_hours'] ) ) {
-				$meta_data['pickup_point_opening_hours'] = json_encode( $pickup_point['opening_hours'] );
+				$meta_data['pickup_point_opening_hours'] = wp_json_encode( $pickup_point['opening_hours'] );
 			}
 		}
 
@@ -388,15 +328,15 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 		if ( ! is_array( $value ) ) {
 			$value = [];
 		}
-		
+
 		// Filter out invalid carriers
 		$valid_carriers = array_keys( $this->available_carriers );
-		$value = array_intersect( $value, $valid_carriers );
-		
+		$value          = array_intersect( $value, $valid_carriers );
+
 		if ( empty( $value ) ) {
 			throw new \Exception( esc_html__( 'At least one carrier must be selected.', 'wuunder-shipping' ) );
 		}
-		
+
 		return $value;
 	}
 
@@ -409,7 +349,7 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 	 */
 	public function generate_wuunder_color_html( $key, $data ): string {
 		$field_key = $this->get_field_key( $key );
-		$defaults = [
+		$defaults  = [
 			'title'             => '',
 			'disabled'          => false,
 			'class'             => '',
@@ -450,17 +390,18 @@ class WuunderPickupShippingMethod extends WC_Shipping_Method {
 	 */
 	public function sanitize_color( $value ) {
 		$value = sanitize_text_field( $value );
-		
+
 		// Ensure it's a valid hex color
 		if ( ! preg_match( '/^#?[a-fA-F0-9]{6}$/', $value ) ) {
+			// phpcs:ignore Squiz.PHP.CommentedOutCode.Found -- Not commented out code, just a return value with comment.
 			return '#52ba69'; // Return default if invalid
 		}
-		
+
 		// Ensure it starts with #
 		if ( strpos( $value, '#' ) !== 0 ) {
 			$value = '#' . $value;
 		}
-		
+
 		return $value;
 	}
 }

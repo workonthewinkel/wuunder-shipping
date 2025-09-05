@@ -29,10 +29,10 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		// Register ourselves with WooCommerce Blocks using the correct hook
 		add_action( 'woocommerce_blocks_checkout_block_registration', [ $this, 'register_with_integration_registry' ] );
 		add_action( 'woocommerce_blocks_cart_block_registration', [ $this, 'register_with_integration_registry' ] );
-		
+
 		// Extend Store API with pickup point data
 		add_action( 'woocommerce_blocks_loaded', [ $this, 'extend_store_api' ] );
-		
+
 		// AJAX handler for storing pickup point in session (for block checkout)
 		add_action( 'wp_ajax_wuunder_store_pickup_point', [ $this, 'ajax_store_pickup_point' ] );
 		add_action( 'wp_ajax_nopriv_wuunder_store_pickup_point', [ $this, 'ajax_store_pickup_point' ] );
@@ -104,12 +104,12 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		$script_path = 'assets/dist/js/blocks.js';
 		$script_url  = plugin_dir_url( WUUNDER_PLUGIN_FILE ) . $script_path;
 		$script_file = WUUNDER_PLUGIN_PATH . '/' . $script_path;
-		$asset_file = WUUNDER_PLUGIN_PATH . '/assets/dist/js/blocks.asset.php';
+		$asset_file  = WUUNDER_PLUGIN_PATH . '/assets/dist/js/blocks.asset.php';
 
 		// Load asset file for dependencies and version
 		$asset = file_exists( $asset_file ) ? include $asset_file : array(
 			'dependencies' => $this->get_script_dependencies(),
-			'version' => WUUNDER_PLUGIN_VERSION
+			'version' => WUUNDER_PLUGIN_VERSION,
 		);
 
 		if ( file_exists( $script_file ) ) {
@@ -149,12 +149,12 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		$script_path = 'assets/dist/js/blocks.js';
 		$script_url  = plugin_dir_url( WUUNDER_PLUGIN_FILE ) . $script_path;
 		$script_file = WUUNDER_PLUGIN_PATH . '/' . $script_path;
-		$asset_file = WUUNDER_PLUGIN_PATH . '/assets/dist/js/blocks.asset.php';
+		$asset_file  = WUUNDER_PLUGIN_PATH . '/assets/dist/js/blocks.asset.php';
 
 		// Load asset file for dependencies and version
 		$asset = file_exists( $asset_file ) ? include $asset_file : array(
 			'dependencies' => $this->get_script_dependencies(),
-			'version' => WUUNDER_PLUGIN_VERSION
+			'version' => WUUNDER_PLUGIN_VERSION,
 		);
 
 		if ( file_exists( $script_file ) ) {
@@ -185,11 +185,14 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 			);
 
 			// Enqueue style when scripts are enqueued
-			add_action( 'wp_enqueue_scripts', function() {
-				if ( wp_script_is( 'wuunder-pickup-block-frontend', 'enqueued' ) ) {
-					wp_enqueue_style( 'wuunder-pickup-block-style' );
+			add_action(
+				'wp_enqueue_scripts',
+				function () {
+					if ( wp_script_is( 'wuunder-pickup-block-frontend', 'enqueued' ) ) {
+						wp_enqueue_style( 'wuunder-pickup-block-style' );
+					}
 				}
-			} );
+			);
 		}
 	}
 
@@ -247,7 +250,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		return [
 			'pickup_point' => [
 				'description' => __( 'Selected pickup point data', 'wuunder-shipping' ),
-				'type' => ['object', 'null'],
+				'type' => [ 'object', 'null' ],
 				'properties' => [
 					'id' => [
 						'type' => 'string',
@@ -285,7 +288,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 	 */
 	public function ajax_store_pickup_point(): void {
 		// Verify nonce
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'wuunder-pickup-block' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'wuunder-pickup-block' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid security token', 'wuunder-shipping' ) ] );
 			return;
 		}
@@ -296,8 +299,9 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 			return;
 		}
 
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON string will be sanitized after decoding.
 		$pickup_point = json_decode( wp_unslash( $_POST['pickup_point'] ), true );
-		
+
 		if ( ! $pickup_point || ! is_array( $pickup_point ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid pickup point data', 'wuunder-shipping' ) ] );
 			return;
@@ -306,15 +310,17 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		// Store in WooCommerce session
 		if ( WC()->session ) {
 			WC()->session->set( 'wuunder_selected_pickup_point', $pickup_point );
-			
+
 			// Trigger cart recalculation to update shipping method meta
 			WC()->cart->calculate_shipping();
 			WC()->cart->calculate_totals();
-			
-			wp_send_json_success( [ 
-				'message' => __( 'Pickup point stored successfully', 'wuunder-shipping' ),
-				'pickup_point' => $pickup_point
-			] );
+
+			wp_send_json_success(
+				[
+					'message' => __( 'Pickup point stored successfully', 'wuunder-shipping' ),
+					'pickup_point' => $pickup_point,
+				]
+			);
 		} else {
 			wp_send_json_error( [ 'message' => __( 'WooCommerce session not available', 'wuunder-shipping' ) ] );
 		}
@@ -327,18 +333,18 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 	 */
 	private function get_pickup_method_settings(): array {
 		$settings = [];
-		
+
 		// Get all shipping zones
-		$zones = \WC_Shipping_Zones::get_zones();
+		$zones    = \WC_Shipping_Zones::get_zones();
 		$zones[0] = \WC_Shipping_Zones::get_zone( 0 ); // Add default zone
-		
+
 		foreach ( $zones as $zone ) {
 			if ( is_array( $zone ) ) {
 				$zone = \WC_Shipping_Zones::get_zone( $zone['zone_id'] );
 			}
-			
+
 			$shipping_methods = $zone->get_shipping_methods();
-			
+
 			foreach ( $shipping_methods as $method ) {
 				if ( $method->id === 'wuunder_pickup' ) {
 					$settings[ $method->get_instance_id() ] = [
@@ -349,7 +355,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 				}
 			}
 		}
-		
+
 		return $settings;
 	}
 }
