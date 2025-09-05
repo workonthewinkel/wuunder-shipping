@@ -8,7 +8,7 @@ use Wuunder\Shipping\Models\Carrier;
 /**
  * Simple Wuunder shipping method that uses instance settings.
  */
-class WuunderSimpleShippingMethod extends WC_Shipping_Method {
+class Shipping extends WC_Shipping_Method {
 
 	/**
 	 * Wuunder carrier data.

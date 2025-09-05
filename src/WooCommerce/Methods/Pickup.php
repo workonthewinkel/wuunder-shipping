@@ -7,7 +7,7 @@ use WC_Shipping_Method;
 /**
  * Wuunder Pick-up shipping method for parcel shop locator.
  */
-class WuunderPickupShippingMethod extends WC_Shipping_Method {
+class Pickup extends WC_Shipping_Method {
 
 	/**
 	 * Available carriers for pick-up points.
