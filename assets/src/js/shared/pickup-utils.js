@@ -37,7 +37,9 @@ export const transformPickupPointData = ( iframeData ) => {
  * @returns {string} Complete iframe URL
  */
 export const buildIframeUrl = ( address, config = {} ) => {
-    const baseUrl = 'https://my.wearewuunder.com/parcelshop_locator/iframe';
+    // Get base URL from PHP configuration
+    const baseUrl = (typeof wuunder_checkout !== 'undefined' && wuunder_checkout.iframe_config?.base_url) ||
+                    (typeof wuunderPickupBlock !== 'undefined' && wuunderPickupBlock.iframeConfig?.baseUrl);
     
     // Default configuration
     const defaultConfig = {
@@ -74,7 +76,10 @@ export const buildIframeUrl = ( address, config = {} ) => {
  * @returns {boolean} True if from Wuunder
  */
 export const isWuunderMessage = ( event ) => {
-    return event.origin === 'https://my.wearewuunder.com';
+    // Get trusted origin from PHP configuration
+    const trustedOrigin = (typeof wuunder_checkout !== 'undefined' && wuunder_checkout.iframe_config?.origin) ||
+                          (typeof wuunderPickupBlock !== 'undefined' && wuunderPickupBlock.iframeConfig?.origin);
+    return event.origin === trustedOrigin;
 };
 
 /**
@@ -135,11 +140,70 @@ export const createModalHTML = ( iframeUrl, title = 'Select pick-up location' ) 
 };
 
 /**
+ * Render pickup point display from hidden template
+ * @param {Object} pickupPoint - Pickup point data
+ * @returns {string} Rendered HTML string
+ */
+export const renderPickupFromTemplate = ( pickupPoint ) => {
+    const template = document.getElementById( 'wuunder-pickup-template' );
+    
+    // Get template content and replace placeholders
+    let html = template.innerHTML;
+    
+    // Replace all placeholders with pickup point data
+    html = html.replace( /\{\{name\}\}/g, pickupPoint.name || '' );
+    html = html.replace( /\{\{street\}\}/g, pickupPoint.street || '' );
+    html = html.replace( /\{\{postcode\}\}/g, pickupPoint.postcode || '' );
+    html = html.replace( /\{\{city\}\}/g, pickupPoint.city || '' );
+    html = html.replace( /\{\{carrier\}\}/g, pickupPoint.carrier || '' );
+    
+    return html;
+};
+
+/**
  * Constants for Wuunder integration
  */
+/**
+ * Create iframe message handler for pickup point communication
+ * @param {Object} callbacks - Callback functions for different events
+ * @param {Function} callbacks.onPickupSelected - Called when pickup point is selected
+ * @param {Function} callbacks.onModalClose - Called when modal should close
+ * @returns {Function} Message handler function
+ */
+export const createIframeMessageHandler = ( callbacks = {} ) => {
+    return ( event ) => {
+        // Verify origin for security
+        if ( ! isWuunderMessage( event ) ) {
+            return;
+        }
+
+        // Handle pickup point selection
+        if ( isPickupPointSelected( event.data ) ) {
+            const pickupPoint = transformPickupPointData( event.data );
+            
+            if ( callbacks.onPickupSelected ) {
+                callbacks.onPickupSelected( pickupPoint );
+            }
+        }
+        
+        // Handle modal close events
+        else if ( isModalCloseEvent( event.data ) ) {
+            if ( callbacks.onModalClose ) {
+                callbacks.onModalClose();
+            }
+        }
+    };
+};
+
 export const WUUNDER_CONSTANTS = {
-    IFRAME_ORIGIN: 'https://my.wearewuunder.com',
-    IFRAME_BASE_URL: 'https://my.wearewuunder.com/parcelshop_locator/iframe',
+    get IFRAME_ORIGIN() {
+        return (typeof wuunder_checkout !== 'undefined' && wuunder_checkout.iframe_config?.origin) ||
+               (typeof wuunderPickupBlock !== 'undefined' && wuunderPickupBlock.iframeConfig?.origin);
+    },
+    get IFRAME_BASE_URL() {
+        return (typeof wuunder_checkout !== 'undefined' && wuunder_checkout.iframe_config?.base_url) ||
+               (typeof wuunderPickupBlock !== 'undefined' && wuunderPickupBlock.iframeConfig?.baseUrl);
+    },
     DEFAULT_CARRIERS: 'dhl,postnl,ups',
     DEFAULT_COLOR: '52ba69',
     DEFAULT_LANGUAGE: 'nl',

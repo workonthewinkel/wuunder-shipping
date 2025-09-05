@@ -7,6 +7,7 @@ import { registerPlugin } from '@wordpress/plugins';
 import { __ } from '@wordpress/i18n';
 import { useEffect, useState } from '@wordpress/element';
 import { select, dispatch, subscribe } from '@wordpress/data';
+import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, formatPickupPointDisplay, createModalHTML, renderPickupFromTemplate } from './shared/pickup-utils.js';
 
 /**
  * Component for pickup point selection in block checkout
@@ -40,15 +41,10 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
         return unsubscribe;
     }, [ selectedPickupPoint ]);
 
-    // Handle iframe messages for pickup point selection
+    // Handle iframe messages for pickup point selection using shared handler
     useEffect(() => {
-        const handleMessage = ( event ) => {
-            if ( event.origin !== 'https://my.wearewuunder.com' ) {
-                return;
-            }
-
-            if ( event.data?.type === 'servicePointPickerSelected' ) {
-                const pickupPoint = transformPickupData( event.data );
+        const messageHandler = createIframeMessageHandler({
+            onPickupSelected: ( pickupPoint ) => {
                 setSelectedPickupPoint( pickupPoint );
                 
                 // Store pickup point in WooCommerce session via AJAX
@@ -56,37 +52,16 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
                 
                 closeModal();
                 updatePickupDisplay( pickupPoint );
-            } else if ( event.data?.type === 'servicePointPickerClose' ) {
+            },
+            onModalClose: () => {
                 closeModal();
             }
-        };
+        });
 
-        window.addEventListener( 'message', handleMessage );
-        return () => window.removeEventListener( 'message', handleMessage );
+        window.addEventListener( 'message', messageHandler );
+        return () => window.removeEventListener( 'message', messageHandler );
     }, []);
 
-    const transformPickupData = ( data ) => {
-        let carrier = '';
-        if ( data.parcelshopId ) {
-            const parts = data.parcelshopId.split( ':' );
-            if ( parts[0] ) {
-                carrier = parts[0].toLowerCase().replace( '_', '' );
-            }
-        }
-        
-        return {
-            id: data.parcelshopId || '',
-            name: data.address?.business || '',
-            street: ( data.address?.street_name || '' ) + ' ' + ( data.address?.house_number || '' ),
-            street_name: data.address?.street_name || '',
-            house_number: data.address?.house_number || '',
-            postcode: data.address?.zip_code || '',
-            city: data.address?.locality || '',
-            country: data.address?.country_code || '',
-            carrier: carrier,
-            opening_hours: data.openingHours || [],
-        };
-    };
 
     const injectPickupSelector = () => {
         // Find the selected wuunder_pickup radio button
@@ -98,7 +73,7 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
         }
         
         // Check if selector already exists
-        if ( document.querySelector( '.wuunder-pickup-block-container' ) ) {
+        if ( document.querySelector( '.wuunder-pickup-container' ) ) {
             return;
         }
 
@@ -110,7 +85,7 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
         }
 
         const selectorDiv = document.createElement( 'div' );
-        selectorDiv.className = 'wuunder-pickup-block-container';
+        selectorDiv.className = 'wuunder-pickup-container';
         selectorDiv.innerHTML = `
             <div class="wuunder-pickup-selector">
                 <button type="button" class="wp-block-button__link wp-element-button" id="wuunder-select-pickup">
@@ -127,27 +102,24 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
     };
 
     const removePickupSelector = () => {
-        const selector = document.querySelector( '.wuunder-pickup-block-container' );
+        const selector = document.querySelector( '.wuunder-pickup-container' );
         selector?.remove();
     };
 
     const updatePickupDisplay = ( pickupPoint ) => {
-        let container = document.querySelector( '.wuunder-pickup-block-container' );
+        let container = document.querySelector( '.wuunder-pickup-container' );
         
         // If container doesn't exist, inject it first
         if ( ! container ) {
             injectPickupSelector();
-            container = document.querySelector( '.wuunder-pickup-block-container' );
+            container = document.querySelector( '.wuunder-pickup-container' );
         }
         
         if ( container ) {
+            const renderedHtml = renderPickupFromTemplate( pickupPoint );
             container.innerHTML = `
                 <div class="wuunder-pickup-selector selected">
-                    <div class="pickup-details">
-                        <strong>${ pickupPoint.name }</strong><br>
-                        ${ pickupPoint.street }<br>
-                        ${ pickupPoint.postcode } ${ pickupPoint.city }
-                    </div>
+                    ${ renderedHtml }
                     <button type="button" class="wp-block-button__link wp-element-button" id="wuunder-change-pickup">
                         ${ __( 'Change', 'wuunder-shipping' ) }
                     </button>
@@ -161,7 +133,12 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
 
     const openModal = () => {
         const customerAddress = getCustomerAddress();
-        const iframeUrl = buildIframeUrl( customerAddress );
+        const settings = getSelectedPickupMethodSettings();
+        const iframeUrl = buildIframeUrl( customerAddress, {
+            carriers: settings.carriers.join( ',' ),
+            primaryColor: settings.color,
+            language: settings.language
+        } );
         
         const modalHtml = `
             <div class="wuunder-pickup-modal-overlay" id="wuunder-pickup-modal">
@@ -293,26 +270,6 @@ const WuunderPickupIntegration = ({ cart, extensions, components }) => {
         };
     };
 
-    const buildIframeUrl = ( address ) => {
-        const addressParts = [ 
-            address.street, 
-            address.postcode, 
-            address.city, 
-            address.country 
-        ].filter( Boolean );
-        
-        // Get settings for the selected pickup method
-        const settings = getSelectedPickupMethodSettings();
-        
-        const params = new URLSearchParams({
-            address: addressParts.join( ', ' ) || 'Netherlands',
-            availableCarriers: settings.carriers.join( ',' ),
-            primary_color: settings.color,
-            language: settings.language
-        });
-        
-        return `https://my.wearewuunder.com/parcelshop_locator/iframe?${ params.toString() }`;
-    };
 
     // Return null as we're injecting DOM directly for now
     // In a full implementation, this would return React components

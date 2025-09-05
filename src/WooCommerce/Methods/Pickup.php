@@ -13,6 +13,28 @@ class Pickup extends WC_Shipping_Method {
 	use ShippingMethodSanitization;
 
 	/**
+	 * Iframe base URL for pickup point locator.
+	 */
+	public const IFRAME_BASE_URL = 'https://my.wearewuunder.com/parcelshop_locator/iframe';
+
+	/**
+	 * Iframe origin for security verification.
+	 */
+	public const IFRAME_ORIGIN = 'https://my.wearewuunder.com';
+
+	/**
+	 * Get iframe configuration for JavaScript.
+	 *
+	 * @return array<string, string> Configuration array with base_url and origin.
+	 */
+	public static function get_iframe_config(): array {
+		return [
+			'base_url' => self::IFRAME_BASE_URL,
+			'origin' => self::IFRAME_ORIGIN,
+		];
+	}
+
+	/**
 	 * Available carriers for pick-up points.
 	 *
 	 * @var array<string, string>
@@ -188,7 +210,7 @@ class Pickup extends WC_Shipping_Method {
 	 * @return string
 	 */
 	public function build_iframe_url( $address, array $carriers, $color, $language ): string {
-		$base_url = 'https://my.wearewuunder.com/parcelshop_locator/iframe';
+		$base_url = self::IFRAME_BASE_URL;
 
 		// Remove # from color if present
 		$color = ltrim( $color, '#' );

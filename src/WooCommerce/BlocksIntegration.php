@@ -5,6 +5,8 @@ namespace Wuunder\Shipping\WooCommerce;
 use Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface;
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 use Wuunder\Shipping\WooCommerce\CheckoutHandler;
+use Wuunder\Shipping\WooCommerce\Methods\Pickup;
+use Wuunder\Shipping\WordPress\View;
 
 /**
  * Class for integrating with WooCommerce Blocks.
@@ -129,6 +131,10 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 					'nonce' => wp_create_nonce( 'wuunder-pickup-block' ),
 					'methodSettings' => $this->get_pickup_method_settings(),
+					'iframeConfig' => [
+						'baseUrl' => Pickup::IFRAME_BASE_URL,
+						'origin' => Pickup::IFRAME_ORIGIN,
+					],
 					'i18n' => [
 						'selectPickupLocation' => __( 'Select pick-up location', 'wuunder-shipping' ),
 						'change' => __( 'Change', 'wuunder-shipping' ),
@@ -138,7 +144,17 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 					],
 				]
 			);
+
+			// Render pickup point template in footer
+			add_action( 'wp_footer', [ $this, 'render_pickup_template' ] );
 		}
+	}
+
+	/**
+	 * Render pickup point template in footer.
+	 */
+	public function render_pickup_template(): void {
+		echo View::render( 'frontend/pickup-point-display' );
 	}
 
 	/**

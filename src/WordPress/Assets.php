@@ -3,6 +3,8 @@
 namespace Wuunder\Shipping\WordPress;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
+use Wuunder\Shipping\WooCommerce\Methods\Pickup;
+use Wuunder\Shipping\WordPress\View;
 
 /**
  * Class Assets
@@ -142,6 +144,7 @@ class Assets implements Hookable {
 					'ajax_url' => \admin_url( 'admin-ajax.php' ),
 					'nonce'    => \wp_create_nonce( 'wuunder-checkout' ),
 					'pickup_settings' => $pickup_settings,
+					'iframe_config' => Pickup::get_iframe_config(),
 					'i18n'     => [
 						'select_pickup_point' => __( 'Select pick-up location', 'wuunder-shipping' ),
 						'select_pickup_location' => __( 'Select pick-up location', 'wuunder-shipping' ),
@@ -151,7 +154,17 @@ class Assets implements Hookable {
 					],
 				]
 			);
+
+			// Render pickup point template in footer
+			add_action( 'wp_footer', [ $this, 'render_pickup_template' ] );
 		}
+	}
+
+	/**
+	 * Render pickup point template in footer.
+	 */
+	public function render_pickup_template(): void {
+		echo View::render( 'frontend/pickup-point-display' );
 	}
 
 	/**

@@ -1,6 +1,8 @@
 /**
  * Wuunder Pick-up Point Checkout Integration
  */
+import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, formatPickupPointDisplay, createModalHTML, renderPickupFromTemplate } from './shared/pickup-utils.js';
+
 (function($) {
     'use strict';
 
@@ -21,8 +23,19 @@
             // Listen for pick-up button clicks
             $(document.body).on('click', '.wuunder-select-pickup-point', this.openPickupModal.bind(this));
             
-            // Listen for messages from iframe
-            window.addEventListener('message', this.handleIframeMessage.bind(this), false);
+            // Listen for messages from iframe using shared handler
+            const messageHandler = createIframeMessageHandler({
+                onPickupSelected: (pickupPoint) => {
+                    this.selectedPickupPoint = pickupPoint;
+                    this.storePickupPoint(pickupPoint);
+                    this.displaySelectedPickupPoint();
+                    this.closeModal();
+                },
+                onModalClose: () => {
+                    this.closeModal();
+                }
+            });
+            window.addEventListener('message', messageHandler, false);
         },
 
         onShippingMethodChange: function() {
@@ -55,12 +68,10 @@
             // Create button container
             const buttonHtml = `
                 <div class="wuunder-pickup-container">
-                    <button type="button" class="button wuunder-select-pickup-point">
-                        ${wuunder_checkout.i18n.select_pickup_point}
-                    </button>
-                    <div class="wuunder-selected-pickup-point" style="display: none;">
-                        <span class="pickup-point-info"></span>
-                        <a href="#" class="wuunder-change-pickup-point">${wuunder_checkout.i18n.change}</a>
+                    <div class="wuunder-pickup-selector">
+                        <button type="button" class="button wuunder-select-pickup-point">
+                            ${wuunder_checkout.i18n.select_pickup_point}
+                        </button>
                     </div>
                 </div>
             `;
@@ -126,7 +137,11 @@
             const methodData = this.getMethodData();
             
             // Build iframe URL
-            const iframeUrl = this.buildIframeUrl(address, methodData);
+            const iframeUrl = buildIframeUrl(address, {
+                carriers: methodData.carriers,
+                primaryColor: methodData.primaryColor,
+                language: methodData.language
+            });
             
             // Create and show modal
             this.createModal(iframeUrl);
@@ -157,26 +172,6 @@
             };
         },
 
-        buildIframeUrl: function(address, methodData) {
-            const baseUrl = 'https://my.wearewuunder.com/parcelshop_locator/iframe';
-            
-            // Format address for iframe
-            const addressString = [
-                address.street,
-                address.postcode,
-                address.city,
-                address.country
-            ].filter(Boolean).join(', ');
-            
-            const params = new URLSearchParams({
-                address: addressString || 'Netherlands',
-                availableCarriers: methodData.carriers,
-                primary_color: methodData.primaryColor.replace('#', ''),
-                language: methodData.language
-            });
-            
-            return `${baseUrl}?${params.toString()}`;
-        },
 
         createModal: function(iframeUrl) {
             // Remove any existing modal
@@ -207,57 +202,7 @@
             this.modalOpen = false;
         },
 
-        handleIframeMessage: function(event) {
-            // Verify origin
-            if (event.origin !== 'https://my.wearewuunder.com') {
-                return;
-            }
-            
-            // Handle pickup point selection
-            if (event.data && event.data.type === 'servicePointPickerSelected') {
-                // Transform the data to our expected format
-                const pickupPoint = this.transformPickupPointData(event.data);
-                this.selectedPickupPoint = pickupPoint;
-                
-                // Store in hidden field for form submission
-                this.storePickupPoint(pickupPoint);
-                
-                // Display selected pickup point
-                this.displaySelectedPickupPoint();
-                
-                // Close iframe
-                this.closeModal();
-                
-                // Trigger checkout update
-                $(document.body).trigger('update_checkout');
-            } else if (event.data && event.data.type === 'servicePointPickerClose') {
-                // User closed the iframe modal
-                this.closeModal();
-            }
-        },
         
-        transformPickupPointData: function(iframeData) {
-            // Extract carrier from parcelshopId (e.g., "POST_NL:218167" -> "postnl")
-            let carrier = '';
-            if (iframeData.parcelshopId) {
-                const parts = iframeData.parcelshopId.split(':');
-                if (parts[0]) {
-                    carrier = parts[0].toLowerCase().replace('_', '');
-                }
-            }
-            
-            // Transform the data structure
-            return {
-                id: iframeData.parcelshopId || '',
-                name: iframeData.address?.business || '',
-                street: (iframeData.address?.street_name || '') + ' ' + (iframeData.address?.house_number || ''),
-                postcode: iframeData.address?.zip_code || '',
-                city: iframeData.address?.locality || '',
-                country: iframeData.address?.country_code || '',
-                carrier: carrier,
-                opening_hours: iframeData.openingHours || []
-            };
-        },
 
         storePickupPoint: function(pickupPoint) {
             // Remove any existing hidden field
@@ -283,26 +228,16 @@
             }
             
             const $container = $('.wuunder-pickup-container');
-            const $button = $container.find('.wuunder-select-pickup-point');
-            const $selectedInfo = $container.find('.wuunder-selected-pickup-point');
-            const $infoText = $selectedInfo.find('.pickup-point-info');
             
-            // Format pickup point info - trim and filter empty values
-            const street = this.selectedPickupPoint.street.trim();
-            const postcode = this.selectedPickupPoint.postcode.trim();
-            const city = this.selectedPickupPoint.city.trim();
+            // Render pickup point info using template renderer
+            const renderedHtml = renderPickupFromTemplate(this.selectedPickupPoint);
             
-            const info = [
-                this.selectedPickupPoint.name,
-                street,
-                postcode && city ? postcode + ' ' + city : (postcode || city)
-            ].filter(Boolean).join(', ');
-            
-            $infoText.text(info);
-            
-            // Show selected info, hide button
-            $button.hide();
-            $selectedInfo.show();
+            $container.html(`
+                <div class="wuunder-pickup-selector selected">
+                    ${renderedHtml}
+                    <a href="#" class="wuunder-change-pickup-point">${wuunder_checkout.i18n.change}</a>
+                </div>
+            `);
             
             // Bind change link
             $container.find('.wuunder-change-pickup-point').off('click').on('click', function(e) {

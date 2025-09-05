@@ -16,9 +16,6 @@ class CheckoutHandler implements Hookable {
 	 */
 	public function register_hooks(): void {
 
-		// Add pickup point data to shipping method label
-		add_filter( 'woocommerce_cart_shipping_method_full_label', [ $this, 'add_pickup_data_to_label' ], 10, 2 );
-
 		// Add pickup point meta to shipping item when it's created
 		add_action( 'woocommerce_checkout_create_order_shipping_item', [ $this, 'add_pickup_point_to_shipping_item' ], 10, 4 );
 
@@ -38,38 +35,6 @@ class CheckoutHandler implements Hookable {
 
 		// Override shipping method display in admin to show pickup point details
 		add_filter( 'woocommerce_order_shipping_to_display', [ $this, 'customize_shipping_display_for_pickup' ], 10, 2 );
-	}
-
-
-	/**
-	 * Add pickup point information to the shipping method label if selected.
-	 *
-	 * @param string $label Shipping method label.
-	 * @param object $method Shipping method object.
-	 * @return string
-	 */
-	public function add_pickup_data_to_label( $label, $method ): string {
-		// Check if this is a pickup method
-		if ( strpos( $method->id, 'wuunder_pickup' ) === false ) {
-			return $label;
-		}
-
-		// Check if we have a selected pickup point in session
-		$pickup_point = WC()->session->get( 'wuunder_selected_pickup_point' );
-
-		if ( $pickup_point && is_array( $pickup_point ) ) {
-			$pickup_info = sprintf(
-				'<div class="wuunder-selected-pickup-info"><small>%s: %s, %s %s</small></div>',
-				__( 'Pickup at', 'wuunder-shipping' ),
-				esc_html( $pickup_point['name'] ?? '' ),
-				esc_html( $pickup_point['street'] ?? '' ),
-				esc_html( $pickup_point['city'] ?? '' )
-			);
-
-			$label .= $pickup_info;
-		}
-
-		return $label;
 	}
 
 	/**
