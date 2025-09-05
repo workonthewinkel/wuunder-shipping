@@ -23,8 +23,9 @@ class CheckoutHandler implements Hookable {
 		add_action( 'woocommerce_checkout_order_created', [ $this, 'update_pickup_order_shipping_address' ], 10 );
 		add_action( 'woocommerce_store_api_checkout_order_processed', [ $this, 'update_pickup_order_shipping_address' ], 10 );
 
-		// Validate pickup point selection
+		// Validate pickup point selection (classic and block checkout)
 		add_action( 'woocommerce_after_checkout_validation', [ $this, 'validate_pickup_selection' ], 10, 2 );
+		add_action( 'woocommerce_store_api_checkout_update_order_from_request', [ $this, 'validate_pickup_selection_block' ], 10, 2 );
 
 		// Replace shipping address with pickup point address for pickup orders
 		add_filter( 'woocommerce_order_formatted_shipping_address', [ $this, 'replace_shipping_address_with_pickup' ], 10, 2 );
@@ -97,7 +98,7 @@ class CheckoutHandler implements Hookable {
 	}
 
 	/**
-	 * Validate that a pickup point was selected when using pickup shipping.
+	 * Validate that a pickup point was selected when using pickup shipping (classic checkout).
 	 *
 	 * @param array     $data Posted checkout data.
 	 * @param \WP_Error $errors Validation errors.
@@ -116,49 +117,13 @@ class CheckoutHandler implements Hookable {
 			return;
 		}
 
-		// Check if pickup point was selected
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified by WooCommerce's checkout handler.
-		if ( ! isset( $_POST['wuunder_selected_pickup_point'] ) || empty( $_POST['wuunder_selected_pickup_point'] ) ) {
+		// Use unified validation logic
+		$pickup_point = $this->get_pickup_point_for_validation();
+		
+		if ( ! $this->is_valid_pickup_point( $pickup_point ) ) {
 			$errors->add(
 				'pickup_point_required',
 				__( 'Please select a pickup location for your delivery.', 'wuunder-shipping' )
-			);
-			return;
-		}
-
-		// Get raw data and try different unslashing approaches
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Nonce verified by WooCommerce, sanitization happens after JSON decode.
-		$raw_data = $_POST['wuunder_selected_pickup_point'];
-
-		// Try to decode without unslashing first
-		$pickup_point = json_decode( $raw_data, true );
-
-		// If that fails, try with wp_unslash
-		if ( ! $pickup_point ) {
-			$pickup_point = json_decode( wp_unslash( $raw_data ), true );
-		}
-
-		// If still fails, try with stripslashes
-		if ( ! $pickup_point ) {
-			$pickup_point = json_decode( stripslashes( $raw_data ), true );
-		}
-
-		$debug_info = sprintf(
-			'Raw data length: %d, JSON decode result: %s, Is array: %s, Has ID: %s',
-			strlen( $raw_data ),
-			$pickup_point ? 'success' : 'failed',
-			is_array( $pickup_point ) ? 'yes' : 'no',
-			( is_array( $pickup_point ) && isset( $pickup_point['id'] ) ) ? 'yes' : 'no'
-		);
-
-		if ( ! $pickup_point || ! is_array( $pickup_point ) || empty( $pickup_point['id'] ) ) {
-			$errors->add(
-				'pickup_point_invalid',
-				sprintf(
-					/* translators: %s: Debug information */
-					__( 'Invalid pickup location data. Please select a pickup location again. Debug: %s', 'wuunder-shipping' ),
-					$debug_info
-				)
 			);
 		}
 	}
@@ -445,5 +410,92 @@ class CheckoutHandler implements Hookable {
 		} else {
 			wp_send_json_error( [ 'message' => __( 'WooCommerce session not available', 'wuunder-shipping' ) ] );
 		}
+	}
+
+	/**
+	 * Validate pickup point selection for block checkout using Store API.
+	 *
+	 * @param \WC_Order        $order Order object.
+	 * @param \WP_REST_Request $request REST request object.
+	 * @return void
+	 * @throws \WC_Data_Exception When validation fails.
+	 */
+	public function validate_pickup_selection_block( $order, $request ): void {
+		// Get shipping methods from order
+		$shipping_methods = $order->get_shipping_methods();
+		
+		if ( empty( $shipping_methods ) ) {
+			return;
+		}
+
+		// Check if any shipping method is a pickup method
+		$has_pickup_method = false;
+		foreach ( $shipping_methods as $shipping_method ) {
+			if ( strpos( $shipping_method->get_method_id(), 'wuunder_pickup' ) !== false ) {
+				$has_pickup_method = true;
+				break;
+			}
+		}
+
+		if ( ! $has_pickup_method ) {
+			return;
+		}
+
+		// Use unified validation logic
+		$pickup_point = $this->get_pickup_point_for_validation();
+		
+		if ( ! $this->is_valid_pickup_point( $pickup_point ) ) {
+			throw new \WC_Data_Exception(
+				'pickup_point_required',
+				__( 'Please select a pickup location for your delivery.', 'wuunder-shipping' )
+			);
+		}
+	}
+
+	/**
+	 * Get pickup point data for validation (unified method for both checkout types).
+	 *
+	 * @return array|null Pickup point data or null if not found.
+	 */
+	private function get_pickup_point_for_validation(): ?array {
+		// First try to get from session (works for both checkout types)
+		if ( WC()->session ) {
+			$pickup_point = WC()->session->get( 'wuunder_selected_pickup_point' );
+			if ( $pickup_point && is_array( $pickup_point ) ) {
+				return $pickup_point;
+			}
+		}
+
+		// Fallback for classic checkout: check POST data
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified by WooCommerce.
+		if ( isset( $_POST['wuunder_selected_pickup_point'] ) && ! empty( $_POST['wuunder_selected_pickup_point'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Nonce verified by WooCommerce, sanitization happens after JSON decode.
+			$raw_data = $_POST['wuunder_selected_pickup_point'];
+			
+			// Try to decode the JSON data
+			$pickup_point = json_decode( $raw_data, true );
+			if ( ! $pickup_point ) {
+				$pickup_point = json_decode( wp_unslash( $raw_data ), true );
+			}
+			if ( ! $pickup_point ) {
+				$pickup_point = json_decode( stripslashes( $raw_data ), true );
+			}
+
+			if ( $pickup_point && is_array( $pickup_point ) ) {
+				return $pickup_point;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Validate if pickup point data is valid (unified validation logic).
+	 *
+	 * @param array|null $pickup_point Pickup point data to validate.
+	 * @return bool True if pickup point is valid, false otherwise.
+	 */
+	private function is_valid_pickup_point( $pickup_point ): bool {
+		return $pickup_point && is_array( $pickup_point ) && ! empty( $pickup_point['id'] );
 	}
 }
