@@ -31,12 +31,12 @@
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "watch": "NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --config=node_modules/laravel-mix/setup/webpack.config.js & npm run start-blocks",
+    "watch": "NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --config=node_modules/laravel-mix/setup/webpack.config.js & npm run start-js",
     "hot": "NODE_ENV=development webpack-dev-server --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
     "production": "NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "build-blocks": "wp-scripts build",
-    "start-blocks": "wp-scripts start",
+    "build-js": "wp-scripts build",
+    "start-js": "wp-scripts start",
     "make-pot": "wp i18n make-pot . languages/wuunder-shipping.pot",
-    "build": "npm run make-pot && npm run production && npm run build-blocks"
+    "build": "npm run make-pot && npm run production && npm run build-js"
   }
 }

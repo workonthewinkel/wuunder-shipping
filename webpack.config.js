@@ -4,7 +4,9 @@ const path = require('path');
 module.exports = {
     ...defaultConfig,
     entry: {
-        'blocks': path.resolve(__dirname, 'assets/src/js/blocks.js')
+        'blocks': path.resolve(__dirname, 'assets/src/js/blocks.js'),
+        'admin': path.resolve(__dirname, 'assets/src/js/admin.js'),
+        'checkout': path.resolve(__dirname, 'assets/src/js/checkout.js')
     },
     output: {
         ...defaultConfig.output,
