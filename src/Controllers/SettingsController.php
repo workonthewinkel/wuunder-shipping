@@ -400,6 +400,7 @@ class SettingsController extends Controller implements Hookable {
 		foreach ( $api_carriers as $key => $carrier_data ) {
 			$carrier = new Carrier();
 
+
 			// Map all carrier data fields
 			$carrier->carrier_code                = $carrier_data['carrier_code'] ?? '';
 			$carrier->carrier_product_code        = $carrier_data['carrier_product_code'] ?? '';

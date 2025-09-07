@@ -193,6 +193,10 @@ class Shipping extends WC_Shipping_Method {
 		$label = $this->get_option( 'title' );
 		$cost  = $this->get_option( 'cost' );
 
+		// Get the carrier data to access service_level
+		$carrier = Carrier::find_by_method_id( $carrier_key );
+		$service_level = $carrier ? $carrier->service_level : '';
+
 		$rate = [
 			'id' => $this->get_rate_id(),
 			'label' => $label,
@@ -200,6 +204,7 @@ class Shipping extends WC_Shipping_Method {
 			'calc_tax' => 'per_order',
 			'meta_data' => [
 				'wuunder_method_id' => $carrier_key,
+				'preferred_service_level' => $service_level,
 			],
 		];
 
