@@ -20,7 +20,7 @@ name: Build Release Package
 
 on:
   release:
-    types: [created, published]  # Triggers when a release is created or published
+    types: [published]  # Only triggers when a release is published
   workflow_dispatch:  # Allows manual triggering for testing
     inputs:
       deploy_to_svn:
