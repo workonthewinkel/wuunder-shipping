@@ -8,6 +8,7 @@ use Wuunder\Shipping\Controllers\SettingsController;
 use Wuunder\Shipping\WooCommerce\Register;
 use Wuunder\Shipping\WooCommerce\CheckoutHandler;
 use Wuunder\Shipping\WooCommerce\BlocksIntegration;
+use Wuunder\Shipping\WooCommerce\RestApiHandler;
 use Wuunder\Shipping\WordPress\Admin;
 
 /**
@@ -57,6 +58,9 @@ class Plugin {
 
 		// Block checkout integration
 		( new BlocksIntegration() )->register_hooks();
+
+		// REST API customizations
+		( new RestApiHandler() )->register_hooks();
 
 		// Admin settings
 		( new SettingsController() )->register_hooks();
