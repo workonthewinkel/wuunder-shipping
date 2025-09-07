@@ -25,6 +25,7 @@ class SettingsController extends Controller implements Hookable {
 		add_action( 'wp_ajax_wuunder_test_connection', [ $this, 'ajax_test_connection' ] );
 		add_action( 'wp_ajax_wuunder_refresh_carriers', [ $this, 'ajax_refresh_carriers' ] );
 		add_action( 'wp_ajax_wuunder_disconnect', [ $this, 'ajax_disconnect' ] );
+		add_action( 'woocommerce_shipping_zone_method_status_toggled', [ $this, 'prevent_enabling_disabled_carriers' ], 10, 4 );
 	}
 
 	/**
@@ -51,17 +52,30 @@ class SettingsController extends Controller implements Hookable {
 		$default_section = $has_api_key ? 'carriers' : 'settings';
 		$current_section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : $default_section; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
+		// Get available sections from filter
+		$available_sections = apply_filters( 'wuunder_settings_sections', [ 'carriers', 'settings' ] );
+
+		// Validate current section exists
+		if ( ! in_array( $current_section, $available_sections, true ) ) {
+			$current_section = $default_section;
+		}
+
 		View::display(
 			'admin/settings-tabs',
 			[
 				'current_section' => $current_section,
 				'has_api_key' => $has_api_key,
+				'available_sections' => $available_sections,
 			]
 		);
 
+		// Allow sections to render their own content
+		do_action( 'wuunder_settings_section_' . $current_section, $current_section );
+
+		// Fallback to built-in sections
 		if ( $current_section === 'carriers' ) {
 			$this->display_carriers_section();
-		} else {
+		} elseif ( $current_section === 'settings' ) {
 			$this->display_settings_section();
 		}
 	}
@@ -181,15 +195,72 @@ class SettingsController extends Controller implements Hookable {
 			$enabled_carriers = array_map( 'sanitize_text_field', array_keys( $raw_carriers ) );
 		}
 
+		// Track which carriers are being disabled
+		$disabled_carriers = [];
+
 		// Update each carrier's enabled status
 		foreach ( $carriers as $carrier ) {
+			$was_enabled = $carrier->enabled;
 			$carrier->enabled = in_array( $carrier->get_method_id(), $enabled_carriers, true );
+			
+			// Track carriers that are being disabled
+			if ( $was_enabled && ! $carrier->enabled ) {
+				$disabled_carriers[] = $carrier->get_method_id();
+			}
+			
 			$carrier->save();
+		}
+
+		// Disable corresponding shipping method instances for disabled carriers
+		if ( ! empty( $disabled_carriers ) ) {
+			$this->disable_shipping_method_instances( $disabled_carriers );
 		}
 
 		// Clear WooCommerce cache to refresh shipping methods
 		if ( function_exists( 'wc_clear_template_cache' ) ) {
 			wc_clear_template_cache();
+		}
+	}
+
+	/**
+	 * Disable shipping method instances for disabled carriers.
+	 *
+	 * @param array $disabled_carrier_ids Array of disabled carrier method IDs.
+	 * @return void
+	 */
+	private function disable_shipping_method_instances( array $disabled_carrier_ids ): void {
+		global $wpdb;
+
+		// Get all shipping zones
+		$zones = \WC_Shipping_Zones::get_zones();
+		$zones[0] = \WC_Shipping_Zones::get_zone_by( 'zone_id', 0 ); // Add 'Rest of the World' zone
+
+		foreach ( $zones as $zone ) {
+			if ( is_array( $zone ) ) {
+				$zone_obj = \WC_Shipping_Zones::get_zone( $zone['id'] );
+				$zone_id = $zone['id'];
+			} else {
+				$zone_obj = $zone;
+				$zone_id = $zone_obj->get_id();
+			}
+
+			foreach ( $zone_obj->get_shipping_methods() as $instance_id => $shipping_method ) {
+				// Check if this is a Wuunder shipping method
+				if ( $shipping_method->id === 'wuunder_shipping' ) {
+					$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
+					
+					// If this method uses a disabled carrier, disable the shipping method instance
+					if ( in_array( $carrier_option, $disabled_carrier_ids, true ) ) {
+						// Update the enabled status in the shipping method options
+						$shipping_method->update_option( 'enabled', 'no' );
+						
+						// Follow WooCommerce core pattern: update database directly
+						if ( $wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) ) ) {
+							do_action( 'woocommerce_shipping_zone_method_status_toggled', $instance_id, $shipping_method->id, $zone_id, 0 );
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -262,6 +333,44 @@ class SettingsController extends Controller implements Hookable {
 		delete_option( 'wuunder_carriers_last_update' );
 
 		wp_send_json_success( __( 'Disconnected successfully. API key and carrier data have been cleared.', 'wuunder-shipping' ) );
+	}
+
+	/**
+	 * Prevent enabling shipping methods with disabled carriers.
+	 *
+	 * @param int    $instance_id Instance ID.
+	 * @param string $method_id Method ID.
+	 * @param int    $zone_id Zone ID.
+	 * @param bool   $is_enabled Whether the method is being enabled.
+	 * @return void
+	 */
+	public function prevent_enabling_disabled_carriers( $instance_id, $method_id, $zone_id, $is_enabled ): void {
+		// Only care about enabling Wuunder shipping methods
+		if ( ! $is_enabled || $method_id !== 'wuunder_shipping' ) {
+			return;
+		}
+
+		// Get the shipping method instance
+		$zone = \WC_Shipping_Zones::get_zone( $zone_id );
+		$shipping_methods = $zone->get_shipping_methods();
+		
+		if ( ! isset( $shipping_methods[ $instance_id ] ) ) {
+			return;
+		}
+
+		$shipping_method = $shipping_methods[ $instance_id ];
+		$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
+
+		// Check if the carrier is disabled
+		if ( ! empty( $carrier_option ) ) {
+			$carrier = Carrier::find_by_method_id( $carrier_option );
+			
+			if ( ! $carrier || ! $carrier->enabled ) {
+				// Force disable it again following WooCommerce core pattern
+				global $wpdb;
+				$wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) );
+			}
+		}
 	}
 
 	/**

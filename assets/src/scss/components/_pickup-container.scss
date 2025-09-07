@@ -1,0 +1,20 @@
+/**
+ * Shared pickup container styles for both classic and block checkout
+ */
+
+// Shared pick-up button container for both classic and block checkout
+.wuunder-pickup-container,
+.wuunder-pickup-block-container {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f7f7f7;
+    border-radius: 4px;
+}
+
+// Block checkout support
+.wp-block-woocommerce-checkout {
+    .wuunder-pickup-container,
+    .wuunder-pickup-block-container {
+        margin-top: 16px;
+    }
+}

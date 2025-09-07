@@ -184,4 +184,24 @@
     .wuunder-disconnect-btn {
         margin-left: 10px;
     }
+
+    // Color picker styling for shipping method settings
+    .wuunder-color-picker {
+        width: 60px !important;
+        height: 40px !important;
+        padding: 2px !important;
+        border: 1px solid #ccd0d4 !important;
+        border-radius: 4px !important;
+        cursor: pointer;
+        
+        &:hover {
+            border-color: #8c8f94;
+        }
+        
+        &:focus {
+            border-color: #0073aa;
+            outline: none;
+            box-shadow: 0 0 0 1px #0073aa;
+        }
+    }
 }

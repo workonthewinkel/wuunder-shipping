@@ -1,0 +1,119 @@
+/**
+ * Debug styles for development mode
+ */
+
+.wuunder-debug-container {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 4px;
+
+    .debug-header {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .debug-output {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .debug-order {
+        border: 1px solid #ccc;
+        margin: 10px 0;
+        padding: 10px;
+        background: white;
+
+        .order-header {
+            margin: 0 0 10px 0;
+            color: #0073aa;
+
+            .pickup-badge {
+                background: #46b450;
+                color: white;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 11px;
+                margin-left: 10px;
+            }
+        }
+
+        .shipping-info,
+        .shipping-lines,
+        .pickup-meta {
+            margin-bottom: 15px;
+
+            .info-label {
+                font-weight: bold;
+                margin-bottom: 5px;
+                display: block;
+            }
+
+            .info-content {
+                background: #f7f7f7;
+                padding: 8px;
+                margin-top: 5px;
+                font-family: monospace;
+
+                &.shipping-method {
+                    background: #f7f7f7;
+                    padding: 8px;
+                    margin-top: 5px;
+
+                    .method-title {
+                        font-weight: bold;
+                    }
+
+                    .method-id {
+                        font-size: 12px;
+                        color: #666;
+                    }
+
+                    .meta-details {
+                        margin-top: 5px;
+
+                        summary {
+                            cursor: pointer;
+                            font-size: 12px;
+                        }
+
+                        pre {
+                            font-size: 11px;
+                            margin: 5px 0;
+                        }
+                    }
+                }
+
+                .pickup-meta-item {
+                    margin-bottom: 5px;
+
+                    .meta-key {
+                        font-weight: bold;
+                    }
+
+                    .meta-value {
+                        font-family: monospace;
+                    }
+                }
+            }
+        }
+
+        .full-json {
+            margin-top: 10px;
+
+            summary {
+                cursor: pointer;
+                font-weight: bold;
+            }
+
+            pre {
+                background: #f0f0f0;
+                padding: 10px;
+                overflow-x: auto;
+                font-size: 12px;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+        }
+    }
+}

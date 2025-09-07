@@ -1,14 +1,17 @@
 <?php
 
-namespace Wuunder\Shipping\WooCommerce;
+namespace Wuunder\Shipping\WooCommerce\Methods;
 
 use WC_Shipping_Method;
 use Wuunder\Shipping\Models\Carrier;
+use Wuunder\Shipping\Traits\ShippingMethodSanitization;
 
 /**
  * Simple Wuunder shipping method that uses instance settings.
  */
-class WuunderSimpleShippingMethod extends WC_Shipping_Method {
+class Shipping extends WC_Shipping_Method {
+
+	use ShippingMethodSanitization;
 
 	/**
 	 * Wuunder carrier data.
@@ -27,14 +30,6 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 		$this->instance_id  = absint( $instance_id );
 		$this->method_title = __( 'Wuunder Shipping', 'wuunder-shipping' );
 
-		// Build dynamic link to Wuunder Settings - carriers tab
-		$settings_url             = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=carriers' );
-		$this->method_description = sprintf(
-			/* translators: %s: URL to Wuunder settings page */
-			__( 'Shipping method provided by <a href="%s"><strong>Wuunder</strong></a>', 'wuunder-shipping' ),
-			$settings_url
-		);
-
 		$this->supports = [
 			'shipping-zones',
 			'instance-settings',
@@ -42,6 +37,9 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 		];
 
 		$this->init();
+		
+		// Set method description after init to check carrier status
+		$this->set_method_description();
 	}
 
 	/**
@@ -57,10 +55,46 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	}
 
 	/**
+	 * Set method description based on carrier status.
+	 */
+	private function set_method_description(): void {
+		$settings_url = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=carriers' );
+		$carrier_id = $this->get_option( 'wuunder_carrier', '' );
+		
+		$this->method_description = sprintf(
+			/* translators: %s: URL to Wuunder settings page */
+			__( 'Shipping method provided by <a href="%s"><strong>Wuunder</strong></a>', 'wuunder-shipping' ),
+			$settings_url
+		);
+		
+		if ( $this->is_carrier_disabled( $carrier_id ) ) {
+			$this->method_description .= "\n <i>" . __( '(this shipping carrier is disabled)', 'wuunder-shipping' ) . "</i>";
+		}
+	}
+
+	/**
 	 * Initialize form fields.
 	 */
 	public function init_form_fields(): void {
+		$selected_carrier = $this->get_option( 'wuunder_carrier', '' );
+		$is_carrier_disabled = $this->is_carrier_disabled( $selected_carrier );
+		
+		$enabled_field = [
+			'title' => __( 'Enable/Disable', 'wuunder-shipping' ),
+			'type' => 'checkbox',
+			'description' => __( 'Enable this shipping method', 'wuunder-shipping' ),
+			'default' => 'yes',
+		];
+
+		// If carrier is disabled, prevent enabling the shipping method
+		if ( $is_carrier_disabled ) {
+			$enabled_field['description'] = __( 'Enable this shipping method (this shipping carrier is disabled)', 'wuunder-shipping' );
+			$enabled_field['disabled'] = true;
+			$enabled_field['custom_attributes'] = [ 'readonly' => 'readonly' ];
+		}
+
 		$this->instance_form_fields = [
+			'enabled' => $enabled_field,
 			'title' => [
 				'title' => __( 'Method Title', 'wuunder-shipping' ),
 				'type' => 'text',
@@ -109,6 +143,46 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 	}
 
 	/**
+	 * Check if a carrier is disabled.
+	 *
+	 * @param string $carrier_id Carrier method ID.
+	 * @return bool True if carrier is disabled, false otherwise.
+	 */
+	private function is_carrier_disabled( string $carrier_id ): bool {
+		if ( empty( $carrier_id ) ) {
+			return false;
+		}
+
+		$carrier = Carrier::find_by_method_id( $carrier_id );
+		return $carrier ? ! $carrier->enabled : true;
+	}
+
+	/**
+	 * Process admin options and validate carrier status.
+	 *
+	 * @return bool
+	 */
+	public function process_admin_options(): bool {
+		$result = parent::process_admin_options();
+		
+		// Check if trying to enable a method with disabled carrier
+		$enabled = $this->get_option( 'enabled', 'yes' );
+		$carrier_id = $this->get_option( 'wuunder_carrier', '' );
+		
+		if ( $enabled === 'yes' && $this->is_carrier_disabled( $carrier_id ) ) {
+			// Force disable the method
+			$this->update_option( 'enabled', 'no' );
+			
+			// Add an admin notice
+			\WC_Admin_Settings::add_error( 
+				__( 'The shipping method could not be enabled because the selected carrier is disabled in Wuunder settings.', 'wuunder-shipping' ) 
+			);
+		}
+		
+		return $result;
+	}
+
+	/**
 	 * Calculate shipping rate.
 	 *
 	 * @param array<string, mixed> $package Package data.
@@ -132,20 +206,6 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 		$this->add_rate( $rate );
 	}
 
-	/**
-	 * Sanitize the title by checking if the title is empty.
-	 *
-	 * @param mixed $value Title value.
-	 * @return string Sanitized title.
-	 * @throws \Exception If the title is empty.
-	 */
-	public function sanitize_title( $value ) {
-		$value = sanitize_text_field( $value );
-		if ( empty( $value ) ) {
-			throw new \Exception( esc_html__( 'The title for a shipping method is required.', 'wuunder-shipping' ) );
-		}
-		return $value;
-	}
 
 	/**
 	 * Sanitize the carrier by checking if the carrier value exists in the database.
@@ -158,35 +218,6 @@ class WuunderSimpleShippingMethod extends WC_Shipping_Method {
 		$carrier = Carrier::find_by_method_id( $value );
 		if ( ! $carrier ) {
 			throw new \Exception( esc_html__( 'The selected carrier is not valid.', 'wuunder-shipping' ) );
-		}
-		return $value;
-	}
-
-	/**
-	 * Sanitize the cost, inspired by the WooCommerce shipping method sanitize_cost function.
-	 *
-	 * @param mixed $value Cost value.
-	 * @return string Sanitized cost.
-	 * @throws \Exception If the cost is invalid.
-	 */
-	public function sanitize_cost( $value ) {
-		$value = is_null( $value ) ? '0' : $value;
-		$value = empty( $value ) ? '0' : $value;
-		$value = wp_kses_post( trim( wp_unslash( $value ) ) );
-		$value = str_replace( array( get_woocommerce_currency_symbol(), html_entity_decode( get_woocommerce_currency_symbol() ) ), '', $value );
-
-		// Get the current locale and all possible decimal separators.
-		$locale   = localeconv();
-		$decimals = array( wc_get_price_decimal_separator(), $locale['decimal_point'], $locale['mon_decimal_point'], ',' );
-
-		// Remove whitespace, then decimals, and then invalid start/end characters.
-		$value = preg_replace( '/\s+/', '', $value );
-		$value = str_replace( $decimals, '.', $value );
-		$value = rtrim( ltrim( $value, "\t\n\r\0\x0B+*/" ), "\t\n\r\0\x0B+-*/" );
-
-		// If the value is not numeric, then throw an exception.
-		if ( ! is_numeric( $value ) ) {
-			throw new \Exception( esc_html__( 'Invalid cost entered.', 'wuunder-shipping' ) );
 		}
 		return $value;
 	}

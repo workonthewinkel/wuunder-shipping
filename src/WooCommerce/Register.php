@@ -5,9 +5,9 @@ namespace Wuunder\Shipping\WooCommerce;
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 
 /**
- * Shipping Method Registry for dynamically registering carrier-specific shipping methods.
+ * Register class for dynamically registering carrier-specific shipping methods.
  */
-class ShippingMethodRegistry implements Hookable {
+class Register implements Hookable {
 
 
 	/**
@@ -27,7 +27,10 @@ class ShippingMethodRegistry implements Hookable {
 	 */
 	public function register_shipping_methods( array $methods ): array {
 		// Register our single shipping method that can handle all carriers
-		$methods['wuunder_shipping'] = WuunderSimpleShippingMethod::class;
+		$methods['wuunder_shipping'] = Methods\Shipping::class;
+
+		// Register the pick-up point shipping method
+		$methods['wuunder_pickup'] = Methods\Pickup::class;
 
 		return $methods;
 	}

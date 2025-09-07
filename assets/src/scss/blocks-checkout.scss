@@ -1,0 +1,20 @@
+/**
+ * Styles for Wuunder Pickup Block Checkout Integration
+ */
+
+// Import shared components
+@import 'components/pickup-container';
+@import 'components/pickup-modal';
+
+// Responsive adjustments for block-specific elements
+@media (max-width: 768px) {
+    .wuunder-pickup-block-container {
+        .wuunder-selected-pickup-block {
+            flex-direction: column;
+            
+            .wuunder-change-pickup {
+                align-self: flex-start;
+            }
+        }
+    }
+}

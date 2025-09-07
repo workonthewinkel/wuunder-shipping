@@ -12,10 +12,11 @@ mix.webpackConfig({
 });
 
 mix.sass('assets/src/scss/admin.scss', 'assets/dist/css/admin.css')
-   .sass('assets/src/scss/main.scss', 'assets/dist/css/main.css')
+   .sass('assets/src/scss/checkout.scss', 'assets/dist/css/checkout.css')
+   .sass('assets/src/scss/blocks-checkout.scss', 'assets/dist/css/blocks.css')
+   .sass('assets/src/scss/debug.scss', 'assets/dist/css/debug.css')
    .options({
        processCssUrls: false
    });
 
-// mix.js('assets/src/js/main.js', 'assets/dist/js/main.js');
-mix.js('assets/src/js/admin.js', 'assets/dist/js/admin.js');
+// JavaScript files are now built by webpack.config.js (WordPress Scripts)

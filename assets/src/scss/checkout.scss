@@ -1,0 +1,47 @@
+/**
+ * Wuunder Pick-up Point Checkout Styles
+ */
+
+// Import shared components
+@import 'components/pickup-container';
+@import 'components/pickup-modal';
+
+// Classic checkout specific styles
+.wuunder-pickup-container {
+    .button.wuunder-select-pickup-point {
+        background: #000000;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: background 0.3s ease;
+
+        &:hover {
+            background: #333333;
+        }
+    }
+
+    .wuunder-selected-pickup-point {
+        .pickup-point-info {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .wuunder-change-pickup-point {
+            color: #000000;
+            text-decoration: none;
+            font-size: 13px;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+
+

@@ -21,10 +21,14 @@ package-lock.json
 package.json
 webpack.mix.js
 
+# Debug files
+src/Debug/
+
 # docs
 CLI.MD
 NOTES.MD
 README.MD
+DIAGRAM.MD
 
 # auto generated files
 .DS_Store
