@@ -37,6 +37,12 @@ class CheckoutHandler implements Hookable {
 		// Override shipping method display in admin to show pickup point details
 		add_filter( 'woocommerce_order_shipping_to_display', [ $this, 'customize_shipping_display_for_pickup' ], 10, 2 );
 
+		// Hide pickup point metadata in admin except pickup_point_id
+		add_filter( 'woocommerce_hidden_order_itemmeta', [ $this, 'hide_pickup_point_metadata_in_admin' ], 10, 1 );
+
+		// Customize pickup point ID display in admin
+		add_filter( 'woocommerce_order_item_display_meta_key', [ $this, 'customize_pickup_point_meta_display' ], 10, 3 );
+
 		// AJAX handler for classic checkout pickup point storage
 		add_action( 'wp_ajax_wuunder_store_pickup_point_classic', [ $this, 'ajax_store_pickup_point_classic' ] );
 		add_action( 'wp_ajax_nopriv_wuunder_store_pickup_point_classic', [ $this, 'ajax_store_pickup_point_classic' ] );
@@ -497,5 +503,49 @@ class CheckoutHandler implements Hookable {
 	 */
 	private function is_valid_pickup_point( $pickup_point ): bool {
 		return $pickup_point && is_array( $pickup_point ) && ! empty( $pickup_point['id'] );
+	}
+
+	/**
+	 * Hide pickup point metadata in admin except pickup_point_id.
+	 *
+	 * @param array $hidden_meta Array of metadata keys to hide.
+	 * @return array
+	 */
+	public function hide_pickup_point_metadata_in_admin( $hidden_meta ): array {
+		// Add all pickup point metadata except pickup_point_id to hidden list
+		$pickup_point_meta_to_hide = [
+			'pickup_point_name',
+			'pickup_point_street',
+			'pickup_point_street_name',
+			'pickup_point_house_number',
+			'pickup_point_postcode',
+			'pickup_point_city',
+			'pickup_point_country',
+			'pickup_point_carrier',
+			'pickup_point_opening_hours',
+		];
+
+		return array_merge( $hidden_meta, $pickup_point_meta_to_hide );
+	}
+
+	/**
+	 * Customize pickup point meta key display in admin.
+	 *
+	 * @param string                $display_key The display key.
+	 * @param \WC_Meta_Data         $meta Meta data object.
+	 * @param \WC_Order_Item_Shipping $item Order item object.
+	 * @return string
+	 */
+	public function customize_pickup_point_meta_display( $display_key, $meta, $item ): string {
+		// Only customize for pickup point ID on shipping items
+		if ( $meta->key === 'pickup_point_id' && $item instanceof \WC_Order_Item_Shipping ) {
+			// Check if this is a pickup shipping method
+			if ( strpos( $item->get_method_id(), 'wuunder_pickup' ) !== false ) {
+				// Return simple 'ID' label
+				return __( 'Method ID', 'wuunder-shipping' );
+			}
+		}
+
+		return $display_key;
 	}
 }
