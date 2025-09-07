@@ -40,6 +40,9 @@ class RestApiHandler implements Hookable {
 		// Add it as a top-level property in the response
 		$response->data['wuunder_parcelshop_id'] = $parcelshop_id;
 
+		// Also rename pickup_point_id to wuunder_parcelshop_id in shipping lines metadata
+		$this->rename_shipping_line_metadata_keys( $response->data );
+
 		return $response;
 	}
 
@@ -66,5 +69,35 @@ class RestApiHandler implements Hookable {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Rename pickup_point_id to wuunder_parcelshop_id in shipping lines metadata.
+	 *
+	 * @param array $response_data Reference to the response data array.
+	 * @return void
+	 */
+	private function rename_shipping_line_metadata_keys( &$response_data ): void {
+		if ( empty( $response_data['shipping_lines'] ) || ! is_array( $response_data['shipping_lines'] ) ) {
+			return;
+		}
+
+		foreach ( $response_data['shipping_lines'] as &$shipping_line ) {
+			if ( empty( $shipping_line['meta_data'] ) || ! is_array( $shipping_line['meta_data'] ) ) {
+				continue;
+			}
+
+			// Check if this is a Wuunder pickup method
+			if ( strpos( $shipping_line['method_id'] ?? '', 'wuunder_pickup' ) === false ) {
+				continue;
+			}
+
+			// Rename pickup_point_id to wuunder_parcelshop_id in meta_data
+			foreach ( $shipping_line['meta_data'] as &$meta_item ) {
+				if ( isset( $meta_item['key'] ) && $meta_item['key'] === 'pickup_point_id' ) {
+					$meta_item['key'] = 'wuunder_parcelshop_id';
+				}
+			}
+		}
 	}
 }
