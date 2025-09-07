@@ -112,112 +112,31 @@ class DebugController implements Hookable {
 	 * Get orders data as it appears in REST API
 	 */
 	private function get_orders_rest_data(): array {
-		$orders = wc_get_orders(
-			[
-				'limit' => 10,
-				'orderby' => 'date',
-				'order' => 'DESC',
-				'status' => 'any',
-			]
-		);
-
-		error_log( 'Wuunder Debug: Found ' . count( $orders ) . ' orders' );
-
-		$orders_data = [];
-
-		foreach ( $orders as $order ) {
-			// Convert order directly to array format similar to REST API
-			$order_data = [
-				'id' => $order->get_id(),
-				'status' => $order->get_status(),
-				'date_created' => $order->get_date_created() ? $order->get_date_created()->format( 'c' ) : '',
-				'total' => $order->get_total(),
-				'currency' => $order->get_currency(),
-				'billing' => [
-					'first_name' => $order->get_billing_first_name(),
-					'last_name' => $order->get_billing_last_name(),
-					'company' => $order->get_billing_company(),
-					'address_1' => $order->get_billing_address_1(),
-					'address_2' => $order->get_billing_address_2(),
-					'city' => $order->get_billing_city(),
-					'state' => $order->get_billing_state(),
-					'postcode' => $order->get_billing_postcode(),
-					'country' => $order->get_billing_country(),
-					'email' => $order->get_billing_email(),
-					'phone' => $order->get_billing_phone(),
-				],
-				'shipping' => [
-					'first_name' => $order->get_shipping_first_name(),
-					'last_name' => $order->get_shipping_last_name(),
-					'company' => $order->get_shipping_company(),
-					'address_1' => $order->get_shipping_address_1(),
-					'address_2' => $order->get_shipping_address_2(),
-					'city' => $order->get_shipping_city(),
-					'state' => $order->get_shipping_state(),
-					'postcode' => $order->get_shipping_postcode(),
-					'country' => $order->get_shipping_country(),
-				],
-				'shipping_lines' => $this->format_shipping_lines( $order ),
-				'meta_data' => $this->format_meta_data( $order ),
-			];
-
-			error_log( 'Wuunder Debug: Successfully processed order ' . $order->get_id() );
-			$orders_data[] = $order_data;
+		// Make actual REST API request to get orders list
+		$request = new \WP_REST_Request( 'GET', '/wc/v2/orders' );
+		$request->set_param( 'per_page', 10 );
+		$request->set_param( 'orderby', 'date' );
+		$request->set_param( 'order', 'desc' );
+		
+		$response = rest_do_request( $request );
+		
+		if ( is_wp_error( $response ) ) {
+			error_log( 'Wuunder Debug: REST API error: ' . $response->get_error_message() );
+			return [];
 		}
-
+		
+		$orders_data = $response->get_data();
+		
+		if ( ! is_array( $orders_data ) ) {
+			error_log( 'Wuunder Debug: Invalid REST API response format' );
+			return [];
+		}
+		
+		error_log( 'Wuunder Debug: Found ' . count( $orders_data ) . ' orders via REST API' );
+		
 		return $orders_data;
 	}
 
-	/**
-	 * Format shipping lines for display
-	 */
-	private function format_shipping_lines( \WC_Order $order ): array {
-		$shipping_lines = [];
-
-		foreach ( $order->get_shipping_methods() as $shipping_item ) {
-			$shipping_lines[] = [
-				'id' => $shipping_item->get_id(),
-				'method_id' => $shipping_item->get_method_id(),
-				'method_title' => $shipping_item->get_method_title(),
-				'total' => $shipping_item->get_total(),
-				'meta_data' => $this->format_item_meta_data( $shipping_item ),
-			];
-		}
-
-		return $shipping_lines;
-	}
-
-	/**
-	 * Format order meta data
-	 */
-	private function format_meta_data( \WC_Order $order ): array {
-		$meta_data = [];
-
-		foreach ( $order->get_meta_data() as $meta ) {
-			$meta_data[] = [
-				'key' => $meta->key,
-				'value' => $meta->value,
-			];
-		}
-
-		return $meta_data;
-	}
-
-	/**
-	 * Format item meta data
-	 */
-	private function format_item_meta_data( \WC_Order_Item $item ): array {
-		$meta_data = [];
-
-		foreach ( $item->get_meta_data() as $meta ) {
-			$meta_data[] = [
-				'key' => $meta->key,
-				'value' => $meta->value,
-			];
-		}
-
-		return $meta_data;
-	}
 
 	/**
 	 * Render orders data in a readable format
