@@ -37,8 +37,12 @@ class RestApiHandler implements Hookable {
 		// Get the parcelshop ID from the order
 		$parcelshop_id = $this->get_wuunder_parcelshop_id_from_order( $order );
 
-		// Add it as a top-level property in the response
+		// Get the preferred service level from the order
+		$preferred_service_level = $this->get_preferred_service_level_from_order( $order );
+
+		// Add as top-level properties in the response
 		$response->data['wuunder_parcelshop_id'] = $parcelshop_id;
+		$response->data['preferred_service_level'] = $preferred_service_level;
 
 		// Also rename pickup_point_id to wuunder_parcelshop_id in shipping lines metadata
 		$this->rename_shipping_line_metadata_keys( $response->data );
@@ -64,6 +68,31 @@ class RestApiHandler implements Hookable {
 				
 				if ( $parcelshop_id ) {
 					return $parcelshop_id;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get the preferred service level from order shipping metadata.
+	 *
+	 * @param \WC_Order $order Order object (works with both HPOS and classic storage).
+	 * @return string|null Preferred service level or null if not found.
+	 */
+	private function get_preferred_service_level_from_order( $order ): ?string {
+		// Get shipping methods
+		$shipping_methods = $order->get_shipping_methods();
+
+		foreach ( $shipping_methods as $shipping_method ) {
+			// Check if this is a Wuunder method (pickup or regular)
+			if ( strpos( $shipping_method->get_method_id(), 'wuunder_' ) !== false ) {
+				// Get the preferred service level from meta
+				$service_level = $shipping_method->get_meta( 'preferred_service_level' );
+				
+				if ( $service_level ) {
+					return $service_level;
 				}
 			}
 		}
