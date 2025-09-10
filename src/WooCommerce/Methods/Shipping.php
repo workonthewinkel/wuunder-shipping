@@ -203,7 +203,7 @@ class Shipping extends WC_Shipping_Method {
 			'cost' => $cost,
 			'calc_tax' => 'per_order',
 			'meta_data' => [
-				'wuunder_method_id' => $carrier_key,
+				'service_code' => $carrier_key,
 				'preferred_service_level' => $service_level,
 			],
 		];

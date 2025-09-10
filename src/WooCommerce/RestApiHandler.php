@@ -42,7 +42,7 @@ class RestApiHandler implements Hookable {
 
 		// Add as top-level properties in the response
 		$response->data['wuunder_parcelshop_id'] = $parcelshop_id;
-		$response->data['preferred_service_level'] = $preferred_service_level;
+		$response->data['wuunder_preferred_service_level'] = $preferred_service_level;
 
 		// Also rename pickup_point_id to wuunder_parcelshop_id in shipping lines metadata
 		$this->rename_shipping_line_metadata_keys( $response->data );
