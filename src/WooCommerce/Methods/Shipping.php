@@ -78,13 +78,6 @@ class Shipping extends WC_Shipping_Method {
 	public function init_form_fields(): void {
 		$selected_carrier = $this->get_option( 'wuunder_carrier', '' );
 		$is_carrier_disabled = $this->is_carrier_disabled( $selected_carrier );
-		
-		$enabled_field = [
-			'title' => __( 'Enable/Disable', 'wuunder-shipping' ),
-			'type' => 'checkbox',
-			'description' => __( 'Enable this shipping method', 'wuunder-shipping' ),
-			'default' => 'yes',
-		];
 
 		// If carrier is disabled, prevent enabling the shipping method
 		if ( $is_carrier_disabled ) {
@@ -94,7 +87,6 @@ class Shipping extends WC_Shipping_Method {
 		}
 
 		$this->instance_form_fields = [
-			'enabled' => $enabled_field,
 			'title' => [
 				'title' => __( 'Method Title', 'wuunder-shipping' ),
 				'type' => 'text',
