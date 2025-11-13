@@ -154,22 +154,11 @@ class CheckoutHandler implements Hookable {
 			return $address;
 		}
 
-		// Build address_2 field with carrier and optionally ID for admin
-		$address_2_parts = [];
-		if ( ! empty( $pickup_point['carrier'] ) ) {
-			/* translators: %s: Carrier name */
-			$address_2_parts[] = sprintf( __( 'Carrier: %s', 'wuunder-shipping' ), strtoupper( $pickup_point['carrier'] ) );
-		}
-		if ( is_admin() && ! empty( $pickup_point['id'] ) ) {
-			/* translators: %s: Pickup point ID */
-			$address_2_parts[] = sprintf( __( 'ID: %s', 'wuunder-shipping' ), $pickup_point['id'] );
-		}
-
 		// Replace with pickup point address
 		$pickup_address = [
 			'company'    => $pickup_point['name'] ?? '',
 			'address_1'  => $pickup_point['street'] ?? '',
-			'address_2'  => implode( "\n", $address_2_parts ),
+			'address_2'  => '',
 			'city'       => $pickup_point['city'] ?? '',
 			'state'      => '',
 			'postcode'   => $pickup_point['postcode'] ?? '',
