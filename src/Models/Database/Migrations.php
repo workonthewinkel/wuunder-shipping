@@ -2,6 +2,7 @@
 
 namespace Wuunder\Shipping\Models\Database;
 
+use Wuunder\Shipping\Models\Schema\AddAcceptsParcelshopDeliveryColumn;
 use Wuunder\Shipping\Models\Schema\AddCarriersTable;
 
 /**
@@ -36,6 +37,7 @@ class Migrations {
 
 		return [
 			new AddCarriersTable(),
+			new AddAcceptsParcelshopDeliveryColumn(),
 		];
 	}
 }

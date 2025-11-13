@@ -164,6 +164,13 @@ class Carrier extends Model {
 	public bool $is_parcelshop_drop_off = false;
 
 	/**
+	 * Accepts parcelshop delivery.
+	 *
+	 * @var bool
+	 */
+	public bool $accepts_parcelshop_delivery = false;
+
+	/**
 	 * Includes ad hoc pickup.
 	 *
 	 * @var bool
@@ -297,6 +304,38 @@ class Carrier extends Model {
 	}
 
 	/**
+	 * Get carriers that accept parcelshop delivery.
+	 *
+	 * @return array
+	 */
+	public static function get_parcelshop_carriers(): array { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		global $wpdb;
+		$table = self::get_table_name();
+
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE accepts_parcelshop_delivery = 1 ORDER BY carrier_name, product_name', // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+				$table
+			),
+			ARRAY_A
+		);
+
+		$carriers = [];
+		foreach ( $rows as $row ) {
+			$carrier = new self();
+			foreach ( $row as $key => $value ) {
+				if ( property_exists( $carrier, $key ) ) {
+					$carrier->$key = $value;
+				}
+			}
+
+			$carriers[] = $carrier;
+		}
+
+		return $carriers;
+	}
+
+	/**
 	 * Save carrier to database.
 	 *
 	 * @return bool
@@ -327,6 +366,7 @@ class Carrier extends Model {
 			'modality'                     => $this->modality,
 			'is_return'                    => $this->is_return ? 1 : 0,
 			'is_parcelshop_drop_off'       => $this->is_parcelshop_drop_off ? 1 : 0,
+			'accepts_parcelshop_delivery'  => $this->accepts_parcelshop_delivery ? 1 : 0,
 			'includes_ad_hoc_pickup'       => $this->includes_ad_hoc_pickup ? 1 : 0,
 			'info'                         => $this->info,
 			'tags'                         => $this->tags,

@@ -423,6 +423,7 @@ class SettingsController extends Controller implements Hookable {
 			$carrier->modality                    = $carrier_data['modality'] ?? '';
 			$carrier->is_return                   = $carrier_data['is_return'] ?? false;
 			$carrier->is_parcelshop_drop_off      = $carrier_data['is_parcelshop_drop_off'] ?? false;
+			$carrier->accepts_parcelshop_delivery = $carrier_data['accepts_parcelshop_delivery'] ?? false;
 			$carrier->includes_ad_hoc_pickup      = $carrier_data['includes_ad_hoc_pickup'] ?? false;
 			$carrier->info                        = $carrier_data['info'] ?? '';
 			$carrier->tags                        = is_array( $carrier_data['tags'] ?? '' ) ? wp_json_encode( $carrier_data['tags'] ) : ( $carrier_data['tags'] ?? '' );
