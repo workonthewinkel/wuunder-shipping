@@ -223,6 +223,29 @@ class Carrier extends Model {
 	}
 
 	/**
+	 * Hydrate carrier models from raw database rows.
+	 *
+	 * @param array $rows Raw rows from database.
+	 * @return array
+	 */
+	private static function hydrate_carriers( array $rows ): array {
+		$carriers = [];
+
+		foreach ( $rows as $row ) {
+			$carrier = new self();
+			foreach ( $row as $key => $value ) {
+				if ( property_exists( $carrier, $key ) ) {
+					$carrier->$key = $value;
+				}
+			}
+
+			$carriers[] = $carrier;
+		}
+
+		return $carriers;
+	}
+
+	/**
 	 * Find carrier by method ID.
 	 *
 	 * @param string $method_id Method ID.
@@ -265,74 +288,62 @@ class Carrier extends Model {
 	 * Get all carriers.
 	 *
 	 * @param bool $enabled_only Only get enabled carriers.
+	 * @param bool|null $accepts_parcelshop Filter by parcelshop delivery flag: true for only parcelshop, false to exclude, null for all.
 	 * @return array
 	 */
-	public static function get_all( $enabled_only = false ): array { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public static function get_all( $enabled_only = false, ?bool $accepts_parcelshop = null ): array { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		global $wpdb;
 		$table = self::get_table_name();
 
+		$sql          = 'SELECT * FROM %i';
+		$params       = [ $table ];
+		$conditions   = [];
+
 		if ( $enabled_only ) {
-			$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-				$wpdb->prepare(
-					'SELECT * FROM %i WHERE enabled = 1 ORDER BY carrier_name, product_name', // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-					$table
-				),
-				ARRAY_A
-			);
-		} else {
-			$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-				$wpdb->prepare(
-					'SELECT * FROM %i ORDER BY carrier_name, product_name', // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-					$table
-				),
-				ARRAY_A
-			);
+			$conditions[]   = 'enabled = %d';
+			$params[] = 1;
 		}
 
-		$carriers = [];
-		foreach ( $rows as $row ) {
-			$carrier = new self();
-			foreach ( $row as $key => $value ) {
-				if ( property_exists( $carrier, $key ) ) {
-					$carrier->$key = $value;
-				}
-			}
-			$carriers[] = $carrier;
+		if ( $accepts_parcelshop === true ) {
+			$conditions[] = 'accepts_parcelshop_delivery = %d';
+			$params[]     = 1;
+		} elseif ( $accepts_parcelshop === false ) {
+			$conditions[] = 'accepts_parcelshop_delivery = %d';
+			$params[]     = 0;
 		}
 
-		return $carriers;
+		if ( ! empty( $conditions ) ) {
+			$sql .= ' WHERE ' . implode( ' AND ', $conditions );
+		}
+
+		$sql .= ' ORDER BY carrier_name, product_name';
+
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare( $sql, $params ),
+			ARRAY_A
+		);
+
+		return self::hydrate_carriers( $rows );
 	}
 
 	/**
 	 * Get carriers that accept parcelshop delivery.
 	 *
+	 * @param bool $enabled_only Only get enabled carriers.
 	 * @return array
 	 */
-	public static function get_parcelshop_carriers(): array { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-		global $wpdb;
-		$table = self::get_table_name();
+	public static function get_parcelshop_carriers( $enabled_only = false ): array {
+		return self::get_all( $enabled_only, true );
+	}
 
-		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-			$wpdb->prepare(
-				'SELECT * FROM %i WHERE accepts_parcelshop_delivery = 1 ORDER BY carrier_name, product_name', // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-				$table
-			),
-			ARRAY_A
-		);
-
-		$carriers = [];
-		foreach ( $rows as $row ) {
-			$carrier = new self();
-			foreach ( $row as $key => $value ) {
-				if ( property_exists( $carrier, $key ) ) {
-					$carrier->$key = $value;
-				}
-			}
-
-			$carriers[] = $carrier;
-		}
-
-		return $carriers;
+	/**
+	 * Get carriers that do not accept parcelshop delivery.
+	 *
+	 * @param bool $enabled_only Only get enabled carriers.
+	 * @return array
+	 */
+	public static function get_standard_carriers( $enabled_only = false ): array {
+		return self::get_all( $enabled_only, false );
 	}
 
 	/**
