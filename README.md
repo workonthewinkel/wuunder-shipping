@@ -87,16 +87,19 @@ Version numbers are **manually managed** in the `wuunder-shipping.php` file head
 
 3. **Merge the release PR:**
    - Merge PR to `release` branch
-   - Release Drafter automatically creates/updates a draft release
-   - Build workflow automatically triggers and:
-     - ✅ Builds production assets (`npm run production`)
-     - ✅ Installs production dependencies (`composer install --no-dev`)
-     - ✅ Creates plugin zip package
-     - ✅ Uploads package to the draft release
+   - Two workflows automatically trigger:
+     - **Release Drafter**: Creates/updates draft release (tagged with version from plugin file)
+     - **Build Release Package**: Builds assets and attaches zip to the draft
+       - ✅ Builds production assets (`npm run production`)
+       - ✅ Installs production dependencies (`composer install --no-dev`)
+       - ✅ Creates plugin zip package
+       - ✅ Uploads package to the draft release (may take 1-2 minutes)
 
 4. **Test the release:**
+   - Wait 1-2 minutes for the build workflow to complete
    - Download the zip from the draft release at https://github.com/workonthewinkel/wuunder/releases
    - Test locally to ensure everything works
+   - **Note**: If zip is missing, check the Actions tab for workflow status or manually trigger the "Build Release Package" workflow
 
 5. **Publish the release:**
    - Review version number (read from `wuunder-shipping.php`)
