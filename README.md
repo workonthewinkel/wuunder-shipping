@@ -51,6 +51,54 @@ composer check-cs  # Check coding standards
 composer fix-cs    # Fix coding standards
 ```
 
+## Release Process
+
+This plugin uses an automated release workflow with WordPress.org SVN sync:
+
+### Creating a Release
+
+1. **Merge PRs with proper labels:**
+   - `feature` or `enhancement` - New features (minor version bump)
+   - `bug` or `bugfix` - Bug fixes (patch version bump)
+   - `major` or `breaking` - Breaking changes (major version bump)
+   - `chore` - Maintenance tasks (patch version bump)
+   - `docs` - Documentation updates
+
+2. **Release Drafter automatically creates/updates a draft release** when PRs are merged to `main`
+
+3. **Draft release is automatically built** - The workflow triggers and:
+   - ✅ Builds production assets (`npm run production`)
+   - ✅ Installs production dependencies (`composer install --no-dev`)
+   - ✅ Creates plugin zip package
+   - ✅ Uploads package to the draft release
+
+4. **Test the release** - Download the zip from the draft release and test locally
+
+5. **Review the draft release** at https://github.com/workonthewinkel/wuunder/releases
+   - Check version number (auto-calculated from labels)
+   - Review changelog (auto-generated from PR titles)
+   - Test the attached zip file
+   - Edit if needed
+
+6. **Publish the release** - This automatically triggers:
+   - ✅ Deploy to WordPress.org SVN repository
+
+### Manual Release Testing
+
+To test the release build without publishing:
+```bash
+# Install WP-CLI dist-archive package
+wp package install wp-cli/dist-archive-command
+
+# Build production assets
+composer install --no-dev --optimize-autoloader
+npm ci
+WP_CLI_ALLOW_ROOT=1 npm run build
+
+# Create distribution package
+wp dist-archive . ./wuunder-shipping.zip --plugin-dirname=wuunder-shipping
+```
+
 ## Configuration
 
 1. Navigate to WooCommerce > Settings > Wuunder

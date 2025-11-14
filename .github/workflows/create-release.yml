@@ -1,13 +1,11 @@
 name: Build Release Package
 
 # This workflow creates a production-ready release package for the Wuunder Shipping plugin
-# and optionally deploys it to WordPress.org SVN repository.
+# and deploys it to WordPress.org SVN repository.
 #
 # Triggers:
-# - Creating a GitHub release (builds and attaches package)
-# - Publishing a GitHub release (builds, attaches, and deploys to SVN)
-# - Manual workflow dispatch with optional SVN deployment
-# - Local testing with act: `act workflow_dispatch`
+# - Creating a draft release (builds and attaches package for testing)
+# - Publishing a GitHub release (deploys to SVN)
 #
 # The workflow:
 # 1. Reads version from the main plugin file (wuunder-shipping.php)
@@ -15,19 +13,12 @@ name: Build Release Package
 # 3. Builds production assets (CSS/JS)
 # 4. Creates a distribution package excluding development files (via .distignore)
 # 5. Generates SHA256 checksum for security
-# 6. Uploads the package to GitHub release (if triggered by release)
-# 7. Deploys to WordPress.org SVN (if release is published or deploy_to_svn=true)
+# 6. Uploads the package to GitHub release (on both draft and publish)
+# 7. Deploys to WordPress.org SVN (only when published)
 
 on:
   release:
-    types: [published]  # Only triggers when a release is published
-  workflow_dispatch:  # Allows manual triggering for testing
-    inputs:
-      deploy_to_svn:
-        description: 'Deploy to WordPress.org SVN'
-        required: false
-        type: boolean
-        default: false
+    types: [created, published]  # Triggers on draft creation and when published
 
 permissions:
   contents: write  # Required for creating releases
@@ -103,30 +94,15 @@ jobs:
           sha256sum "${PLUGIN_NAME}-${VERSION}.zip" > "${PLUGIN_NAME}-${VERSION}.zip.sha256"
 
       - name: Upload assets to release
-        # When triggered by release event, upload to that release
-        # When triggered manually, only create artifacts (no release to upload to)
-        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: |
             wuunder-shipping-*.zip
             wuunder-shipping-*.zip.sha256
           fail_on_unmatched_files: true
-      
-      - name: Upload artifacts (manual trigger)
-        # When manually triggered, save artifacts for download
-        if: github.event_name == 'workflow_dispatch' && !inputs.deploy_to_svn
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-package-${{ steps.get_version.outputs.version }}
-          path: |
-            wuunder-shipping-*.zip
-            wuunder-shipping-*.zip.sha256
-          retention-days: 7
 
       - name: Prepare for SVN deployment
-        # Deploy to SVN when: release is published OR manual trigger with deploy_to_svn=true
-        if: github.event.action == 'published' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_svn)
+        if: github.event.action == 'published'
         run: |
           PLUGIN_NAME="wuunder-shipping"
           VERSION="${{ steps.get_version.outputs.version }}"
@@ -145,8 +121,7 @@ jobs:
           echo "Prepared for SVN deployment"
 
       - name: Check SVN repository exists
-        # Check if the WordPress.org SVN repository exists before attempting deployment
-        if: github.event.action == 'published' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_svn)
+        if: github.event.action == 'published'
         id: check_svn
         run: |
           # Check if the SVN repository exists
@@ -159,12 +134,11 @@ jobs:
             echo "This is expected for new plugins before WordPress.org approval"
           fi
 
-      - name: Deploy to WordPress.org SVN (DRY RUN)
-        # Only run if SVN repository exists
-        if: (github.event.action == 'published' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_svn)) && steps.check_svn.outputs.svn_exists == 'true'
+      - name: Deploy to WordPress.org SVN
+        if: github.event.action == 'published' && steps.check_svn.outputs.svn_exists == 'true'
         uses: 10up/action-wordpress-plugin-deploy@stable
         with:
-          dry-run: true  # Enable dry-run until SVN credentials are available
+          dry-run: true
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME || 'dummy' }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD || 'dummy' }}
@@ -172,14 +146,3 @@ jobs:
           VERSION: ${{ steps.get_version.outputs.version }}
           BUILD_DIR: svn-deploy/wuunder-shipping
           ASSETS_DIR: .wordpress-org
-      
-      - name: SVN deployment skipped
-        # Show message when SVN deployment is skipped
-        if: (github.event.action == 'published' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_svn)) && steps.check_svn.outputs.svn_exists == 'false'
-        run: |
-          echo "🔄 SVN deployment skipped - repository not available yet"
-          echo "To deploy to WordPress.org:"
-          echo "1. Submit plugin for review at https://wordpress.org/plugins/developers/add/"
-          echo "2. Wait for approval and SVN repository creation"
-          echo "3. Set up SVN_USERNAME and SVN_PASSWORD secrets"
-          echo "4. Change dry-run to false in the workflow"
