@@ -1,0 +1,61 @@
+name: Release PR Changelog Reminder
+
+# This workflow adds a comment to release PRs reminding you to update the changelog
+# in readme.txt. This is just a check/reminder - we assume you've already updated it.
+
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - release
+
+permissions:
+  pull-requests: write
+
+jobs:
+  changelog-reminder:
+    name: Changelog Reminder
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from plugin file
+        id: get_version
+        run: |
+          VERSION=$(grep "Version:" wuunder-shipping.php | sed 's/.*Version: //' | tr -d ' ')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const version = '${{ steps.get_version.outputs.version }}';
+
+            const body = `## Release Checklist for v${version}
+
+            ### Before merging, please ensure:
+
+            - [ ] Version updated in \`wuunder-shipping.php\` to \`${version}\`
+            - [ ] Changelog updated in \`readme.txt\` under \`== Changelog ==\` section
+
+            ### If changelog is not updated yet:
+
+            1. Checkout this branch: \`git checkout ${context.payload.pull_request.head.ref}\`
+            2. Edit \`readme.txt\` and add changelog entry for v${version}
+            3. Commit: \`git commit -am "Update changelog for v${version}"\`
+            4. Push: \`git push\`
+
+            **Tip:** You can view merged PRs at https://github.com/${context.repo.owner}/${context.repo.repo}/pulls?q=is:pr+is:merged+base:main
+            `;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+
+            console.log('Created changelog reminder comment');
