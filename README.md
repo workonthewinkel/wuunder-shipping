@@ -68,6 +68,46 @@ Version numbers are **manually managed** in the `wuunder-shipping.php` file head
 - PR labels are used only for organizing the changelog, not for version calculation
 - Follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 
+### Changelog Management
+
+**WordPress.org readme.txt:**
+- Maintained manually in `readme.txt` under the `== Changelog ==` section
+- Update the changelog when creating your release PR (before merging)
+- A bot posts a checklist reminder to help ensure you don't forget
+- Ensures WordPress.org users see proper changelog on the plugin page
+
+**GitHub Releases:**
+- Automatically generated from merged PR titles and labels
+- Organized into categories (Features, Bug Fixes, Maintenance, Documentation)
+- Created when you publish the release
+
+### Automated Workflows
+
+The release process uses several automated GitHub Actions workflows:
+
+1. **Release Drafter** (`.github/workflows/release-drafter.yml`)
+   - Triggers: Push to `release` branch
+   - Creates/updates draft releases with auto-generated changelogs
+
+2. **Release PR Checklist** (`.github/workflows/release-pr-changelog.yml`)
+   - Triggers: PR opened to `release` branch
+   - Posts a checklist reminder to verify version and changelog are updated
+
+3. **Build Release Package** (`.github/workflows/build-release.yml`)
+   - Triggers: Push to `release` branch
+   - Builds production assets and attaches zip to draft release
+   - Can be manually triggered to rebuild
+
+4. **Deploy to WordPress.org** (`.github/workflows/wordpress-plugin-deploy.yml`)
+   - Triggers: Release published
+   - Downloads pre-built zip from release assets
+   - Deploys to WordPress.org SVN repository
+
+5. **Sync Release to Main** (`.github/workflows/sync-release-to-main.yml`)
+   - Triggers: Release published
+   - Auto-creates PR to sync version bumps back to `main`
+   - Updates existing PR if one already exists
+
 ### Creating a Release
 
 1. **Develop on `main` branch:**
@@ -82,35 +122,38 @@ Version numbers are **manually managed** in the `wuunder-shipping.php` file head
 2. **When ready to release, create a release PR:**
    - Create PR: `main` → `release`
    - **Update version number in `wuunder-shipping.php` header** (e.g., `0.7.2` → `0.7.3`)
-   - This version will be used for the GitHub release tag and plugin zip
+   - **Update `readme.txt` changelog section** with changes for this release
+   - A bot will automatically post a **checklist reminder** (you can check it off once done)
    - Review all changes that will be released
 
 3. **Merge the release PR:**
    - Merge PR to `release` branch
    - Two workflows automatically trigger:
      - **Release Drafter**: Creates/updates draft release (tagged with version from plugin file)
-     - **Build Release Package**: Builds assets and attaches zip to the draft
-       - ✅ Builds production assets (`npm run production`)
-       - ✅ Installs production dependencies (`composer install --no-dev`)
-       - ✅ Creates plugin zip package
-       - ✅ Uploads package to the draft release (may take 1-2 minutes)
+     - **Build Release Package**: Builds production assets and attaches zip to the draft
+       - Installs production dependencies (`composer install --no-dev`)
+       - Builds production assets (`npm run production`)
+       - Creates plugin zip package
+       - Uploads package to the draft release (may take 1-2 minutes)
 
 4. **Test the release:**
-   - Wait 1-2 minutes for the build workflow to complete
+   - Wait 1-2 minutes for the "Build Release Package" workflow to complete
    - Download the zip from the draft release at https://github.com/workonthewinkel/wuunder/releases
    - Test locally to ensure everything works
-   - **Note**: If zip is missing, check the Actions tab for workflow status or manually trigger the "Build Release Package" workflow
+   - **Note**: If zip is missing, manually trigger the "Build Release Package" workflow from the Actions tab
 
 5. **Publish the release:**
    - Review version number (read from `wuunder-shipping.php`)
    - Review changelog (auto-generated from PR titles and labels)
+   - Test the attached zip file one final time
    - Click "Publish release"
-   - This automatically triggers:
-     - ✅ Deploy to WordPress.org SVN repository
+   - This automatically triggers two workflows:
+     - **Deploy to WordPress.org**: Deploys the tested zip to WordPress.org SVN (~30 seconds)
+     - **Sync Release to Main**: Creates PR to sync changes back to `main` branch
 
-6. **Sync back to main (automatic):**
-   - After merging to `release`, a PR is automatically created: `release` → `main`
-   - Review and merge this PR to keep `main` in sync with version bumps
+6. **Merge the sync PR:**
+   - After publishing, review the auto-created PR: `release` → `main`
+   - Merge this PR to keep `main` in sync with the published release
    - This ensures `main` always has the latest version number
 
 ### Manual Release Testing
