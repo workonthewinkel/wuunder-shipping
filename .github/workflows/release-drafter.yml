@@ -15,6 +15,22 @@ jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release
+
+      - name: Get version from plugin file
+        id: get_version
+        run: |
+          # Extract version from the plugin header comment
+          VERSION=$(grep "Version:" wuunder-shipping.php | sed 's/.*Version: //' | tr -d ' ')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Version from plugin file: $VERSION"
+
+      - name: Create/update release draft
+        uses: release-drafter/release-drafter@v6
+        with:
+          version: ${{ steps.get_version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

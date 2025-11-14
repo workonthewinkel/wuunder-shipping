@@ -60,21 +60,29 @@ This plugin uses a **release branch workflow** with automated WordPress.org SVN 
 - **`main`** - Development branch (merge all PRs here)
 - **`release`** - Production branch (only updated when ready to release)
 
+### Version Management
+
+Version numbers are **manually managed** in the `wuunder-shipping.php` file header:
+- Update the version in your release PR (`main` → `release`)
+- Release Drafter reads this version and uses it for the GitHub release tag
+- PR labels are used only for organizing the changelog, not for version calculation
+- Follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
+
 ### Creating a Release
 
 1. **Develop on `main` branch:**
    - Merge PRs to `main` as usual during development
-   - Label PRs appropriately:
-     - `feature` or `enhancement` - New features (minor version bump)
-     - `bug` or `bugfix` - Bug fixes (patch version bump)
-     - `major` or `breaking` - Breaking changes (major version bump)
-     - `chore` - Maintenance tasks (patch version bump)
+   - Label PRs appropriately for changelog organization:
+     - `feature` or `enhancement` - New features
+     - `bug` or `bugfix` - Bug fixes
+     - `major` or `breaking` - Breaking changes
+     - `chore` - Maintenance tasks
      - `docs` - Documentation updates
 
 2. **When ready to release, create a release PR:**
    - Create PR: `main` → `release`
-   - Update version number in `wuunder-shipping.php` header
-   - Label the PR based on the type of changes included
+   - **Update version number in `wuunder-shipping.php` header** (e.g., `0.7.2` → `0.7.3`)
+   - This version will be used for the GitHub release tag and plugin zip
    - Review all changes that will be released
 
 3. **Merge the release PR:**
@@ -91,8 +99,8 @@ This plugin uses a **release branch workflow** with automated WordPress.org SVN 
    - Test locally to ensure everything works
 
 5. **Publish the release:**
-   - Review version number (auto-calculated from PR labels)
-   - Review changelog (auto-generated from PR titles)
+   - Review version number (read from `wuunder-shipping.php`)
+   - Review changelog (auto-generated from PR titles and labels)
    - Click "Publish release"
    - This automatically triggers:
      - ✅ Deploy to WordPress.org SVN repository
