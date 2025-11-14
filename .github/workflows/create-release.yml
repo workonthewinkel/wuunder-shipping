@@ -4,7 +4,7 @@ name: Build Release Package
 # and deploys it to WordPress.org SVN repository.
 #
 # Triggers:
-# - Creating a draft release (builds and attaches package for testing)
+# - Push to release branch (builds and attaches package to draft release)
 # - Publishing a GitHub release (deploys to SVN)
 #
 # The workflow:
@@ -17,8 +17,12 @@ name: Build Release Package
 # 7. Deploys to WordPress.org SVN (only when published)
 
 on:
+  push:
+    branches:
+      - release  # Triggers when code is merged to release branch
   release:
-    types: [created, published]  # Triggers on draft creation and when published
+    types: [published]  # Triggers when release is published for SVN deployment
+  workflow_dispatch:  # Allows manual triggering to attach zip to existing draft
 
 permissions:
   contents: write  # Required for creating releases
@@ -94,12 +98,35 @@ jobs:
           sha256sum "${PLUGIN_NAME}-${VERSION}.zip" > "${PLUGIN_NAME}-${VERSION}.zip.sha256"
 
       - name: Upload assets to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            wuunder-shipping-*.zip
-            wuunder-shipping-*.zip.sha256
-          fail_on_unmatched_files: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          TAG_NAME="v${VERSION}"
+
+          # Retry logic: wait for Release Drafter to create the draft
+          MAX_ATTEMPTS=12
+          ATTEMPT=0
+
+          echo "🔍 Looking for release $TAG_NAME..."
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+              echo "✅ Found release $TAG_NAME"
+              echo "📦 Uploading assets..."
+              gh release upload "$TAG_NAME" wuunder-shipping-*.zip wuunder-shipping-*.zip.sha256 --clobber
+              echo "✅ Assets uploaded successfully"
+              exit 0
+            fi
+
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "⏳ Attempt $ATTEMPT/$MAX_ATTEMPTS - Release not found yet, waiting..."
+            sleep 5
+          done
+
+          echo "❌ Release $TAG_NAME not found after $MAX_ATTEMPTS attempts"
+          echo "Please check if Release Drafter workflow completed successfully"
+          exit 1
 
       - name: Prepare for SVN deployment
         if: github.event.action == 'published'
