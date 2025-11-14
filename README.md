@@ -105,8 +105,8 @@ The release process uses several automated GitHub Actions workflows:
 
 5. **Sync Release to Main** (`.github/workflows/sync-release-to-main.yml`)
    - Triggers: Release published
-   - Auto-creates PR to sync version bumps back to `main`
-   - Updates existing PR if one already exists
+   - Automatically pushes `release` branch to `main` to keep them in sync
+   - No PR created (already reviewed in release PR)
 
 ### Creating a Release
 
@@ -149,12 +149,9 @@ The release process uses several automated GitHub Actions workflows:
    - Click "Publish release"
    - This automatically triggers two workflows:
      - **Deploy to WordPress.org**: Deploys the tested zip to WordPress.org SVN (~30 seconds)
-     - **Sync Release to Main**: Creates PR to sync changes back to `main` branch
+     - **Sync Release to Main**: Automatically pushes `release` to `main` (no PR needed)
 
-6. **Merge the sync PR:**
-   - After publishing, review the auto-created PR: `release` → `main`
-   - Merge this PR to keep `main` in sync with the published release
-   - This ensures `main` always has the latest version number
+That's it! The `main` branch is now automatically synced and you're done.
 
 ### Manual Release Testing
 
