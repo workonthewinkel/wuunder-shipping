@@ -53,35 +53,62 @@ composer fix-cs    # Fix coding standards
 
 ## Release Process
 
-This plugin uses an automated release workflow with WordPress.org SVN sync:
+This plugin uses a **release branch workflow** with automated WordPress.org SVN sync:
+
+### Branch Structure
+
+- **`main`** - Development branch (merge all PRs here)
+- **`release`** - Production branch (only updated when ready to release)
+
+### Version Management
+
+Version numbers are **manually managed** in the `wuunder-shipping.php` file header:
+- Update the version in your release PR (`main` → `release`)
+- Release Drafter reads this version and uses it for the GitHub release tag
+- PR labels are used only for organizing the changelog, not for version calculation
+- Follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 
 ### Creating a Release
 
-1. **Merge PRs with proper labels:**
-   - `feature` or `enhancement` - New features (minor version bump)
-   - `bug` or `bugfix` - Bug fixes (patch version bump)
-   - `major` or `breaking` - Breaking changes (major version bump)
-   - `chore` - Maintenance tasks (patch version bump)
-   - `docs` - Documentation updates
+1. **Develop on `main` branch:**
+   - Merge PRs to `main` as usual during development
+   - Label PRs appropriately for changelog organization:
+     - `feature` or `enhancement` - New features
+     - `bug` or `bugfix` - Bug fixes
+     - `major` or `breaking` - Breaking changes
+     - `chore` - Maintenance tasks
+     - `docs` - Documentation updates
 
-2. **Release Drafter automatically creates/updates a draft release** when PRs are merged to `main`
+2. **When ready to release, create a release PR:**
+   - Create PR: `main` → `release`
+   - **Update version number in `wuunder-shipping.php` header** (e.g., `0.7.2` → `0.7.3`)
+   - This version will be used for the GitHub release tag and plugin zip
+   - Review all changes that will be released
 
-3. **Draft release is automatically built** - The workflow triggers and:
-   - ✅ Builds production assets (`npm run production`)
-   - ✅ Installs production dependencies (`composer install --no-dev`)
-   - ✅ Creates plugin zip package
-   - ✅ Uploads package to the draft release
+3. **Merge the release PR:**
+   - Merge PR to `release` branch
+   - Release Drafter automatically creates/updates a draft release
+   - Build workflow automatically triggers and:
+     - ✅ Builds production assets (`npm run production`)
+     - ✅ Installs production dependencies (`composer install --no-dev`)
+     - ✅ Creates plugin zip package
+     - ✅ Uploads package to the draft release
 
-4. **Test the release** - Download the zip from the draft release and test locally
+4. **Test the release:**
+   - Download the zip from the draft release at https://github.com/workonthewinkel/wuunder/releases
+   - Test locally to ensure everything works
 
-5. **Review the draft release** at https://github.com/workonthewinkel/wuunder/releases
-   - Check version number (auto-calculated from labels)
-   - Review changelog (auto-generated from PR titles)
-   - Test the attached zip file
-   - Edit if needed
+5. **Publish the release:**
+   - Review version number (read from `wuunder-shipping.php`)
+   - Review changelog (auto-generated from PR titles and labels)
+   - Click "Publish release"
+   - This automatically triggers:
+     - ✅ Deploy to WordPress.org SVN repository
 
-6. **Publish the release** - This automatically triggers:
-   - ✅ Deploy to WordPress.org SVN repository
+6. **Sync back to main (automatic):**
+   - After merging to `release`, a PR is automatically created: `release` → `main`
+   - Review and merge this PR to keep `main` in sync with version bumps
+   - This ensures `main` always has the latest version number
 
 ### Manual Release Testing
 
@@ -110,6 +137,11 @@ wp dist-archive . ./wuunder-shipping.zip --plugin-dirname=wuunder-shipping
 ### Pickup Point Configuration
 
 The plugin includes an integrated pickup point locator that allows customers to select parcel shops during checkout. This feature works with both classic and block-based WooCommerce checkouts.
+
+### Prerequisites for WordPress.org Deployment
+
+- Add `SVN_USERNAME` and `SVN_PASSWORD` secrets to GitHub repository settings
+- Plugin must be approved and have an SVN repository at https://plugins.svn.wordpress.org/wuunder-shipping/
 
 ## Plugin Structure
 
