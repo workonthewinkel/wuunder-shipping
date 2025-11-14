@@ -26,7 +26,7 @@ jobs:
           # Extract version from the plugin header comment
           VERSION=$(grep "Version:" wuunder-shipping.php | sed 's/.*Version: //' | tr -d ' ')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "📦 Version from plugin file: $VERSION"
+          echo "Version from plugin file: $VERSION"
 
       - name: Create/update release draft
         uses: release-drafter/release-drafter@v6

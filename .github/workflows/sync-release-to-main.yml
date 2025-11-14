@@ -1,0 +1,107 @@
+name: Sync Release to Main
+
+# This workflow automatically creates a PR to sync the release branch back to main
+# after a release is published. This ensures main stays up to date with version bumps
+# and any changes that were deployed to production.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-to-main:
+    name: Create PR to sync release to main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release
+          fetch-depth: 0  # Fetch all history for proper branch comparison
+
+      - name: Check if sync PR already exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if there's already an open PR from release to main
+          EXISTING_PR=$(gh pr list --base main --head release --state open --json number --jq '.[0].number')
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "pr_exists=true" >> $GITHUB_OUTPUT
+            echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
+            echo "PR #$EXISTING_PR already exists"
+          else
+            echo "pr_exists=false" >> $GITHUB_OUTPUT
+            echo "No existing PR found"
+          fi
+
+      - name: Check if branches are in sync
+        id: check_sync
+        run: |
+          git fetch origin main:main
+
+          # Compare release and main branches
+          DIFF=$(git rev-list --left-right --count release...main)
+          AHEAD=$(echo $DIFF | cut -d' ' -f1)
+          BEHIND=$(echo $DIFF | cut -d' ' -f2)
+
+          echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
+          echo "behind=$BEHIND" >> $GITHUB_OUTPUT
+
+          if [ "$AHEAD" -eq 0 ]; then
+            echo "needs_sync=false" >> $GITHUB_OUTPUT
+            echo "Branches are in sync"
+          else
+            echo "needs_sync=true" >> $GITHUB_OUTPUT
+            echo "release is $AHEAD commit(s) ahead of main"
+          fi
+
+      - name: Create sync PR
+        if: steps.check_sync.outputs.needs_sync == 'true' && steps.check_pr.outputs.pr_exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create PR from release to main
+          gh pr create \
+            --base main \
+            --head release \
+            --title "Sync release branch to main" \
+            --body "$(cat <<'EOF'
+          ## Sync Release to Main
+
+          This PR syncs the \`release\` branch back to \`main\` to keep them in sync.
+
+          ### Changes
+          This includes version bumps and any changes merged to the \`release\` branch.
+
+          ### Checklist
+          - [ ] Review the changes
+          - [ ] Merge to keep main up to date
+
+          This PR was automatically created by the sync workflow.
+          EOF
+          )"
+
+          echo "Created sync PR from release to main"
+
+      - name: Update existing PR
+        if: steps.check_sync.outputs.needs_sync == 'true' && steps.check_pr.outputs.pr_exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ steps.check_pr.outputs.pr_number }}"
+
+          gh pr comment $PR_NUMBER --body "Release branch has been updated. Please review the latest changes."
+
+          echo "Updated existing PR #$PR_NUMBER"
+
+      - name: Already in sync
+        if: steps.check_sync.outputs.needs_sync == 'false'
+        run: |
+          echo "No sync needed - release and main are already in sync"

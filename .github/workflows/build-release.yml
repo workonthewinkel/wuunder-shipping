@@ -1,0 +1,117 @@
+name: Build Release Package
+
+# This workflow builds production-ready assets and attaches them to draft releases.
+# It runs when code is merged to the release branch, creating a zip package that
+# can be tested before publishing.
+
+on:
+  push:
+    branches:
+      - release
+  workflow_dispatch:  # Allow manual trigger for rebuilding
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Attach Assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from plugin file
+        id: get_version
+        run: |
+          # Extract version from the plugin header comment
+          # This ensures consistency - the plugin file is the single source of truth
+          VERSION=$(grep "Version:" wuunder-shipping.php | sed 's/.*Version: //' | tr -d ' ')
+          TAG_NAME="v${VERSION}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Building release for version: $VERSION"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer:v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup WP-CLI with dist-archive
+        run: |
+          # Download and install WP-CLI
+          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x wp-cli.phar
+          sudo mv wp-cli.phar /usr/local/bin/wp
+
+          # Install the dist-archive package for creating distribution packages
+          wp package install wp-cli/dist-archive-command --allow-root
+
+      - name: Install dependencies and build assets
+        run: |
+          # Install production PHP dependencies (excludes dev dependencies)
+          composer install --no-dev --optimize-autoloader
+
+          # Install Node dependencies and build production assets
+          npm ci
+
+          # Build production CSS/JS and generate translation files
+          # WP_CLI_ALLOW_ROOT=1 allows wp i18n commands in the build script
+          WP_CLI_ALLOW_ROOT=1 npm run build
+
+      - name: Create distribution package
+        run: |
+          PLUGIN_NAME="wuunder-shipping"
+          VERSION="${{ steps.get_version.outputs.version }}"
+
+          # Create a distribution archive using WP-CLI
+          # - Uses .distignore to exclude development files
+          # - Sets the plugin directory name inside the zip
+          # - Creates a properly formatted WordPress plugin package
+          wp dist-archive . "./${PLUGIN_NAME}-${VERSION}.zip" \
+            --plugin-dirname="${PLUGIN_NAME}" \
+            --allow-root
+
+          # Generate SHA256 checksum for security verification
+          sha256sum "${PLUGIN_NAME}-${VERSION}.zip" > "${PLUGIN_NAME}-${VERSION}.zip.sha256"
+
+          echo "Created ${PLUGIN_NAME}-${VERSION}.zip"
+
+      - name: Upload assets to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          TAG_NAME="v${VERSION}"
+
+          # Retry logic: wait for Release Drafter to create the draft
+          MAX_ATTEMPTS=12
+          ATTEMPT=0
+
+          echo "Looking for release $TAG_NAME..."
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+              echo "Found release $TAG_NAME"
+              echo "Uploading assets..."
+              gh release upload "$TAG_NAME" wuunder-shipping-*.zip wuunder-shipping-*.zip.sha256 --clobber
+              echo "Assets uploaded successfully"
+              exit 0
+            fi
+
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS - Release not found yet, waiting..."
+            sleep 5
+          done
+
+          echo "Release $TAG_NAME not found after $MAX_ATTEMPTS attempts"
+          echo "Please check if Release Drafter workflow completed successfully"
+          exit 1

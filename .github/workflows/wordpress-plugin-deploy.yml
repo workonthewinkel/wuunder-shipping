@@ -1,0 +1,105 @@
+name: Deploy to WordPress.org
+
+# This workflow deploys the plugin to WordPress.org SVN repository.
+# It runs when a GitHub release is published, using the pre-built assets
+# that were attached to the release by the build-release workflow.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to WordPress.org SVN
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from plugin file
+        id: get_version
+        run: |
+          VERSION=$(grep "Version:" wuunder-shipping.php | sed 's/.*Version: //' | tr -d ' ')
+          TAG_NAME="v${VERSION}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PLUGIN_NAME="wuunder-shipping"
+          VERSION="${{ steps.get_version.outputs.version }}"
+          TAG_NAME="v${VERSION}"
+
+          echo "Downloading ${PLUGIN_NAME}-${VERSION}.zip from release..."
+          gh release download "$TAG_NAME" --pattern "${PLUGIN_NAME}-${VERSION}.zip"
+
+          if [ ! -f "${PLUGIN_NAME}-${VERSION}.zip" ]; then
+            echo "Failed to download release asset"
+            exit 1
+          fi
+
+          echo "Downloaded release asset"
+
+      - name: Prepare for SVN deployment
+        run: |
+          PLUGIN_NAME="wuunder-shipping"
+          VERSION="${{ steps.get_version.outputs.version }}"
+
+          # Extract the built package for SVN deployment
+          echo "Extracting plugin package..."
+          unzip -q "${PLUGIN_NAME}-${VERSION}.zip" -d ./svn-deploy
+
+          # Prepare WordPress.org assets directory
+          mkdir -p .wordpress-org
+
+          # Copy WordPress.org assets if they exist
+          if [ -d "assets/wordpress-org" ]; then
+            cp -r assets/wordpress-org/* .wordpress-org/ 2>/dev/null || true
+            echo "Copied WordPress.org assets"
+          fi
+
+          echo "Prepared for SVN deployment"
+
+      - name: Check SVN repository exists
+        id: check_svn
+        run: |
+          # Check if the SVN repository exists
+          if curl -s --head "https://plugins.svn.wordpress.org/wuunder-shipping/" | head -n 1 | grep -q "200 OK"; then
+            echo "svn_exists=true" >> $GITHUB_OUTPUT
+            echo "SVN repository exists"
+          else
+            echo "svn_exists=false" >> $GITHUB_OUTPUT
+            echo "SVN repository does not exist yet - plugin not approved/published on WordPress.org"
+            echo "This is expected for new plugins before WordPress.org approval"
+          fi
+
+      - name: Deploy to WordPress.org SVN
+        if: steps.check_svn.outputs.svn_exists == 'true'
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          dry-run: true
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME || 'dummy' }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD || 'dummy' }}
+          SLUG: wuunder-shipping
+          VERSION: ${{ steps.get_version.outputs.version }}
+          BUILD_DIR: svn-deploy/wuunder-shipping
+          ASSETS_DIR: .wordpress-org
+
+      - name: SVN deployment skipped
+        if: steps.check_svn.outputs.svn_exists == 'false'
+        run: |
+          echo "SVN deployment skipped - repository not available yet"
+          echo "To deploy to WordPress.org:"
+          echo "1. Submit plugin for review at https://wordpress.org/plugins/developers/add/"
+          echo "2. Wait for approval and SVN repository creation"
+          echo "3. Set up SVN_USERNAME and SVN_PASSWORD secrets"
+          echo "4. Change dry-run to false in the workflow"

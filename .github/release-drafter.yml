@@ -2,22 +2,22 @@ name-template: 'v$INPUT_VERSION'
 tag-template: 'v$INPUT_VERSION'
 
 categories:
-  - title: '🚀 Features'
+  - title: 'Features'
     labels:
       - 'feature'
       - 'enhancement'
       - 'feat'
-  - title: '🐛 Bug Fixes'
+  - title: 'Bug Fixes'
     labels:
       - 'fix'
       - 'bugfix'
       - 'bug'
-  - title: '🧰 Maintenance'
+  - title: 'Maintenance'
     labels:
       - 'chore'
       - 'refactor'
       - 'dependencies'
-  - title: '📚 Documentation'
+  - title: 'Documentation'
     labels:
       - 'documentation'
       - 'docs'
