@@ -442,7 +442,7 @@ class CheckoutHandler implements Hookable {
 		if ( ! $this->is_valid_pickup_point( $pickup_point ) ) {
 			throw new \WC_Data_Exception(
 				'pickup_point_required',
-				__( 'Please select a pickup location for your delivery.', 'wuunder-shipping' )
+				esc_html__( 'Please select a pickup location for your delivery.', 'wuunder-shipping' )
 			);
 		}
 	}

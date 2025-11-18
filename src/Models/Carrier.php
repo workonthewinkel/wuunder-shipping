@@ -313,13 +313,13 @@ class Carrier extends Model {
 		}
 
 		if ( ! empty( $conditions ) ) {
-			$sql .= ' WHERE ' . implode( ' AND ', $conditions );
+			$sql .= ' WHERE ' . implode( ' AND ', $conditions ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Conditions are built from hardcoded strings with placeholders.
 		}
 
 		$sql .= ' ORDER BY carrier_name, product_name';
 
 		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-			$wpdb->prepare( $sql, $params ),
+			$wpdb->prepare( $sql, $params ), // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- False positive: $sql is properly prepared with placeholders.
 			ARRAY_A
 		);
 

@@ -256,7 +256,7 @@ class SettingsController extends Controller implements Hookable {
 						$shipping_method->update_option( 'enabled', 'no' );
 
 						// Follow WooCommerce core pattern: update database directly
-						if ( $wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) ) ) {
+						if ( $wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Following WooCommerce core pattern for zone method updates.
 							do_action( 'woocommerce_shipping_zone_method_status_toggled', $instance_id, $shipping_method->id, $zone_id, 0 );
 						}
 					}
@@ -363,7 +363,7 @@ class SettingsController extends Controller implements Hookable {
 			if ( ! $carrier || ! $carrier->enabled ) {
 				// Force disable it again following WooCommerce core pattern
 				global $wpdb;
-				$wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) );
+				$wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Following WooCommerce core pattern for zone method updates.
 			}
 		}
 	}

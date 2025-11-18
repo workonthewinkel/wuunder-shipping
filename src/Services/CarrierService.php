@@ -16,7 +16,7 @@ class CarrierService {
 	 * @param bool $preserve_enabled Whether to preserve enabled state for existing carriers.
 	 * @return true|\WP_Error True on success, WP_Error on failure.
 	 */
-	public static function refresh_from_api( bool $preserve_enabled = false ) {
+	public static function refresh_from_api( $preserve_enabled = false ) {
 
 		$api_key = get_option( 'wuunder_api_key', '' );
 
