@@ -121,7 +121,7 @@ class Shipping extends WC_Shipping_Method {
 	 * @return array<string, string>
 	 */
 	private function get_available_carriers(): array {
-		$carriers = Carrier::get_all( true ); // Get only enabled carriers
+		$carriers = Carrier::get_standard_carriers( true ); // Get only enabled carriers that do not accept parcelshop delivery
 		$options  = [ '' => __( 'Select a carrier...', 'wuunder-shipping' ) ];
 
 		foreach ( $carriers as $carrier ) {
