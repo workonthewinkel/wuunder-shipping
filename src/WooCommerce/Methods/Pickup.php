@@ -179,7 +179,7 @@ class Pickup extends WC_Shipping_Method {
 	 * @return array<string, string>
 	 */
 	public function get_available_carriers(): array {
-		$carriers = Carrier::get_parcelshop_carriers();
+		$carriers = Carrier::get_parcelshop_carriers( true );
 		$options  = [];
 
 		foreach ( $carriers as $carrier ) {
