@@ -146,11 +146,13 @@ class WuunderClient {
 					foreach ( $carrier['carrier_products'] as $product ) {
 						$product_code = $product['code'] ?? '';
 						$carrier_key  = $carrier_code . ':' . $product_code;
+						$parcelshop_delivery = $product['accepts_parcelshop_delivery'] ?? false;
 
 						// Map to our expected structure
 						$carriers[ $carrier_key ] = [
 							'carrier_code'                 => $carrier_code,
 							'carrier_product_code'         => $product_code,
+							'accepts_parcelshop_delivery'  => $parcelshop_delivery,
 							'service_code'                 => $product['preferred_service_level'] ?? '',
 							'carrier_name'                 => $carrier_name,
 							'product_name'                 => $product['name'] ?? '',
