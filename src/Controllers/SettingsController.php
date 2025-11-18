@@ -380,7 +380,7 @@ class SettingsController extends Controller implements Hookable {
 	 * @param bool   $preserve_enabled Whether to preserve enabled state for existing carriers.
 	 * @return true|\WP_Error True on success, WP_Error on failure.
 	 */
-	private function load_carriers_from_api( $api_key, $preserve_enabled = false ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public function load_carriers_from_api( $api_key, $preserve_enabled = false ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$client       = new WuunderClient( $api_key );
 		$api_carriers = $client->get_carriers();
 
