@@ -288,8 +288,6 @@ class CheckoutHandler implements Hookable {
 
 		// Set address fields
 		$order->set_shipping_address_1( $pickup_point['street'] ?? '' );
-		/* translators: %s: Carrier name */
-		$order->set_shipping_address_2( ! empty( $pickup_point['carrier'] ) ? sprintf( __( 'Carrier: %s', 'wuunder-shipping' ), strtoupper( $pickup_point['carrier'] ) ) : '' );
 		$order->set_shipping_city( $pickup_point['city'] ?? '' );
 		$order->set_shipping_postcode( $pickup_point['postcode'] ?? '' );
 		$order->set_shipping_country( $pickup_point['country'] ?? '' );
