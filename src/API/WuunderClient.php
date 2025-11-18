@@ -144,8 +144,8 @@ class WuunderClient {
 				// Process each carrier product
 				if ( isset( $carrier['carrier_products'] ) && is_array( $carrier['carrier_products'] ) ) {
 					foreach ( $carrier['carrier_products'] as $product ) {
-						$product_code = $product['code'] ?? '';
-						$carrier_key  = $carrier_code . ':' . $product_code;
+						$product_code        = $product['code'] ?? '';
+						$carrier_key         = $carrier_code . ':' . $product_code;
 						$parcelshop_delivery = $product['accepts_parcelshop_delivery'] ?? false;
 
 						// Map to our expected structure

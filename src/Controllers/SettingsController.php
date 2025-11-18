@@ -201,14 +201,14 @@ class SettingsController extends Controller implements Hookable {
 
 		// Update each carrier's enabled status
 		foreach ( $carriers as $carrier ) {
-			$was_enabled = $carrier->enabled;
+			$was_enabled      = $carrier->enabled;
 			$carrier->enabled = in_array( $carrier->get_method_id(), $enabled_carriers, true );
-			
+
 			// Track carriers that are being disabled
 			if ( $was_enabled && ! $carrier->enabled ) {
 				$disabled_carriers[] = $carrier->get_method_id();
 			}
-			
+
 			$carrier->save();
 		}
 
@@ -233,28 +233,28 @@ class SettingsController extends Controller implements Hookable {
 		global $wpdb;
 
 		// Get all shipping zones
-		$zones = \WC_Shipping_Zones::get_zones();
+		$zones    = \WC_Shipping_Zones::get_zones();
 		$zones[0] = \WC_Shipping_Zones::get_zone_by( 'zone_id', 0 ); // Add 'Rest of the World' zone
 
 		foreach ( $zones as $zone ) {
 			if ( is_array( $zone ) ) {
 				$zone_obj = \WC_Shipping_Zones::get_zone( $zone['id'] );
-				$zone_id = $zone['id'];
+				$zone_id  = $zone['id'];
 			} else {
 				$zone_obj = $zone;
-				$zone_id = $zone_obj->get_id();
+				$zone_id  = $zone_obj->get_id();
 			}
 
 			foreach ( $zone_obj->get_shipping_methods() as $instance_id => $shipping_method ) {
 				// Check if this is a Wuunder shipping method
 				if ( $shipping_method->id === 'wuunder_shipping' ) {
 					$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
-					
+
 					// If this method uses a disabled carrier, disable the shipping method instance
 					if ( in_array( $carrier_option, $disabled_carrier_ids, true ) ) {
 						// Update the enabled status in the shipping method options
 						$shipping_method->update_option( 'enabled', 'no' );
-						
+
 						// Follow WooCommerce core pattern: update database directly
 						if ( $wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) ) ) {
 							do_action( 'woocommerce_shipping_zone_method_status_toggled', $instance_id, $shipping_method->id, $zone_id, 0 );
@@ -346,20 +346,20 @@ class SettingsController extends Controller implements Hookable {
 		}
 
 		// Get the shipping method instance
-		$zone = \WC_Shipping_Zones::get_zone( $zone_id );
+		$zone             = \WC_Shipping_Zones::get_zone( $zone_id );
 		$shipping_methods = $zone->get_shipping_methods();
-		
+
 		if ( ! isset( $shipping_methods[ $instance_id ] ) ) {
 			return;
 		}
 
 		$shipping_method = $shipping_methods[ $instance_id ];
-		$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
+		$carrier_option  = $shipping_method->get_option( 'wuunder_carrier', '' );
 
 		// Check if the carrier is disabled
 		if ( ! empty( $carrier_option ) ) {
 			$carrier = Carrier::find_by_method_id( $carrier_option );
-			
+
 			if ( ! $carrier || ! $carrier->enabled ) {
 				// Force disable it again following WooCommerce core pattern
 				global $wpdb;

@@ -287,7 +287,7 @@ class Carrier extends Model {
 	/**
 	 * Get all carriers.
 	 *
-	 * @param bool $enabled_only Only get enabled carriers.
+	 * @param bool      $enabled_only Only get enabled carriers.
 	 * @param bool|null $accepts_parcelshop Filter by parcelshop delivery flag: true for only parcelshop, false to exclude, null for all.
 	 * @return array
 	 */
@@ -295,13 +295,13 @@ class Carrier extends Model {
 		global $wpdb;
 		$table = self::get_table_name();
 
-		$sql          = 'SELECT * FROM %i';
-		$params       = [ $table ];
-		$conditions   = [];
+		$sql        = 'SELECT * FROM %i';
+		$params     = [ $table ];
+		$conditions = [];
 
 		if ( $enabled_only ) {
-			$conditions[]   = 'enabled = %d';
-			$params[] = 1;
+			$conditions[] = 'enabled = %d';
+			$params[]     = 1;
 		}
 
 		if ( $accepts_parcelshop === true ) {

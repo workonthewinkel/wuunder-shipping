@@ -53,5 +53,3 @@ class AddAcceptsParcelshopDeliveryColumn extends Schema {
 		return (bool) $wpdb->get_var( $query ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	}
 }
-
-

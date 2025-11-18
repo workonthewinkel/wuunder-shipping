@@ -117,23 +117,23 @@ class DebugController implements Hookable {
 		$request->set_param( 'per_page', 10 );
 		$request->set_param( 'orderby', 'date' );
 		$request->set_param( 'order', 'desc' );
-		
+
 		$response = rest_do_request( $request );
-		
+
 		if ( is_wp_error( $response ) ) {
 			error_log( 'Wuunder Debug: REST API error: ' . $response->get_error_message() );
 			return [];
 		}
-		
+
 		$orders_data = $response->get_data();
-		
+
 		if ( ! is_array( $orders_data ) ) {
 			error_log( 'Wuunder Debug: Invalid REST API response format' );
 			return [];
 		}
-		
+
 		error_log( 'Wuunder Debug: Found ' . count( $orders_data ) . ' orders via REST API' );
-		
+
 		return $orders_data;
 	}
 
