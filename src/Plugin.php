@@ -5,6 +5,7 @@ namespace Wuunder\Shipping;
 use Wuunder\Shipping\WordPress\Assets;
 use Wuunder\Shipping\Models\Database\Migrations;
 use Wuunder\Shipping\Controllers\SettingsController;
+use Wuunder\Shipping\Services\CarrierService;
 use Wuunder\Shipping\WooCommerce\Register;
 use Wuunder\Shipping\WooCommerce\CheckoutHandler;
 use Wuunder\Shipping\WooCommerce\BlocksIntegration;
@@ -60,6 +61,9 @@ class Plugin {
 
 			// Run migrations.
 			( new Migrations() )->run();
+
+			// Refresh carriers from API (preserving enabled state).
+			CarrierService::refresh_from_api( true );
 
 			// Update the stored version.
 			update_option( 'wuunder_plugin_version', $current_version );
