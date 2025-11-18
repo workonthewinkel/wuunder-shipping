@@ -380,7 +380,7 @@ class SettingsController extends Controller implements Hookable {
 	 * @param bool   $preserve_enabled Whether to preserve enabled state for existing carriers.
 	 * @return true|\WP_Error True on success, WP_Error on failure.
 	 */
-	private function load_carriers_from_api( $api_key, $preserve_enabled = false ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public function load_carriers_from_api( $api_key, $preserve_enabled = false ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$client       = new WuunderClient( $api_key );
 		$api_carriers = $client->get_carriers();
 
@@ -423,6 +423,7 @@ class SettingsController extends Controller implements Hookable {
 			$carrier->modality                    = $carrier_data['modality'] ?? '';
 			$carrier->is_return                   = $carrier_data['is_return'] ?? false;
 			$carrier->is_parcelshop_drop_off      = $carrier_data['is_parcelshop_drop_off'] ?? false;
+			$carrier->accepts_parcelshop_delivery = $carrier_data['accepts_parcelshop_delivery'] ?? false;
 			$carrier->includes_ad_hoc_pickup      = $carrier_data['includes_ad_hoc_pickup'] ?? false;
 			$carrier->info                        = $carrier_data['info'] ?? '';
 			$carrier->tags                        = is_array( $carrier_data['tags'] ?? '' ) ? wp_json_encode( $carrier_data['tags'] ) : ( $carrier_data['tags'] ?? '' );

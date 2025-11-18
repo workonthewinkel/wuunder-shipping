@@ -3,6 +3,7 @@
 namespace Wuunder\Shipping\WooCommerce\Methods;
 
 use WC_Shipping_Method;
+use Wuunder\Shipping\Models\Carrier;
 use Wuunder\Shipping\Traits\ShippingMethodSanitization;
 
 /**
@@ -33,17 +34,6 @@ class Pickup extends WC_Shipping_Method {
 			'origin' => self::IFRAME_ORIGIN,
 		];
 	}
-
-	/**
-	 * Available carriers for pick-up points.
-	 *
-	 * @var array<string, string>
-	 */
-	private array $available_carriers = [
-		'dhl' => 'DHL',
-		'postnl' => 'PostNL',
-		'ups' => 'UPS',
-	];
 
 	/**
 	 * Constructor.
@@ -110,8 +100,8 @@ class Pickup extends WC_Shipping_Method {
 				'title' => __( 'Available Carriers', 'wuunder-shipping' ),
 				'type' => 'carrier_checkboxes',
 				'description' => __( 'Select which carriers should be available for pick-up points.', 'wuunder-shipping' ),
-				'options' => $this->get_carrier_options(),
-				'default' => array_keys( $this->available_carriers ),
+				'options' => $this->get_available_carriers(),
+				'default' => array_keys( $this->get_available_carriers() ),
 				'desc_tip' => true,
 				'sanitize_callback' => array( $this, 'sanitize_carriers' ),
 			],
@@ -181,14 +171,6 @@ class Pickup extends WC_Shipping_Method {
 		return ob_get_clean();
 	}
 
-	/**
-	 * Get carrier options for multiselect.
-	 *
-	 * @return array<string, string>
-	 */
-	private function get_carrier_options(): array {
-		return $this->get_available_carriers();
-	}
 
 	/**
 	 * Get available carriers.
@@ -197,7 +179,16 @@ class Pickup extends WC_Shipping_Method {
 	 * @return array<string, string>
 	 */
 	public function get_available_carriers(): array {
-		return apply_filters( 'wuunder_pickup_available_carriers', $this->available_carriers );
+		$carriers = Carrier::get_parcelshop_carriers( true );
+		$options  = [];
+
+		foreach ( $carriers as $carrier ) {
+			if ( ! isset( $options[ $carrier->carrier_code ] ) ) {
+				$options[ $carrier->carrier_code ] = $carrier->carrier_name;
+			}
+		}
+
+		return apply_filters( 'wuunder_pickup_available_carriers', $options );
 	}
 
 	/**
@@ -303,7 +294,7 @@ class Pickup extends WC_Shipping_Method {
 		}
 
 		// Filter out invalid carriers
-		$valid_carriers = array_keys( $this->available_carriers );
+		$valid_carriers = array_keys( $this->get_available_carriers() );
 		$value          = array_intersect( $value, $valid_carriers );
 
 		if ( empty( $value ) ) {
