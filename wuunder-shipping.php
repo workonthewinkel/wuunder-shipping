@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Wuunder Shipping
- * Plugin URI: wearewuunder.com
+ * Plugin URI: https://wordpress.org/plugins/wuunder-shipping
  * Description: WooCommerce integration for Wuunder parcel delivery platform
  * Version: 0.7.6
  * Author: Work on The Winkel
@@ -10,7 +10,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wuunder-shipping
  * Requires at least: 6.4
- * Requires PHP: 8.0
+ * Requires PHP: 7.4
  * Requires Plugins: woocommerce
  */
 
