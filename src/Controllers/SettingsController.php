@@ -15,6 +15,13 @@ use Wuunder\Shipping\WordPress\View;
 class SettingsController extends Controller implements Hookable {
 
 	/**
+	 * Whether API key is configured.
+	 *
+	 * @var bool
+	 */
+	private bool $has_api_key = false;
+
+	/**
 	 * Register WordPress hooks.
 	 *
 	 * @return void
@@ -46,11 +53,10 @@ class SettingsController extends Controller implements Hookable {
 	 * @return void
 	 */
 	public function settings_tab(): void {
-		$api_key     = get_option( 'wuunder_api_key', '' );
-		$has_api_key = ! empty( $api_key );
+		$this->has_api_key = ! empty( get_option( 'wuunder_api_key', '' ) );
 
 		// Default section depends on whether API key is set
-		$default_section = $has_api_key ? 'shipping_methods' : 'settings';
+		$default_section = $this->has_api_key ? 'shipping_methods' : 'settings';
 		$current_section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : $default_section; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		// Get available sections from filter
@@ -64,8 +70,8 @@ class SettingsController extends Controller implements Hookable {
 		View::display(
 			'admin/settings-tabs',
 			[
-				'current_section' => $current_section,
-				'has_api_key' => $has_api_key,
+				'current_section'    => $current_section,
+				'has_api_key'        => $this->has_api_key,
 				'available_sections' => $available_sections,
 			]
 		);
@@ -105,12 +111,8 @@ class SettingsController extends Controller implements Hookable {
 	 * @return void
 	 */
 	private function display_shipping_methods_section(): void {
-		$api_key     = get_option( 'wuunder_api_key', '' );
-		$has_api_key = ! empty( $api_key );
-
-		// Auto-load carriers if we have API key but no carriers
-		$all_carriers = Carrier::get_all();
-		if ( $has_api_key && empty( $all_carriers ) ) {
+		// Auto-load carriers if none exist (service handles API key check)
+		if ( empty( Carrier::get_all() ) ) {
 			$this->load_carriers_from_api();
 		}
 
@@ -129,7 +131,7 @@ class SettingsController extends Controller implements Hookable {
 			[
 				'carrier_methods' => $carrier_methods,
 				'carrier_names'   => $carrier_names,
-				'has_api_key'     => $has_api_key,
+				'has_api_key'     => $this->has_api_key,
 			]
 		);
 	}
@@ -140,12 +142,8 @@ class SettingsController extends Controller implements Hookable {
 	 * @return void
 	 */
 	private function display_pickup_methods_section(): void {
-		$api_key     = get_option( 'wuunder_api_key', '' );
-		$has_api_key = ! empty( $api_key );
-
-		// Auto-load carriers if we have API key but no carriers
-		$all_carriers = Carrier::get_all();
-		if ( $has_api_key && empty( $all_carriers ) ) {
+		// Auto-load carriers if none exist (service handles API key check)
+		if ( empty( Carrier::get_all() ) ) {
 			$this->load_carriers_from_api();
 		}
 
@@ -164,7 +162,7 @@ class SettingsController extends Controller implements Hookable {
 			[
 				'carrier_methods' => $carrier_methods,
 				'carrier_names'   => $carrier_names,
-				'has_api_key'     => $has_api_key,
+				'has_api_key'     => $this->has_api_key,
 			]
 		);
 	}
