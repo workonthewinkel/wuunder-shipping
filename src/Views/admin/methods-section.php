@@ -3,14 +3,17 @@
  * Carriers section view
  *
  * @package Wuunder\Shipping
- * @var array $carriers    Array of Carrier objects
- * @var bool  $has_api_key Whether API key is configured
+ * @var array  $carrier_methods Array of Carrier objects
+ * @var array  $carrier_names   Array of carrier names keyed by carrier code
+ * @var bool   $has_api_key     Whether API key is configured
+ * @var string $carrier_type    Type of carriers: 'standard' or 'parcelshop'
  */
 
 defined( 'ABSPATH' ) || exit;
 ?>
 
 <div class="wuunder-carriers-section" id="wuunder-carriers-section">
+	<input type="hidden" name="wuunder_carrier_type" value="<?php echo esc_attr( $carrier_type ); ?>" />
 	<?php if ( empty( $carrier_methods ) ) : ?>
 		<?php if ( $has_api_key ) : ?>
 			<p><?php esc_html_e( 'No carriers found. Click "Refresh Carriers" to retrieve available shipping methods.', 'wuunder-shipping' ); ?></p>
@@ -88,15 +91,6 @@ defined( 'ABSPATH' ) || exit;
 				</tr>
 			</thead>
 			<tbody>
-				<?php
-				$has_enabled = false;
-				foreach ( $carrier_methods as $carrier ) {
-					if ( $carrier->enabled ) {
-						$has_enabled = true;
-						break;
-					}
-				}
-				?>
 				<?php foreach ( $carrier_methods as $carrier ) : ?>
 					<?php
 					// Build data tags for filtering
@@ -118,7 +112,7 @@ defined( 'ABSPATH' ) || exit;
 					$data_tags_string = implode( ' ', $data_tags );
 
 					// Determine if checkbox should be checked
-					$is_checked = $has_enabled ? $carrier->enabled : true;
+					$is_checked = $carrier->enabled;
 					?>
 					<?php
 					$row_hidden = false;
