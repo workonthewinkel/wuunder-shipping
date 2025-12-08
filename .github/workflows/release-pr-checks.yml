@@ -124,14 +124,8 @@ jobs:
           script: |
             const body = `## WordPress Plugin Check Results
 
-            The WordPress Plugin Check found issues that may need attention.
-
-            Please review the annotations above for specific file locations.
-
-            ### Resources
-
-            - [Plugin Check documentation](https://github.com/WordPress/plugin-check)
-            - [WordPress Plugin Developer Handbook](https://developer.wordpress.org/plugins/)
+            Plugin Check found issues, the issues are added as annotations in the files changed tab.
+            
             `;
 
             await github.rest.issues.createComment({
