@@ -27,15 +27,8 @@ class CheckoutHandler implements Hookable {
 		add_action( 'woocommerce_after_checkout_validation', [ $this, 'validate_pickup_selection' ], 10, 2 );
 		add_action( 'woocommerce_store_api_checkout_update_order_from_request', [ $this, 'validate_pickup_selection_block' ], 10, 2 );
 
-		// Replace shipping address with pickup point address for pickup orders
-		add_filter( 'woocommerce_order_formatted_shipping_address', [ $this, 'replace_shipping_address_with_pickup' ], 10, 2 );
-		add_filter( 'woocommerce_formatted_address_replacements', [ $this, 'format_pickup_address_replacements' ], 10, 2 );
-
-		// Add pickup point information to emails only (address replacement handles confirmation page)
+		// Add pickup point information to emails
 		add_action( 'woocommerce_email_customer_details', [ $this, 'display_pickup_point_in_email' ], 15, 4 );
-
-		// Override shipping method display in admin to show pickup point details
-		add_filter( 'woocommerce_order_shipping_to_display', [ $this, 'customize_shipping_display_for_pickup' ], 10, 2 );
 
 		// Hide pickup point metadata in admin except pickup_point_id
 		add_filter( 'woocommerce_hidden_order_itemmeta', [ $this, 'hide_pickup_point_metadata_in_admin' ], 10, 1 );
@@ -135,70 +128,6 @@ class CheckoutHandler implements Hookable {
 	}
 
 	/**
-	 * Replace shipping address with pickup point address for pickup orders.
-	 *
-	 * @param array     $address Formatted shipping address.
-	 * @param \WC_Order $order Order object.
-	 * @return array
-	 */
-	public function replace_shipping_address_with_pickup( $address, $order ): array {
-		// Ensure we have an array to work with
-		if ( ! is_array( $address ) ) {
-			$address = [];
-		}
-
-		// Get pickup point data from shipping method meta
-		$pickup_point = $this->get_pickup_point_from_order( $order );
-
-		if ( ! $pickup_point ) {
-			return $address;
-		}
-
-		// Replace with pickup point address
-		$pickup_address = [
-			'company'    => $pickup_point['name'] ?? '',
-			'address_1'  => $pickup_point['street'] ?? '',
-			'address_2'  => '',
-			'city'       => $pickup_point['city'] ?? '',
-			'state'      => '',
-			'postcode'   => $pickup_point['postcode'] ?? '',
-			'country'    => $pickup_point['country'] ?? '',
-			'first_name' => __( 'Pickup at', 'wuunder-shipping' ),
-			'last_name'  => '',
-		];
-
-		return $pickup_address;
-	}
-
-	/**
-	 * Format address replacements for pickup points.
-	 *
-	 * @param array $replacements Address replacements.
-	 * @param array $args Address arguments.
-	 * @return array
-	 */
-	public function format_pickup_address_replacements( $replacements, $args ): array {
-		// Ensure we have arrays to work with
-		if ( ! is_array( $replacements ) ) {
-			$replacements = [];
-		}
-		if ( ! is_array( $args ) ) {
-			$args = [];
-		}
-
-		// Check if this is a pickup address replacement
-		if ( isset( $args['first_name'] ) && $args['first_name'] === __( 'Pickup at', 'wuunder-shipping' ) ) {
-			// Customize the formatting for pickup addresses
-			$replacements['{name}']       = $args['first_name'];
-			$replacements['{company}']    = $args['company'];
-			$replacements['{first_name}'] = '';
-			$replacements['{last_name}']  = '';
-		}
-
-		return $replacements;
-	}
-
-	/**
 	 * Display pickup point information in order emails.
 	 *
 	 * @param \WC_Order $order Order object.
@@ -240,29 +169,6 @@ class CheckoutHandler implements Hookable {
 			</div>
 			<?php
 		}
-	}
-
-	/**
-	 * Customize shipping method display to show simple pickup point name in totals.
-	 *
-	 * @param string   $shipping_display The shipping display string.
-	 * @param WC_Order $order The order object.
-	 * @return string Modified shipping display.
-	 */
-	public function customize_shipping_display_for_pickup( $shipping_display, $order ): string {
-		$pickup_point = $this->get_pickup_point_from_order( $order );
-
-		if ( ! $pickup_point ) {
-			return $shipping_display;
-		}
-
-		// Simple display for order totals - just "Pick up at {name}"
-		if ( ! empty( $pickup_point['name'] ) ) {
-			/* translators: %s: Pickup point name */
-			return sprintf( __( 'Pick up at %s', 'wuunder-shipping' ), esc_html( $pickup_point['name'] ) );
-		}
-
-		return $shipping_display;
 	}
 
 	/**
