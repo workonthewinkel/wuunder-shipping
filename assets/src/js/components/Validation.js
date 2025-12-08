@@ -23,10 +23,18 @@ class Validation {
     }
 
     initializeValidation() {
-        const $carrierSelect = $('#woocommerce_wuunder_shipping_wuunder_carrier');
-        const $titleField = $('#woocommerce_wuunder_shipping_title');
         const $saveButton = $('#btn-ok');
-        
+        const $carrierSelect = $('#woocommerce_wuunder_shipping_wuunder_carrier');
+        const $carrierCheckboxes = $('[name^="woocommerce_wuunder_pickup_available_carriers"]');
+
+        // No carrier fields means no carriers available - hide save button
+        if (!$carrierSelect.length && !$carrierCheckboxes.length) {
+            $saveButton.hide();
+            return;
+        }
+
+        const $titleField = $('#woocommerce_wuunder_shipping_title');
+
         if ($carrierSelect.length && $titleField.length && $saveButton.length) {
             // Initial validation
             this.validateAndUpdateButton($carrierSelect, $titleField, $saveButton);
