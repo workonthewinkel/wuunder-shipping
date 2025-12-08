@@ -52,22 +52,18 @@ This plugin uses a **release branch workflow** with automated WordPress.org SVN 
    - Create new `versions/x.x.x` branch based on main.
    - **Update version number in `wuunder-shipping.php` header** (e.g., `0.7.2` → `0.7.3`)
    - **Update `readme.txt` changelog section** with changes for this release
+   - This will fire some workflows, wait until completed to inspect any issues.
 
 3. **Merge the release PR:**
    - Merge PR to `release` branch
    - Two workflows automatically trigger:
      - **Release Drafter**: Creates/updates draft release (tagged with version from plugin file)
      - **Build Release Package**: Builds production assets and attaches zip to the draft
-       - Installs production dependencies (`composer install --no-dev`)
-       - Builds production assets (`npm run production`)
-       - Creates plugin zip package
-       - Uploads package to the draft release (may take 1-2 minutes)
 
 4. **Test the release:**
-   - Wait 1-2 minutes for the "Build Release Package" workflow to complete
+   - Wait a few minutes for the "Build Release Package" workflow to complete
    - Download the zip from the draft release at https://github.com/workonthewinkel/wuunder/releases
-   - Test locally to ensure everything works
-   - **Note**: If zip is missing, manually trigger the "Build Release Package" workflow from the Actions tab
+   - Test locally or in staging environment to ensure everything works
 
 5. **Publish the release:**
    - Review version number (read from `wuunder-shipping.php`)
@@ -115,33 +111,6 @@ Version numbers are **manually managed** in the `wuunder-shipping.php` file head
 - Automatically generated from merged PR titles and labels
 - Organized into categories (Features, Bug Fixes, Maintenance, Documentation)
 - Created when you publish the release
-
-### Automated Workflows
-
-The release process uses several automated GitHub Actions workflows:
-
-1. **Release Drafter** (`.github/workflows/release-drafter.yml`)
-   - Triggers: Push to `release` branch
-   - Creates/updates draft releases with auto-generated changelogs
-
-2. **Release PR Checklist** (`.github/workflows/release-pr-changelog.yml`)
-   - Triggers: PR opened to `release` branch
-   - Posts a checklist reminder to verify version and changelog are updated
-
-3. **Build Release Package** (`.github/workflows/build-release.yml`)
-   - Triggers: Push to `release` branch
-   - Builds production assets and attaches zip to draft release
-   - Can be manually triggered to rebuild
-
-4. **Deploy to WordPress.org** (`.github/workflows/wordpress-plugin-deploy.yml`)
-   - Triggers: Release published
-   - Downloads pre-built zip from release assets
-   - Deploys to WordPress.org SVN repository
-
-5. **Sync Release to Main** (`.github/workflows/sync-release-to-main.yml`)
-   - Triggers: Release published
-   - Automatically pushes `release` branch to `main` to keep them in sync
-   - No PR created (already reviewed in release PR)
 
 ## Configuration
 
