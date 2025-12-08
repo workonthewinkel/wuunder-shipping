@@ -132,6 +132,7 @@ class SettingsController extends Controller implements Hookable {
 				'carrier_methods' => $carrier_methods,
 				'carrier_names'   => $carrier_names,
 				'has_api_key'     => $this->has_api_key,
+				'carrier_type'    => 'standard',
 			]
 		);
 	}
@@ -163,6 +164,7 @@ class SettingsController extends Controller implements Hookable {
 				'carrier_methods' => $carrier_methods,
 				'carrier_names'   => $carrier_names,
 				'has_api_key'     => $this->has_api_key,
+				'carrier_type'    => 'parcelshop',
 			]
 		);
 	}
@@ -224,7 +226,16 @@ class SettingsController extends Controller implements Hookable {
 			return;
 		}
 
-		$carriers         = Carrier::get_all();
+		// Determine which carrier type we're updating
+		$carrier_type = isset( $_POST['wuunder_carrier_type'] ) ? sanitize_text_field( wp_unslash( $_POST['wuunder_carrier_type'] ) ) : 'standard';
+
+		// Get only carriers of the type being edited
+		if ( $carrier_type === 'parcelshop' ) {
+			$carriers = Carrier::get_parcelshop_carriers();
+		} else {
+			$carriers = Carrier::get_standard_carriers();
+		}
+
 		$enabled_carriers = [];
 
 		// Get enabled carriers from POST data
@@ -238,14 +249,14 @@ class SettingsController extends Controller implements Hookable {
 
 		// Update each carrier's enabled status
 		foreach ( $carriers as $carrier ) {
-			$was_enabled = $carrier->enabled;
+			$was_enabled      = $carrier->enabled;
 			$carrier->enabled = in_array( $carrier->get_method_id(), $enabled_carriers, true );
-			
+
 			// Track carriers that are being disabled
 			if ( $was_enabled && ! $carrier->enabled ) {
 				$disabled_carriers[] = $carrier->get_method_id();
 			}
-			
+
 			$carrier->save();
 		}
 
