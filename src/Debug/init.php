@@ -20,3 +20,8 @@ add_action(
 		}
 	}
 );
+
+// Register WP-CLI commands
+if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\Wuunder\Shipping\Debug\CLI' ) ) {
+	\Wuunder\Shipping\Debug\CLI::register();
+}

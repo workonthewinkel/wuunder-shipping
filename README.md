@@ -2,36 +2,19 @@
 
 This is the Private Github README file for the Wuunder Plugin.
 
-Recommended knowledge:
-- [`CLI.MD`](CLI.MD) contains a few scripts that help clean up the database for easy testing, viewing of database entries and endpoints.
-- [`NOTES.MD`](NOTES.MD) contains insights and knowledge on API communication
-- [`DIAGRAM.MD`](DIAGRAM.MD) Shows code structure in a diagram
-
-A WordPress/WooCommerce plugin that integrates with the Wuunder parcel delivery platform. Wuunder is a shipping management system that connects multiple carriers and provides unified shipping services for e-commerce businesses.
-
-This plugin enables WooCommerce stores to offer Wuunder's shipping methods directly at checkout, with real-time carrier selection and pricing. It includes support for pickup point selection with an integrated parcel shop locator and full WooCommerce Blocks compatibility.
-
-## Features
-
-- **Multiple Shipping Methods**: Integrate various Wuunder carriers and shipping options
-- **Pickup Point Locator**: Interactive parcel shop locator with iframe integration
-- **WooCommerce Blocks Support**: Full compatibility with WooCommerce block-based checkout
-- **Real-time Pricing**: Dynamic shipping cost calculation based on carrier rates
-- **Admin Configuration**: Easy setup through WooCommerce settings interface
-
-## Requirements
-
-- PHP 7.4+
-- WordPress 6.4+
-- WooCommerce (required)
-- Node.js 16+ (for development)
-
 ## Installation
 
 1. Clone or download this repository to `/wp-content/plugins/`
 2. Run `composer install` to install PHP dependencies
 3. Run `npm install` to install Node.js dependencies
 4. Activate the plugin in WordPress admin
+
+## WP-CLI Commands
+
+```bash
+wp wuunder clear              # Remove all Wuunder settings
+wp wuunder delete_orders --yes # Delete all shop orders
+```
 
 ## Development
 
@@ -59,6 +42,58 @@ This plugin uses a **release branch workflow** with automated WordPress.org SVN 
 
 - **`main`** - Development branch (merge all PRs here)
 - **`release`** - Production branch (only updated when ready to release)
+
+### Creating a Release
+
+1. **Develop on `main` branch:**
+   - Merge PRs to `main` as usual during development
+
+2. **When ready to release, create a release PR:**
+   - Create new `versions/x.x.x` branch based on main.
+   - **Update version number in `wuunder-shipping.php` header** (e.g., `0.7.2` → `0.7.3`)
+   - **Update `readme.txt` changelog section** with changes for this release
+
+3. **Merge the release PR:**
+   - Merge PR to `release` branch
+   - Two workflows automatically trigger:
+     - **Release Drafter**: Creates/updates draft release (tagged with version from plugin file)
+     - **Build Release Package**: Builds production assets and attaches zip to the draft
+       - Installs production dependencies (`composer install --no-dev`)
+       - Builds production assets (`npm run production`)
+       - Creates plugin zip package
+       - Uploads package to the draft release (may take 1-2 minutes)
+
+4. **Test the release:**
+   - Wait 1-2 minutes for the "Build Release Package" workflow to complete
+   - Download the zip from the draft release at https://github.com/workonthewinkel/wuunder/releases
+   - Test locally to ensure everything works
+   - **Note**: If zip is missing, manually trigger the "Build Release Package" workflow from the Actions tab
+
+5. **Publish the release:**
+   - Review version number (read from `wuunder-shipping.php`)
+   - Review changelog (auto-generated from PR titles and labels)
+   - Test the attached zip file one final time
+   - Click "Publish release"
+   - This automatically triggers two workflows:
+     - **Deploy to WordPress.org**: Deploys the tested zip to WordPress.org SVN (~30 seconds)
+     - **Sync Release to Main**: Automatically pushes `release` to `main` (no PR needed)
+
+
+### Manual Release Testing
+
+To test the release build without publishing:
+```bash
+# Install WP-CLI dist-archive package
+wp package install wp-cli/dist-archive-command
+
+# Build production assets
+composer install --no-dev --optimize-autoloader
+npm ci
+WP_CLI_ALLOW_ROOT=1 npm run build
+
+# Create distribution package
+wp dist-archive . ./wuunder-shipping.zip --plugin-dirname=wuunder-shipping
+```
 
 ### Version Management
 
@@ -107,67 +142,6 @@ The release process uses several automated GitHub Actions workflows:
    - Triggers: Release published
    - Automatically pushes `release` branch to `main` to keep them in sync
    - No PR created (already reviewed in release PR)
-
-### Creating a Release
-
-1. **Develop on `main` branch:**
-   - Merge PRs to `main` as usual during development
-   - Label PRs appropriately for changelog organization:
-     - `feature` or `enhancement` - New features
-     - `bug` or `bugfix` - Bug fixes
-     - `major` or `breaking` - Breaking changes
-     - `chore` - Maintenance tasks
-     - `docs` - Documentation updates
-
-2. **When ready to release, create a release PR:**
-   - Create PR: `main` → `release`
-   - **Update version number in `wuunder-shipping.php` header** (e.g., `0.7.2` → `0.7.3`)
-   - **Update `readme.txt` changelog section** with changes for this release
-   - A bot will automatically post a **checklist reminder** (you can check it off once done)
-   - Review all changes that will be released
-
-3. **Merge the release PR:**
-   - Merge PR to `release` branch
-   - Two workflows automatically trigger:
-     - **Release Drafter**: Creates/updates draft release (tagged with version from plugin file)
-     - **Build Release Package**: Builds production assets and attaches zip to the draft
-       - Installs production dependencies (`composer install --no-dev`)
-       - Builds production assets (`npm run production`)
-       - Creates plugin zip package
-       - Uploads package to the draft release (may take 1-2 minutes)
-
-4. **Test the release:**
-   - Wait 1-2 minutes for the "Build Release Package" workflow to complete
-   - Download the zip from the draft release at https://github.com/workonthewinkel/wuunder/releases
-   - Test locally to ensure everything works
-   - **Note**: If zip is missing, manually trigger the "Build Release Package" workflow from the Actions tab
-
-5. **Publish the release:**
-   - Review version number (read from `wuunder-shipping.php`)
-   - Review changelog (auto-generated from PR titles and labels)
-   - Test the attached zip file one final time
-   - Click "Publish release"
-   - This automatically triggers two workflows:
-     - **Deploy to WordPress.org**: Deploys the tested zip to WordPress.org SVN (~30 seconds)
-     - **Sync Release to Main**: Automatically pushes `release` to `main` (no PR needed)
-
-That's it! The `main` branch is now automatically synced and you're done.
-
-### Manual Release Testing
-
-To test the release build without publishing:
-```bash
-# Install WP-CLI dist-archive package
-wp package install wp-cli/dist-archive-command
-
-# Build production assets
-composer install --no-dev --optimize-autoloader
-npm ci
-WP_CLI_ALLOW_ROOT=1 npm run build
-
-# Create distribution package
-wp dist-archive . ./wuunder-shipping.zip --plugin-dirname=wuunder-shipping
-```
 
 ## Configuration
 
