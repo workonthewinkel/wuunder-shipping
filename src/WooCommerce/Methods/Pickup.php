@@ -4,6 +4,7 @@ namespace Wuunder\Shipping\WooCommerce\Methods;
 
 use WC_Shipping_Method;
 use Wuunder\Shipping\Models\Carrier;
+use Wuunder\Shipping\Traits\NoCarriersNotice;
 use Wuunder\Shipping\Traits\ShippingMethodSanitization;
 
 /**
@@ -11,6 +12,7 @@ use Wuunder\Shipping\Traits\ShippingMethodSanitization;
  */
 class Pickup extends WC_Shipping_Method {
 
+	use NoCarriersNotice;
 	use ShippingMethodSanitization;
 
 	/**
@@ -78,7 +80,25 @@ class Pickup extends WC_Shipping_Method {
 	 * Initialize form fields.
 	 */
 	public function init_form_fields(): void {
+		$available_carriers = $this->get_available_carriers();
+		$has_carriers = ! empty( $available_carriers );
+
+		// If no carriers available, only show message with link to manage carriers
+		if ( ! $has_carriers ) {
+			$this->instance_form_fields = $this->get_no_carriers_notice_fields( 'pickup_methods' );
+			return;
+		}
+
 		$this->instance_form_fields = [
+			'available_carriers' => [
+				'title' => __( 'Available Carriers', 'wuunder-shipping' ),
+				'type' => 'carrier_checkboxes',
+				'description' => __( 'Select which carriers should be available for pick-up points.', 'wuunder-shipping' ),
+				'options' => $available_carriers,
+				'default' => array_keys( $available_carriers ),
+				'desc_tip' => true,
+				'sanitize_callback' => array( $this, 'sanitize_carriers' ),
+			],
 			'title' => [
 				'title' => __( 'Method Title', 'wuunder-shipping' ),
 				'type' => 'text',
@@ -95,15 +115,6 @@ class Pickup extends WC_Shipping_Method {
 				'default' => '',
 				'desc_tip' => true,
 				'sanitize_callback' => array( $this, 'sanitize_cost' ),
-			],
-			'available_carriers' => [
-				'title' => __( 'Available Carriers', 'wuunder-shipping' ),
-				'type' => 'carrier_checkboxes',
-				'description' => __( 'Select which carriers should be available for pick-up points.', 'wuunder-shipping' ),
-				'options' => $this->get_available_carriers(),
-				'default' => array_keys( $this->get_available_carriers() ),
-				'desc_tip' => true,
-				'sanitize_callback' => array( $this, 'sanitize_carriers' ),
 			],
 			'primary_color' => [
 				'title' => __( 'Primary Color', 'wuunder-shipping' ),
