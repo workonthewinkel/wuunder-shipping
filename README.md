@@ -9,8 +9,12 @@ This is the Private Github README file for the Wuunder Plugin.
 3. Run `npm install` to install Node.js dependencies
 4. Activate the plugin in WordPress admin
 
-## Clean Wuunder settings
-- Run `wp wuunder clear` to remove all Wuunder settings
+## WP-CLI Commands
+
+```bash
+wp wuunder clear              # Remove all Wuunder settings
+wp wuunder delete_orders --yes # Delete all shop orders
+```
 
 ## Development
 
@@ -43,19 +47,11 @@ This plugin uses a **release branch workflow** with automated WordPress.org SVN 
 
 1. **Develop on `main` branch:**
    - Merge PRs to `main` as usual during development
-   - Label PRs appropriately for changelog organization:
-     - `feature` or `enhancement` - New features
-     - `bug` or `bugfix` - Bug fixes
-     - `major` or `breaking` - Breaking changes
-     - `chore` - Maintenance tasks
-     - `docs` - Documentation updates
 
 2. **When ready to release, create a release PR:**
-   - Create PR: `main` → `release`
+   - Create new `versions/x.x.x` branch based on main.
    - **Update version number in `wuunder-shipping.php` header** (e.g., `0.7.2` → `0.7.3`)
    - **Update `readme.txt` changelog section** with changes for this release
-   - A bot will automatically post a **checklist reminder** (you can check it off once done)
-   - Review all changes that will be released
 
 3. **Merge the release PR:**
    - Merge PR to `release` branch

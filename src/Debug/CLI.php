@@ -77,6 +77,68 @@ class CLI {
 	}
 
 	/**
+	 * Delete all shop orders.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--yes]
+	 * : Skip confirmation prompt.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Delete all shop orders
+	 *     $ wp wuunder delete_orders
+	 *
+	 *     # Delete without confirmation
+	 *     $ wp wuunder delete_orders --yes
+	 *
+	 * @when after_wp_load
+	 */
+	public function delete_orders( $args, $assoc_args ): void {
+		$yes = \WP_CLI\Utils\get_flag_value( $assoc_args, 'yes', false );
+
+		$orders = wc_get_orders(
+			[
+				'limit'  => -1,
+				'return' => 'ids',
+			]
+		);
+
+		$count = count( $orders );
+
+		if ( 0 === $count ) {
+			\WP_CLI::success( 'No orders to delete.' );
+			return;
+		}
+
+		if ( ! $yes ) {
+			\WP_CLI::confirm( "This will permanently delete {$count} order(s). Are you sure?" );
+		}
+
+		\WP_CLI::log( "Deleting {$count} order(s)..." );
+
+		$deleted = 0;
+		$failed  = 0;
+
+		foreach ( $orders as $order_id ) {
+			$order = wc_get_order( $order_id );
+			if ( $order && $order->delete( true ) ) {
+				++$deleted;
+				\WP_CLI::log( "  Deleted order #{$order_id}" );
+			} else {
+				++$failed;
+				\WP_CLI::warning( "  Failed to delete order #{$order_id}" );
+			}
+		}
+
+		if ( $failed > 0 ) {
+			\WP_CLI::warning( "Deleted {$deleted} order(s), {$failed} failed." );
+		} else {
+			\WP_CLI::success( "Deleted {$deleted} order(s)." );
+		}
+	}
+
+	/**
 	 * Remove Wuunder shipping methods from all zones.
 	 */
 	private function remove_shipping_methods(): void {
