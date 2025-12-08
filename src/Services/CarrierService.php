@@ -77,7 +77,7 @@ class CarrierService {
 			if ( $preserve_enabled && isset( $existing_carriers[ $key ] ) ) {
 				$carrier->enabled = $existing_carriers[ $key ];
 			} else {
-				$carrier->enabled = false; // Start with disabled by default
+				$carrier->enabled = true; // Enable new methods by default
 			}
 
 			$carrier->save();
