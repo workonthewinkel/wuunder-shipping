@@ -25,10 +25,7 @@ webpack.mix.js
 src/Debug/
 
 # docs
-CLI.MD
-NOTES.MD
 README.MD
-DIAGRAM.MD
 
 # auto generated files
 .DS_Store
