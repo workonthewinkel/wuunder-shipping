@@ -51,7 +51,6 @@ Thumbs.db
 behat.yml
 bitbucket-pipelines.yml
 .circleci/config.yml
-composer.json
 composer.lock
 dependencies.yml
 Gruntfile.js
