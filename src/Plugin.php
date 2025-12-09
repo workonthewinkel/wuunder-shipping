@@ -6,6 +6,7 @@ use Wuunder\Shipping\WordPress\Assets;
 use Wuunder\Shipping\Models\Database\Migrations;
 use Wuunder\Shipping\Controllers\SettingsController;
 use Wuunder\Shipping\Services\CarrierService;
+use Wuunder\Shipping\Queue\Register as Queue;
 use Wuunder\Shipping\WooCommerce\Register;
 use Wuunder\Shipping\WooCommerce\CheckoutHandler;
 use Wuunder\Shipping\WooCommerce\BlocksIntegration;
@@ -86,6 +87,9 @@ class Plugin {
 
 		// Dynamic shipping method registry
 		( new Register() )->register_hooks();
+
+		// Queue registration
+		( new Queue() )->register_hooks();
 
 		// Checkout handler for pickup points
 		( new CheckoutHandler() )->register_hooks();
