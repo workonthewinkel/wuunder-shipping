@@ -34,10 +34,8 @@ class CarrierService {
 
 		// Get existing carriers to optionally preserve enabled state
 		$existing_carriers = [];
-		if ( $preserve_enabled ) {
-			foreach ( Carrier::get_all() as $carrier ) {
-				$existing_carriers[ $carrier->get_method_id() ] = $carrier->enabled;
-			}
+		foreach ( Carrier::get_all() as $carrier ) {
+			$existing_carriers[ $carrier->get_method_id() ] = $carrier->enabled;
 		}
 
 		// Save carriers from API
@@ -83,6 +81,101 @@ class CarrierService {
 			$carrier->save();
 		}
 
+		// After looping through all new carriers, loop through the old ones and see which we need to delete:
+		$existing_carrier_ids = array_keys( $existing_carriers );
+		foreach( $existing_carrier_ids as $carrier_id ){
+
+			// if this existing carrier was not sent over by the api:
+			if( !isset( $api_carriers[ $carrier_id ] ) ){
+				static::handle_carrier_deletion( $carrier_id );
+			}
+
+		}
+
 		return true;
+	}
+
+	/**
+	 * Handle the deletion of a single carrier:
+	 * - Delete the carrier from the database
+	 * - Delete any WooCommerce shipping method instances that use this carrier
+	 *
+	 * @param string $carrier_id The carrier method ID (format: carrier_code:carrier_product_code).
+	 * @return void
+	 */
+	public static function handle_carrier_deletion( string $carrier_id ): void {
+		// Load the actual Carrier object to delete it
+		$carrier = Carrier::find_by_method_id( $carrier_id );
+		
+		if ( ! $carrier ) {
+			// Carrier doesn't exist, nothing to delete
+			return;
+		}
+
+		// Extract carrier_code for pickup method checks
+		$carrier_code = $carrier->carrier_code;
+
+		// Delete associated WooCommerce shipping method instances
+		static::delete_associated_shipping_methods( $carrier_id, $carrier_code );
+
+		// Delete the carrier from the database
+		$carrier->delete();
+	}
+
+	/**
+	 * Delete WooCommerce shipping method instances associated with a carrier.
+	 *
+	 * @param string $carrier_id The full carrier method ID (carrier_code:carrier_product_code).
+	 * @param string $carrier_code The carrier code (for pickup method checks).
+	 * @return void
+	 */
+	private static function delete_associated_shipping_methods( string $carrier_id, string $carrier_code ): void {
+		// Get all shipping zones
+		$zones = \WC_Shipping_Zones::get_zones();
+		$zones[0] = \WC_Shipping_Zones::get_zone_by( 'zone_id', 0 ); // Add 'Rest of the World' zone
+
+		foreach ( $zones as $zone ) {
+			if ( is_array( $zone ) ) {
+				$zone_obj = \WC_Shipping_Zones::get_zone( $zone['id'] );
+				$zone_id = $zone['id'];
+			} else {
+				$zone_obj = $zone;
+				$zone_id = $zone_obj->get_id();
+			}
+
+			if ( ! $zone_obj ) {
+				continue;
+			}
+
+			$shipping_methods = $zone_obj->get_shipping_methods();
+			$methods_to_delete = [];
+
+			foreach ( $shipping_methods as $instance_id => $shipping_method ) {
+				// Check wuunder_shipping methods
+				if ( $shipping_method->id === 'wuunder_shipping' ) {
+					$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
+					
+					// If this method uses the deleted carrier, mark it for deletion
+					if ( $carrier_option === $carrier_id ) {
+						$methods_to_delete[] = $instance_id;
+					}
+				}
+
+				// Check wuunder_pickup methods
+				if ( $shipping_method->id === 'wuunder_pickup' ) {
+					$available_carriers = $shipping_method->get_option( 'available_carriers', [] );
+					
+					// If the deleted carrier is in the available carriers list, delete the method
+					if ( is_array( $available_carriers ) && in_array( $carrier_code, $available_carriers, true ) ) {
+						$methods_to_delete[] = $instance_id;
+					}
+				}
+			}
+
+			// Delete the marked methods
+			foreach ( $methods_to_delete as $instance_id ) {
+				$zone_obj->delete_shipping_method( $instance_id );
+			}
+		}
 	}
 }
