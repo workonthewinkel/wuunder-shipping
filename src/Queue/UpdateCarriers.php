@@ -3,6 +3,7 @@
 namespace Wuunder\Shipping\Queue;
 
 use Wuunder\Shipping\Contracts\Queueable;
+use Wuunder\Shipping\Services\CarrierService;
 
 /**
  * Class UpdateCarriers
