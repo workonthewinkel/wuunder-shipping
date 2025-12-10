@@ -17,12 +17,6 @@ abstract class Queueable implements Hookable {
 	protected string $hook;
 
 	/**
-	 * All Action Scheduler async actions should be assigned to a group.
-	 * With this we are able to check whether a group of async actions is still running.
-	 */
-	protected static string $group;
-
-	/**
 	 * Register this job
 	 */
 	public function register_hooks(): void {
@@ -41,13 +35,6 @@ abstract class Queueable implements Hookable {
     public function handle(): void {
         // implement this in the child class
     }
-
-	/**
-	 * Get the group name used for scheduling async actions in the Action Scheduler.
-	 */
-	public static function get_group(): string {
-		return self::$group;
-	}
 
 	/**
 	 * Return this queueables hook

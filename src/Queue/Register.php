@@ -42,7 +42,7 @@ class Register {
             // daily check if our carriers are still available on the wuunder api.
 			if ( \as_has_scheduled_action( 'wuunder/update_carriers' ) === false ) {
 				\as_schedule_recurring_action(
-					\time(),
+					\time() + \DAY_IN_SECONDS,
 					\DAY_IN_SECONDS,
 					'wuunder/update_carriers'
 				);
