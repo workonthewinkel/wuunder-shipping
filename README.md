@@ -34,6 +34,37 @@ composer check-cs  # Check coding standards
 composer fix-cs    # Fix coding standards
 ```
 
+### Debug Mode
+
+When running `composer install` with dev dependencies, a Debug tab appears in WooCommerce > Settings > Wuunder. This shows:
+
+- **Wuunder API - Shipping Carriers** - Carriers from API (non-parcelshop)
+- **Wuunder API - Pickup Carriers** - Carriers with `accepts_parcelshop_delivery = true`
+- **Wuunder Shipping Methods** - Configured shipping methods with carrier and enabled status
+- **Wuunder Pickup Methods** - Configured pickup methods with available carriers
+- **REST API Output** - Last 10 orders as seen by external services
+
+To test carrier unavailability, create an mu-plugin:
+
+```php
+<?php
+// wp-content/mu-plugins/wuunder-debug-exclude-carriers.php
+add_filter( 'wuunder_api_carriers', function( $carriers ) {
+    $exclude = [
+        'DHL_PARCEL:DHL_CONNECT_2SHOP',
+        'DPD:DPD_HOME',
+    ];
+
+    foreach ( $exclude as $carrier_id ) {
+        unset( $carriers[ $carrier_id ] );
+    }
+
+    return $carriers;
+} );
+```
+
+Then refresh carriers in Wuunder settings to see the disable logic in action.
+
 ## Release Process
 
 This plugin uses a **release branch workflow** with automated WordPress.org SVN sync:
@@ -128,6 +159,39 @@ The plugin includes an integrated pickup point locator that allows customers to 
 
 - Add `SVN_USERNAME` and `SVN_PASSWORD` secrets to GitHub repository settings
 - Plugin must be approved and have an SVN repository at https://plugins.svn.wordpress.org/wuunder-shipping/
+
+## Filters
+
+### `wuunder_api_carriers`
+
+Filter carriers returned from the Wuunder API before they are processed.
+
+```php
+add_filter( 'wuunder_api_carriers', function( $carriers ) {
+    // Remove specific carrier products
+    unset( $carriers['DHL_PARCEL:DHL_CONNECT_2SHOP'] );
+
+    return $carriers;
+} );
+```
+
+**Parameters:**
+- `$carriers` (array) - Associative array of carriers keyed by method ID (`carrier_code:carrier_product_code`)
+
+**Use cases:**
+- Testing carrier unavailability scenarios
+- Filtering out specific carriers for certain environments
+
+### `wuunder_pickup_available_carriers`
+
+Filter available carriers shown in pickup method settings.
+
+```php
+add_filter( 'wuunder_pickup_available_carriers', function( $options ) {
+    // $options is array of carrier_code => carrier_name
+    return $options;
+} );
+```
 
 ## Plugin Structure
 
