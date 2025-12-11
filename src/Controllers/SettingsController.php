@@ -15,6 +15,13 @@ use Wuunder\Shipping\WordPress\View;
 class SettingsController extends Controller implements Hookable {
 
 	/**
+	 * Whether API key is configured.
+	 *
+	 * @var bool
+	 */
+	private bool $has_api_key = false;
+
+	/**
 	 * Register WordPress hooks.
 	 *
 	 * @return void
@@ -46,15 +53,14 @@ class SettingsController extends Controller implements Hookable {
 	 * @return void
 	 */
 	public function settings_tab(): void {
-		$api_key     = get_option( 'wuunder_api_key', '' );
-		$has_api_key = ! empty( $api_key );
+		$this->has_api_key = ! empty( get_option( 'wuunder_api_key', '' ) );
 
 		// Default section depends on whether API key is set
-		$default_section = $has_api_key ? 'carriers' : 'settings';
+		$default_section = $this->has_api_key ? 'shipping_methods' : 'settings';
 		$current_section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : $default_section; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		// Get available sections from filter
-		$available_sections = apply_filters( 'wuunder_settings_sections', [ 'carriers', 'settings' ] );
+		$available_sections = apply_filters( 'wuunder_settings_sections', [ 'shipping_methods', 'pickup_methods', 'settings' ] );
 
 		// Validate current section exists
 		if ( ! in_array( $current_section, $available_sections, true ) ) {
@@ -64,8 +70,8 @@ class SettingsController extends Controller implements Hookable {
 		View::display(
 			'admin/settings-tabs',
 			[
-				'current_section' => $current_section,
-				'has_api_key' => $has_api_key,
+				'current_section'    => $current_section,
+				'has_api_key'        => $this->has_api_key,
 				'available_sections' => $available_sections,
 			]
 		);
@@ -74,8 +80,10 @@ class SettingsController extends Controller implements Hookable {
 		do_action( 'wuunder_settings_section_' . $current_section, $current_section );
 
 		// Fallback to built-in sections
-		if ( $current_section === 'carriers' ) {
-			$this->display_carriers_section();
+		if ( $current_section === 'shipping_methods' ) {
+			$this->display_shipping_methods_section();
+		} elseif ( $current_section === 'pickup_methods' ) {
+			$this->display_pickup_methods_section();
 		} elseif ( $current_section === 'settings' ) {
 			$this->display_settings_section();
 		}
@@ -98,20 +106,18 @@ class SettingsController extends Controller implements Hookable {
 	}
 
 	/**
-	 * Display carriers section.
+	 * Display shipping methods section.
 	 *
 	 * @return void
 	 */
-	private function display_carriers_section(): void {
-		$api_key     = get_option( 'wuunder_api_key', '' );
-		$has_api_key = ! empty( $api_key );
-
-		// Auto-load carriers if we have API key but no carriers
-		$carrier_methods = Carrier::get_all();
-		if ( $has_api_key && empty( $carrier_methods ) ) {
+	private function display_shipping_methods_section(): void {
+		// Auto-load carriers if none exist (service handles API key check)
+		if ( empty( Carrier::get_all() ) ) {
 			$this->load_carriers_from_api();
-			$carrier_methods = Carrier::get_all(); // Re-fetch after loading
 		}
+
+		// Get standard carriers (non-parcelshop)
+		$carrier_methods = Carrier::get_standard_carriers();
 
 		$carrier_names = [];
 		foreach ( $carrier_methods as $carrier ) {
@@ -121,11 +127,44 @@ class SettingsController extends Controller implements Hookable {
 		}
 
 		View::display(
-			'admin/carriers-section',
+			'admin/methods-section',
 			[
 				'carrier_methods' => $carrier_methods,
-				'carrier_names' => $carrier_names,
-				'has_api_key' => $has_api_key,
+				'carrier_names'   => $carrier_names,
+				'has_api_key'     => $this->has_api_key,
+				'carrier_type'    => 'standard',
+			]
+		);
+	}
+
+	/**
+	 * Display pickup methods section.
+	 *
+	 * @return void
+	 */
+	private function display_pickup_methods_section(): void {
+		// Auto-load carriers if none exist (service handles API key check)
+		if ( empty( Carrier::get_all() ) ) {
+			$this->load_carriers_from_api();
+		}
+
+		// Get parcelshop carriers
+		$carrier_methods = Carrier::get_parcelshop_carriers();
+
+		$carrier_names = [];
+		foreach ( $carrier_methods as $carrier ) {
+			if ( ! isset( $carrier_names[ $carrier->carrier_code ] ) ) {
+				$carrier_names[ $carrier->carrier_code ] = $carrier->carrier_name;
+			}
+		}
+
+		View::display(
+			'admin/methods-section',
+			[
+				'carrier_methods' => $carrier_methods,
+				'carrier_names'   => $carrier_names,
+				'has_api_key'     => $this->has_api_key,
+				'carrier_type'    => 'parcelshop',
 			]
 		);
 	}
@@ -166,10 +205,10 @@ class SettingsController extends Controller implements Hookable {
 	public function update_settings(): void {
 		$current_section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : 'settings'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		// Detect carriers section by POST data presence since URL section param gets lost
-		$is_carriers_section = isset( $_POST['wuunder_enabled_carriers'] ) || $current_section === 'carriers'; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		// Detect methods section by POST data presence since URL section param gets lost
+		$is_methods_section = isset( $_POST['wuunder_enabled_carriers'] ) || in_array( $current_section, [ 'shipping_methods', 'pickup_methods' ], true ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		if ( $is_carriers_section ) {
+		if ( $is_methods_section ) {
 			$this->update_carriers();
 		} else {
 			woocommerce_update_options( $this->get_settings() );
@@ -187,7 +226,16 @@ class SettingsController extends Controller implements Hookable {
 			return;
 		}
 
-		$carriers         = Carrier::get_all();
+		// Determine which carrier type we're updating
+		$carrier_type = isset( $_POST['wuunder_carrier_type'] ) ? sanitize_text_field( wp_unslash( $_POST['wuunder_carrier_type'] ) ) : 'standard';
+
+		// Get only carriers of the type being edited
+		if ( $carrier_type === 'parcelshop' ) {
+			$carriers = Carrier::get_parcelshop_carriers();
+		} else {
+			$carriers = Carrier::get_standard_carriers();
+		}
+
 		$enabled_carriers = [];
 
 		// Get enabled carriers from POST data
@@ -201,14 +249,14 @@ class SettingsController extends Controller implements Hookable {
 
 		// Update each carrier's enabled status
 		foreach ( $carriers as $carrier ) {
-			$was_enabled = $carrier->enabled;
+			$was_enabled      = $carrier->enabled;
 			$carrier->enabled = in_array( $carrier->get_method_id(), $enabled_carriers, true );
-			
+
 			// Track carriers that are being disabled
 			if ( $was_enabled && ! $carrier->enabled ) {
 				$disabled_carriers[] = $carrier->get_method_id();
 			}
-			
+
 			$carrier->save();
 		}
 

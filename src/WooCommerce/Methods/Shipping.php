@@ -58,7 +58,7 @@ class Shipping extends WC_Shipping_Method {
 	 * Set method description based on carrier status.
 	 */
 	private function set_method_description(): void {
-		$settings_url = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=carriers' );
+		$settings_url = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=shipping_methods' );
 		$carrier_id = $this->get_option( 'wuunder_carrier', '' );
 		
 		$this->method_description = sprintf(

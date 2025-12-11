@@ -45,8 +45,8 @@ class Pickup extends WC_Shipping_Method {
 		$this->instance_id  = absint( $instance_id );
 		$this->method_title = __( 'Wuunder Pick-up', 'wuunder-shipping' );
 
-		// Build dynamic link to Wuunder Settings - carriers tab
-		$settings_url             = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=carriers' );
+		// Build dynamic link to Wuunder Settings - pickup methods tab
+		$settings_url             = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=pickup_methods' );
 		$this->method_description = sprintf(
 			/* translators: %s: URL to Wuunder settings page */
 			__( 'Pick-up point shipping method provided by <a href="%s"><strong>Wuunder</strong></a>', 'wuunder-shipping' ),
