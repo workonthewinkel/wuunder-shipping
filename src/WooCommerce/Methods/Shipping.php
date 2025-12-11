@@ -51,7 +51,7 @@ class Shipping extends WC_Shipping_Method {
 		$this->init_form_fields();
 
 		// Get instance-specific title with carrier name
-		$this->title = $this->get_option( 'title' );
+		$this->title = $this->get_option( 'title', __( 'Wuunder Shipping', 'wuunder-shipping' ) );
 
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, [ $this, 'process_admin_options' ] );
 	}

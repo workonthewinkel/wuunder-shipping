@@ -70,8 +70,8 @@ class Pickup extends WC_Shipping_Method {
 	public function init(): void {
 		$this->init_form_fields();
 
-		// Get instance-specific title
-		$this->title = $this->get_option( 'title' );
+		// Get instance-specific title with carrier name
+		$this->title = $this->get_option( 'title', __( 'Pick-up at parcel shop', 'wuunder-shipping' ) );
 
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, [ $this, 'process_admin_options' ] );
 	}
@@ -83,7 +83,7 @@ class Pickup extends WC_Shipping_Method {
 		$available_carriers = $this->get_available_carriers();
 		$has_carriers = ! empty( $available_carriers );
 
-		// If no carriers available, only show message with link to manage carriers
+		// If no carriers available, show notice with title field
 		if ( ! $has_carriers ) {
 			$this->instance_form_fields = $this->get_no_carriers_notice_fields( 'pickup_methods' );
 			return;
