@@ -163,8 +163,8 @@ class CarrierService {
 				if ( $shipping_method->id === 'wuunder_shipping' ) {
 					$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
 
-					// If this method uses an unavailable carrier, disable it
-					if ( in_array( $carrier_option, $carrier_ids, true ) ) {
+					// Disable if no carrier is configured or if the carrier is disabled
+					if ( empty( $carrier_option ) || in_array( $carrier_option, $carrier_ids, true ) ) {
 						static::disable_shipping_method( $shipping_method, $instance_id, $zone_id );
 					}
 				}
