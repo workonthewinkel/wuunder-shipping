@@ -386,7 +386,7 @@ class SettingsController extends Controller implements Hookable {
 			$enabled_carriers = Carrier::get_parcelshop_carriers( true );
 			$has_enabled_carrier = false;
 			foreach ( $enabled_carriers as $carrier ) {
-				if ( in_array( $carrier->carrier_code, $available_carriers, true ) ) {
+				if ( in_array( $carrier->get_method_id(), $available_carriers, true ) ) {
 					$has_enabled_carrier = true;
 					break;
 				}

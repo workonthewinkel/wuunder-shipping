@@ -129,16 +129,6 @@ class CarrierService {
 	 * @return void
 	 */
 	public static function disable_shipping_method_instances( array $carrier_ids ): void {
-		// Extract carrier codes for pickup method checks
-		$carrier_codes = [];
-		foreach ( $carrier_ids as $carrier_id ) {
-			$carrier = Carrier::find_by_method_id( $carrier_id );
-			if ( $carrier ) {
-				$carrier_codes[] = $carrier->carrier_code;
-			}
-		}
-		$carrier_codes = array_unique( $carrier_codes );
-
 		// Get all shipping zones
 		$zones = \WC_Shipping_Zones::get_zones();
 		$zones[0] = \WC_Shipping_Zones::get_zone_by( 'zone_id', 0 ); // Add 'Rest of the World' zone
@@ -179,11 +169,19 @@ class CarrierService {
 					}
 
 					// Filter out unavailable carriers
-					$filtered_carriers = array_values( array_diff( $available_carriers, $carrier_codes ) );
+					$filtered_carriers = array_values( array_diff( $available_carriers, $carrier_ids ) );
 
 					// If carriers were removed, update the option
 					if ( count( $filtered_carriers ) !== count( $available_carriers ) ) {
-						$shipping_method->update_option( 'available_carriers', $filtered_carriers );
+						// Update instance_settings directly (update_option doesn't work for instance settings)
+						$shipping_method->instance_settings['available_carriers'] = $filtered_carriers;
+
+						// Save using WooCommerce's pattern for instance settings
+						update_option(
+							$shipping_method->get_instance_option_key(),
+							apply_filters( 'woocommerce_shipping_' . $shipping_method->id . '_instance_settings_values', $shipping_method->instance_settings, $shipping_method ),
+							'yes'
+						);
 
 						// If no carriers remain, disable the method
 						if ( empty( $filtered_carriers ) ) {
@@ -235,9 +233,20 @@ class CarrierService {
 
 			foreach ( $shipping_methods as $method ) {
 				if ( $method->id === 'wuunder_pickup' ) {
+					$available_carriers = $method->get_option( 'available_carriers', [] );
+
+					// Extract carrier codes from method IDs (e.g., "DHL_PARCEL:PRODUCT" -> "DHL_PARCEL")
+					$carrier_codes = [];
+					foreach ( $available_carriers as $method_id ) {
+						$parts = explode( ':', $method_id );
+						if ( isset( $parts[0] ) ) {
+							$carrier_codes[] = $parts[0];
+						}
+					}
+
 					$settings[ $method->get_instance_id() ] = [
 						'primary_color'      => $method->get_option( 'primary_color', '#52ba69' ),
-						'available_carriers' => $method->get_option( 'available_carriers', [] ),
+						'available_carriers' => array_values( array_unique( $carrier_codes ) ),
 						'language'           => $method->get_option( 'language', 'nl' ),
 					];
 				}
