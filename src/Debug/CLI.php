@@ -70,9 +70,6 @@ class CLI {
 		$count = $wpdb->query( "TRUNCATE TABLE `{$table}`" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		\WP_CLI::log( "  Truncated table: {$table}" );
 
-		// Remove Wuunder shipping methods from zones.
-		$this->remove_shipping_methods();
-
 		\WP_CLI::success( 'All Wuunder data has been cleared.' );
 	}
 
@@ -138,35 +135,4 @@ class CLI {
 		}
 	}
 
-	/**
-	 * Remove Wuunder shipping methods from all zones.
-	 */
-	private function remove_shipping_methods(): void {
-		$zones   = \WC_Shipping_Zones::get_zones();
-		$zones[] = \WC_Shipping_Zones::get_zone_by( 'zone_id', 0 ); // Rest of World.
-		$removed = 0;
-
-		foreach ( $zones as $zone_data ) {
-			if ( is_array( $zone_data ) ) {
-				$zone = \WC_Shipping_Zones::get_zone( $zone_data['id'] );
-			} else {
-				$zone = $zone_data;
-			}
-
-			if ( ! $zone ) {
-				continue;
-			}
-
-			foreach ( $zone->get_shipping_methods() as $instance_id => $method ) {
-				if ( in_array( $method->id, [ 'wuunder_shipping', 'wuunder_pickup' ], true ) ) {
-					$zone->delete_shipping_method( $instance_id );
-					++$removed;
-				}
-			}
-		}
-
-		if ( $removed > 0 ) {
-			\WP_CLI::log( "  Removed {$removed} Wuunder shipping method(s) from zones" );
-		}
-	}
 }
