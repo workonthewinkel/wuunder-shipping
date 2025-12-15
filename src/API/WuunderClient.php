@@ -183,6 +183,6 @@ class WuunderClient {
 			}
 		}
 
-		return $carriers;
+		return apply_filters( 'wuunder_api_carriers', $carriers );
 	}
 }
