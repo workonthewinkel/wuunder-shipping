@@ -213,4 +213,37 @@ class CarrierService {
 			do_action( 'woocommerce_shipping_zone_method_status_toggled', $instance_id, $shipping_method->id, $zone_id, 0 );
 		}
 	}
+
+	/**
+	 * Get settings for all pickup method instances across all zones.
+	 *
+	 * @return array Array of settings keyed by instance ID.
+	 */
+	public static function get_pickup_method_settings(): array {
+		$settings = [];
+
+		// Get all shipping zones
+		$zones    = \WC_Shipping_Zones::get_zones();
+		$zones[0] = \WC_Shipping_Zones::get_zone( 0 ); // Add default zone
+
+		foreach ( $zones as $zone ) {
+			if ( is_array( $zone ) ) {
+				$zone = \WC_Shipping_Zones::get_zone( $zone['zone_id'] );
+			}
+
+			$shipping_methods = $zone->get_shipping_methods();
+
+			foreach ( $shipping_methods as $method ) {
+				if ( $method->id === 'wuunder_pickup' ) {
+					$settings[ $method->get_instance_id() ] = [
+						'primary_color'      => $method->get_option( 'primary_color', '#52ba69' ),
+						'available_carriers' => $method->get_option( 'available_carriers', [] ),
+						'language'           => $method->get_option( 'language', 'nl' ),
+					];
+				}
+			}
+		}
+
+		return $settings;
+	}
 }
