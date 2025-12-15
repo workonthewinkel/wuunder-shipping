@@ -55,7 +55,7 @@ class CarrierFilter {
     }
 
     applyFilters() {
-        const searchQuery = $(this.searchInput).val().toLowerCase();
+        const searchQuery = ($(this.searchInput).val() || '').toLowerCase();
         const selectedCarrier = $(this.carrierFilterSelect).val();
         const $rows = $(this.tableRows);
 
