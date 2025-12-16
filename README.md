@@ -2,36 +2,19 @@
 
 This is the Private Github README file for the Wuunder Plugin.
 
-Recommended knowledge:
-- [`CLI.MD`](CLI.MD) contains a few scripts that help clean up the database for easy testing, viewing of database entries and endpoints.
-- [`NOTES.MD`](NOTES.MD) contains insights and knowledge on API communication
-- [`DIAGRAM.MD`](DIAGRAM.MD) Shows code structure in a diagram
-
-A WordPress/WooCommerce plugin that integrates with the Wuunder parcel delivery platform. Wuunder is a shipping management system that connects multiple carriers and provides unified shipping services for e-commerce businesses.
-
-This plugin enables WooCommerce stores to offer Wuunder's shipping methods directly at checkout, with real-time carrier selection and pricing. It includes support for pickup point selection with an integrated parcel shop locator and full WooCommerce Blocks compatibility.
-
-## Features
-
-- **Multiple Shipping Methods**: Integrate various Wuunder carriers and shipping options
-- **Pickup Point Locator**: Interactive parcel shop locator with iframe integration
-- **WooCommerce Blocks Support**: Full compatibility with WooCommerce block-based checkout
-- **Real-time Pricing**: Dynamic shipping cost calculation based on carrier rates
-- **Admin Configuration**: Easy setup through WooCommerce settings interface
-
-## Requirements
-
-- PHP 7.4+
-- WordPress 6.4+
-- WooCommerce (required)
-- Node.js 16+ (for development)
-
 ## Installation
 
 1. Clone or download this repository to `/wp-content/plugins/`
 2. Run `composer install` to install PHP dependencies
 3. Run `npm install` to install Node.js dependencies
 4. Activate the plugin in WordPress admin
+
+## WP-CLI Commands
+
+```bash
+wp wuunder clear              # Remove all Wuunder settings
+wp wuunder delete_orders --yes # Delete all shop orders
+```
 
 ## Development
 
@@ -51,6 +34,37 @@ composer check-cs  # Check coding standards
 composer fix-cs    # Fix coding standards
 ```
 
+### Debug Mode
+
+When running `composer install` with dev dependencies, a Debug tab appears in WooCommerce > Settings > Wuunder. This shows:
+
+- **Wuunder API - Shipping Carriers** - Carriers from API (non-parcelshop)
+- **Wuunder API - Pickup Carriers** - Carriers with `accepts_parcelshop_delivery = true`
+- **Wuunder Shipping Methods** - Configured shipping methods with carrier and enabled status
+- **Wuunder Pickup Methods** - Configured pickup methods with available carriers
+- **REST API Output** - Last 10 orders as seen by external services
+
+To test carrier unavailability, create an mu-plugin:
+
+```php
+<?php
+// wp-content/mu-plugins/wuunder-debug-exclude-carriers.php
+add_filter( 'wuunder_api_carriers', function( $carriers ) {
+    $exclude = [
+        'DHL_PARCEL:DHL_CONNECT_2SHOP',
+        'DPD:DPD_HOME',
+    ];
+
+    foreach ( $exclude as $carrier_id ) {
+        unset( $carriers[ $carrier_id ] );
+    }
+
+    return $carriers;
+} );
+```
+
+Then refresh carriers in Wuunder settings to see the disable logic in action.
+
 ## Release Process
 
 This plugin uses a **release branch workflow** with automated WordPress.org SVN sync:
@@ -59,6 +73,54 @@ This plugin uses a **release branch workflow** with automated WordPress.org SVN 
 
 - **`main`** - Development branch (merge all PRs here)
 - **`release`** - Production branch (only updated when ready to release)
+
+### Creating a Release
+
+1. **Develop on `main` branch:**
+   - Merge PRs to `main` as usual during development
+
+2. **When ready to release, create a release PR:**
+   - Create new `versions/x.x.x` branch based on main.
+   - **Update version number in `wuunder-shipping.php` header** (e.g., `0.7.2` → `0.7.3`)
+   - **Update `readme.txt` changelog section** with changes for this release
+   - This will fire some workflows, wait until completed to inspect any issues.
+
+3. **Merge the release PR:**
+   - Merge PR to `release` branch
+   - Two workflows automatically trigger:
+     - **Release Drafter**: Creates/updates draft release (tagged with version from plugin file)
+     - **Build Release Package**: Builds production assets and attaches zip to the draft
+
+4. **Test the release:**
+   - Wait a few minutes for the "Build Release Package" workflow to complete
+   - Download the zip from the draft release at https://github.com/workonthewinkel/wuunder/releases
+   - Test locally or in staging environment to ensure everything works
+
+5. **Publish the release:**
+   - Review version number (read from `wuunder-shipping.php`)
+   - Review changelog (auto-generated from PR titles and labels)
+   - Test the attached zip file one final time
+   - Click "Publish release"
+   - This automatically triggers two workflows:
+     - **Deploy to WordPress.org**: Deploys the tested zip to WordPress.org SVN (~30 seconds)
+     - **Sync Release to Main**: Automatically pushes `release` to `main` (no PR needed)
+
+
+### Manual Release Testing
+
+To test the release build without publishing:
+```bash
+# Install WP-CLI dist-archive package
+wp package install wp-cli/dist-archive-command
+
+# Build production assets
+composer install --no-dev --optimize-autoloader
+npm ci
+WP_CLI_ALLOW_ROOT=1 npm run build
+
+# Create distribution package
+wp dist-archive . ./wuunder-shipping.zip --plugin-dirname=wuunder-shipping
+```
 
 ### Version Management
 
@@ -81,94 +143,6 @@ Version numbers are **manually managed** in the `wuunder-shipping.php` file head
 - Organized into categories (Features, Bug Fixes, Maintenance, Documentation)
 - Created when you publish the release
 
-### Automated Workflows
-
-The release process uses several automated GitHub Actions workflows:
-
-1. **Release Drafter** (`.github/workflows/release-drafter.yml`)
-   - Triggers: Push to `release` branch
-   - Creates/updates draft releases with auto-generated changelogs
-
-2. **Release PR Checklist** (`.github/workflows/release-pr-changelog.yml`)
-   - Triggers: PR opened to `release` branch
-   - Posts a checklist reminder to verify version and changelog are updated
-
-3. **Build Release Package** (`.github/workflows/build-release.yml`)
-   - Triggers: Push to `release` branch
-   - Builds production assets and attaches zip to draft release
-   - Can be manually triggered to rebuild
-
-4. **Deploy to WordPress.org** (`.github/workflows/wordpress-plugin-deploy.yml`)
-   - Triggers: Release published
-   - Downloads pre-built zip from release assets
-   - Deploys to WordPress.org SVN repository
-
-5. **Sync Release to Main** (`.github/workflows/sync-release-to-main.yml`)
-   - Triggers: Release published
-   - Automatically pushes `release` branch to `main` to keep them in sync
-   - No PR created (already reviewed in release PR)
-
-### Creating a Release
-
-1. **Develop on `main` branch:**
-   - Merge PRs to `main` as usual during development
-   - Label PRs appropriately for changelog organization:
-     - `feature` or `enhancement` - New features
-     - `bug` or `bugfix` - Bug fixes
-     - `major` or `breaking` - Breaking changes
-     - `chore` - Maintenance tasks
-     - `docs` - Documentation updates
-
-2. **When ready to release, create a release PR:**
-   - Create PR: `main` → `release`
-   - **Update version number in `wuunder-shipping.php` header** (e.g., `0.7.2` → `0.7.3`)
-   - **Update `readme.txt` changelog section** with changes for this release
-   - A bot will automatically post a **checklist reminder** (you can check it off once done)
-   - Review all changes that will be released
-
-3. **Merge the release PR:**
-   - Merge PR to `release` branch
-   - Two workflows automatically trigger:
-     - **Release Drafter**: Creates/updates draft release (tagged with version from plugin file)
-     - **Build Release Package**: Builds production assets and attaches zip to the draft
-       - Installs production dependencies (`composer install --no-dev`)
-       - Builds production assets (`npm run production`)
-       - Creates plugin zip package
-       - Uploads package to the draft release (may take 1-2 minutes)
-
-4. **Test the release:**
-   - Wait 1-2 minutes for the "Build Release Package" workflow to complete
-   - Download the zip from the draft release at https://github.com/workonthewinkel/wuunder/releases
-   - Test locally to ensure everything works
-   - **Note**: If zip is missing, manually trigger the "Build Release Package" workflow from the Actions tab
-
-5. **Publish the release:**
-   - Review version number (read from `wuunder-shipping.php`)
-   - Review changelog (auto-generated from PR titles and labels)
-   - Test the attached zip file one final time
-   - Click "Publish release"
-   - This automatically triggers two workflows:
-     - **Deploy to WordPress.org**: Deploys the tested zip to WordPress.org SVN (~30 seconds)
-     - **Sync Release to Main**: Automatically pushes `release` to `main` (no PR needed)
-
-That's it! The `main` branch is now automatically synced and you're done.
-
-### Manual Release Testing
-
-To test the release build without publishing:
-```bash
-# Install WP-CLI dist-archive package
-wp package install wp-cli/dist-archive-command
-
-# Build production assets
-composer install --no-dev --optimize-autoloader
-npm ci
-WP_CLI_ALLOW_ROOT=1 npm run build
-
-# Create distribution package
-wp dist-archive . ./wuunder-shipping.zip --plugin-dirname=wuunder-shipping
-```
-
 ## Configuration
 
 1. Navigate to WooCommerce > Settings > Wuunder
@@ -185,6 +159,39 @@ The plugin includes an integrated pickup point locator that allows customers to 
 
 - Add `SVN_USERNAME` and `SVN_PASSWORD` secrets to GitHub repository settings
 - Plugin must be approved and have an SVN repository at https://plugins.svn.wordpress.org/wuunder-shipping/
+
+## Filters
+
+### `wuunder_api_carriers`
+
+Filter carriers returned from the Wuunder API before they are processed.
+
+```php
+add_filter( 'wuunder_api_carriers', function( $carriers ) {
+    // Remove specific carrier products
+    unset( $carriers['DHL_PARCEL:DHL_CONNECT_2SHOP'] );
+
+    return $carriers;
+} );
+```
+
+**Parameters:**
+- `$carriers` (array) - Associative array of carriers keyed by method ID (`carrier_code:carrier_product_code`)
+
+**Use cases:**
+- Testing carrier unavailability scenarios
+- Filtering out specific carriers for certain environments
+
+### `wuunder_pickup_available_carriers`
+
+Filter available carriers shown in pickup method settings.
+
+```php
+add_filter( 'wuunder_pickup_available_carriers', function( $options ) {
+    // $options is array of carrier_code => carrier_name
+    return $options;
+} );
+```
 
 ## Plugin Structure
 

@@ -15,6 +15,13 @@ use Wuunder\Shipping\WordPress\View;
 class SettingsController extends Controller implements Hookable {
 
 	/**
+	 * Whether API key is configured.
+	 *
+	 * @var bool
+	 */
+	private bool $has_api_key = false;
+
+	/**
 	 * Register WordPress hooks.
 	 *
 	 * @return void
@@ -46,15 +53,14 @@ class SettingsController extends Controller implements Hookable {
 	 * @return void
 	 */
 	public function settings_tab(): void {
-		$api_key     = get_option( 'wuunder_api_key', '' );
-		$has_api_key = ! empty( $api_key );
+		$this->has_api_key = ! empty( get_option( 'wuunder_api_key', '' ) );
 
 		// Default section depends on whether API key is set
-		$default_section = $has_api_key ? 'carriers' : 'settings';
+		$default_section = $this->has_api_key ? 'shipping_methods' : 'settings';
 		$current_section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : $default_section; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		// Get available sections from filter
-		$available_sections = apply_filters( 'wuunder_settings_sections', [ 'carriers', 'settings' ] );
+		$available_sections = apply_filters( 'wuunder_settings_sections', [ 'shipping_methods', 'pickup_methods', 'settings' ] );
 
 		// Validate current section exists
 		if ( ! in_array( $current_section, $available_sections, true ) ) {
@@ -64,8 +70,8 @@ class SettingsController extends Controller implements Hookable {
 		View::display(
 			'admin/settings-tabs',
 			[
-				'current_section' => $current_section,
-				'has_api_key' => $has_api_key,
+				'current_section'    => $current_section,
+				'has_api_key'        => $this->has_api_key,
 				'available_sections' => $available_sections,
 			]
 		);
@@ -74,8 +80,10 @@ class SettingsController extends Controller implements Hookable {
 		do_action( 'wuunder_settings_section_' . $current_section, $current_section );
 
 		// Fallback to built-in sections
-		if ( $current_section === 'carriers' ) {
-			$this->display_carriers_section();
+		if ( $current_section === 'shipping_methods' ) {
+			$this->display_shipping_methods_section();
+		} elseif ( $current_section === 'pickup_methods' ) {
+			$this->display_pickup_methods_section();
 		} elseif ( $current_section === 'settings' ) {
 			$this->display_settings_section();
 		}
@@ -98,20 +106,18 @@ class SettingsController extends Controller implements Hookable {
 	}
 
 	/**
-	 * Display carriers section.
+	 * Display shipping methods section.
 	 *
 	 * @return void
 	 */
-	private function display_carriers_section(): void {
-		$api_key     = get_option( 'wuunder_api_key', '' );
-		$has_api_key = ! empty( $api_key );
-
-		// Auto-load carriers if we have API key but no carriers
-		$carrier_methods = Carrier::get_all();
-		if ( $has_api_key && empty( $carrier_methods ) ) {
+	private function display_shipping_methods_section(): void {
+		// Auto-load carriers if none exist (service handles API key check)
+		if ( empty( Carrier::get_all() ) ) {
 			$this->load_carriers_from_api();
-			$carrier_methods = Carrier::get_all(); // Re-fetch after loading
 		}
+
+		// Get standard carriers (non-parcelshop)
+		$carrier_methods = Carrier::get_standard_carriers();
 
 		$carrier_names = [];
 		foreach ( $carrier_methods as $carrier ) {
@@ -121,11 +127,44 @@ class SettingsController extends Controller implements Hookable {
 		}
 
 		View::display(
-			'admin/carriers-section',
+			'admin/methods-section',
 			[
 				'carrier_methods' => $carrier_methods,
-				'carrier_names' => $carrier_names,
-				'has_api_key' => $has_api_key,
+				'carrier_names'   => $carrier_names,
+				'has_api_key'     => $this->has_api_key,
+				'carrier_type'    => 'standard',
+			]
+		);
+	}
+
+	/**
+	 * Display pickup methods section.
+	 *
+	 * @return void
+	 */
+	private function display_pickup_methods_section(): void {
+		// Auto-load carriers if none exist (service handles API key check)
+		if ( empty( Carrier::get_all() ) ) {
+			$this->load_carriers_from_api();
+		}
+
+		// Get parcelshop carriers
+		$carrier_methods = Carrier::get_parcelshop_carriers();
+
+		$carrier_names = [];
+		foreach ( $carrier_methods as $carrier ) {
+			if ( ! isset( $carrier_names[ $carrier->carrier_code ] ) ) {
+				$carrier_names[ $carrier->carrier_code ] = $carrier->carrier_name;
+			}
+		}
+
+		View::display(
+			'admin/methods-section',
+			[
+				'carrier_methods' => $carrier_methods,
+				'carrier_names'   => $carrier_names,
+				'has_api_key'     => $this->has_api_key,
+				'carrier_type'    => 'parcelshop',
 			]
 		);
 	}
@@ -166,10 +205,10 @@ class SettingsController extends Controller implements Hookable {
 	public function update_settings(): void {
 		$current_section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : 'settings'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		// Detect carriers section by POST data presence since URL section param gets lost
-		$is_carriers_section = isset( $_POST['wuunder_enabled_carriers'] ) || $current_section === 'carriers'; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		// Detect methods section by POST data presence since URL section param gets lost
+		$is_methods_section = isset( $_POST['wuunder_enabled_carriers'] ) || in_array( $current_section, [ 'shipping_methods', 'pickup_methods' ], true ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		if ( $is_carriers_section ) {
+		if ( $is_methods_section ) {
 			$this->update_carriers();
 		} else {
 			woocommerce_update_options( $this->get_settings() );
@@ -187,7 +226,16 @@ class SettingsController extends Controller implements Hookable {
 			return;
 		}
 
-		$carriers         = Carrier::get_all();
+		// Determine which carrier type we're updating
+		$carrier_type = isset( $_POST['wuunder_carrier_type'] ) ? sanitize_text_field( wp_unslash( $_POST['wuunder_carrier_type'] ) ) : 'standard';
+
+		// Get only carriers of the type being edited
+		if ( $carrier_type === 'parcelshop' ) {
+			$carriers = Carrier::get_parcelshop_carriers();
+		} else {
+			$carriers = Carrier::get_standard_carriers();
+		}
+
 		$enabled_carriers = [];
 
 		// Get enabled carriers from POST data
@@ -201,20 +249,20 @@ class SettingsController extends Controller implements Hookable {
 
 		// Update each carrier's enabled status
 		foreach ( $carriers as $carrier ) {
-			$was_enabled = $carrier->enabled;
+			$was_enabled      = $carrier->enabled;
 			$carrier->enabled = in_array( $carrier->get_method_id(), $enabled_carriers, true );
-			
+
 			// Track carriers that are being disabled
 			if ( $was_enabled && ! $carrier->enabled ) {
 				$disabled_carriers[] = $carrier->get_method_id();
 			}
-			
+
 			$carrier->save();
 		}
 
 		// Disable corresponding shipping method instances for disabled carriers
 		if ( ! empty( $disabled_carriers ) ) {
-			$this->disable_shipping_method_instances( $disabled_carriers );
+			CarrierService::disable_shipping_method_instances( $disabled_carriers );
 		}
 
 		// Clear WooCommerce cache to refresh shipping methods
@@ -222,49 +270,6 @@ class SettingsController extends Controller implements Hookable {
 			wc_clear_template_cache();
 		}
 	}
-
-	/**
-	 * Disable shipping method instances for disabled carriers.
-	 *
-	 * @param array $disabled_carrier_ids Array of disabled carrier method IDs.
-	 * @return void
-	 */
-	private function disable_shipping_method_instances( array $disabled_carrier_ids ): void {
-		global $wpdb;
-
-		// Get all shipping zones
-		$zones = \WC_Shipping_Zones::get_zones();
-		$zones[0] = \WC_Shipping_Zones::get_zone_by( 'zone_id', 0 ); // Add 'Rest of the World' zone
-
-		foreach ( $zones as $zone ) {
-			if ( is_array( $zone ) ) {
-				$zone_obj = \WC_Shipping_Zones::get_zone( $zone['id'] );
-				$zone_id = $zone['id'];
-			} else {
-				$zone_obj = $zone;
-				$zone_id = $zone_obj->get_id();
-			}
-
-			foreach ( $zone_obj->get_shipping_methods() as $instance_id => $shipping_method ) {
-				// Check if this is a Wuunder shipping method
-				if ( $shipping_method->id === 'wuunder_shipping' ) {
-					$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
-					
-					// If this method uses a disabled carrier, disable the shipping method instance
-					if ( in_array( $carrier_option, $disabled_carrier_ids, true ) ) {
-						// Update the enabled status in the shipping method options
-						$shipping_method->update_option( 'enabled', 'no' );
-						
-						// Follow WooCommerce core pattern: update database directly
-						if ( $wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) ) ) {
-							do_action( 'woocommerce_shipping_zone_method_status_toggled', $instance_id, $shipping_method->id, $zone_id, 0 );
-						}
-					}
-				}
-			}
-		}
-	}
-
 
 	/**
 	 * AJAX handler for testing connection.
@@ -340,30 +345,55 @@ class SettingsController extends Controller implements Hookable {
 	 * @return void
 	 */
 	public function prevent_enabling_disabled_carriers( $instance_id, $method_id, $zone_id, $is_enabled ): void {
-		// Only care about enabling Wuunder shipping methods
-		if ( ! $is_enabled || $method_id !== 'wuunder_shipping' ) {
+		// Only care about enabling Wuunder methods
+		if ( ! $is_enabled || ! in_array( $method_id, [ 'wuunder_shipping', 'wuunder_pickup' ], true ) ) {
 			return;
 		}
 
 		// Get the shipping method instance
-		$zone = \WC_Shipping_Zones::get_zone( $zone_id );
+		$zone             = \WC_Shipping_Zones::get_zone( $zone_id );
 		$shipping_methods = $zone->get_shipping_methods();
-		
+
 		if ( ! isset( $shipping_methods[ $instance_id ] ) ) {
 			return;
 		}
 
 		$shipping_method = $shipping_methods[ $instance_id ];
-		$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
 
-		// Check if the carrier is disabled
-		if ( ! empty( $carrier_option ) ) {
-			$carrier = Carrier::find_by_method_id( $carrier_option );
-			
-			if ( ! $carrier || ! $carrier->enabled ) {
-				// Force disable it again following WooCommerce core pattern
-				global $wpdb;
-				$wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) );
+		// Check wuunder_shipping: carrier must exist and be enabled
+		if ( $method_id === 'wuunder_shipping' ) {
+			$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
+
+			if ( ! empty( $carrier_option ) ) {
+				$carrier = Carrier::find_by_method_id( $carrier_option );
+
+				if ( ! $carrier || ! $carrier->enabled ) {
+					CarrierService::disable_shipping_method( $shipping_method, $instance_id, $zone_id );
+				}
+			}
+		}
+
+		// Check wuunder_pickup: must have at least one enabled carrier
+		if ( $method_id === 'wuunder_pickup' ) {
+			$available_carriers = $shipping_method->get_option( 'available_carriers', [] );
+
+			if ( ! is_array( $available_carriers ) || empty( $available_carriers ) ) {
+				CarrierService::disable_shipping_method( $shipping_method, $instance_id, $zone_id );
+				return;
+			}
+
+			// Check if at least one carrier is enabled
+			$enabled_carriers    = Carrier::get_parcelshop_carriers( true );
+			$has_enabled_carrier = false;
+			foreach ( $enabled_carriers as $carrier ) {
+				if ( in_array( $carrier->get_method_id(), $available_carriers, true ) ) {
+					$has_enabled_carrier = true;
+					break;
+				}
+			}
+
+			if ( ! $has_enabled_carrier ) {
+				CarrierService::disable_shipping_method( $shipping_method, $instance_id, $zone_id );
 			}
 		}
 	}

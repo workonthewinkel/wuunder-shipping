@@ -14,8 +14,9 @@ defined( 'ABSPATH' ) || exit;
 $section_labels = apply_filters(
 	'wuunder_settings_section_labels',
 	[
-		'carriers' => __( 'Carriers', 'wuunder-shipping' ),
-		'settings' => __( 'Settings', 'wuunder-shipping' ),
+		'shipping_methods' => __( 'Shipping Methods', 'wuunder-shipping' ),
+		'pickup_methods'   => __( 'Pick-up Methods', 'wuunder-shipping' ),
+		'settings'         => __( 'Settings', 'wuunder-shipping' ),
 	]
 );
 ?>

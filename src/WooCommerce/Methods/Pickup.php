@@ -4,6 +4,7 @@ namespace Wuunder\Shipping\WooCommerce\Methods;
 
 use WC_Shipping_Method;
 use Wuunder\Shipping\Models\Carrier;
+use Wuunder\Shipping\Traits\NoCarriersNotice;
 use Wuunder\Shipping\Traits\ShippingMethodSanitization;
 
 /**
@@ -11,6 +12,7 @@ use Wuunder\Shipping\Traits\ShippingMethodSanitization;
  */
 class Pickup extends WC_Shipping_Method {
 
+	use NoCarriersNotice;
 	use ShippingMethodSanitization;
 
 	/**
@@ -45,8 +47,8 @@ class Pickup extends WC_Shipping_Method {
 		$this->instance_id  = absint( $instance_id );
 		$this->method_title = __( 'Wuunder Pick-up', 'wuunder-shipping' );
 
-		// Build dynamic link to Wuunder Settings - carriers tab
-		$settings_url             = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=carriers' );
+		// Build dynamic link to Wuunder Settings - pickup methods tab
+		$settings_url             = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=pickup_methods' );
 		$this->method_description = sprintf(
 			/* translators: %s: URL to Wuunder settings page */
 			__( 'Pick-up point shipping method provided by <a href="%s"><strong>Wuunder</strong></a>', 'wuunder-shipping' ),
@@ -68,8 +70,8 @@ class Pickup extends WC_Shipping_Method {
 	public function init(): void {
 		$this->init_form_fields();
 
-		// Get instance-specific title
-		$this->title = $this->get_option( 'title' );
+		// Get instance-specific title with carrier name
+		$this->title = $this->get_option( 'title', __( 'Pick-up at parcel shop', 'wuunder-shipping' ) );
 
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, [ $this, 'process_admin_options' ] );
 	}
@@ -78,7 +80,25 @@ class Pickup extends WC_Shipping_Method {
 	 * Initialize form fields.
 	 */
 	public function init_form_fields(): void {
+		$available_carriers = $this->get_available_carriers();
+		$has_carriers       = ! empty( $available_carriers );
+
+		// If no carriers available, show notice with title field
+		if ( ! $has_carriers ) {
+			$this->instance_form_fields = $this->get_no_carriers_notice_fields( 'pickup_methods' );
+			return;
+		}
+
 		$this->instance_form_fields = [
+			'available_carriers' => [
+				'title' => __( 'Available Carriers', 'wuunder-shipping' ),
+				'type' => 'carrier_checkboxes',
+				'description' => __( 'Select which carriers should be available for pick-up points.', 'wuunder-shipping' ),
+				'options' => $available_carriers,
+				'default' => array_keys( $available_carriers ),
+				'desc_tip' => true,
+				'sanitize_callback' => array( $this, 'sanitize_carriers' ),
+			],
 			'title' => [
 				'title' => __( 'Method Title', 'wuunder-shipping' ),
 				'type' => 'text',
@@ -95,15 +115,6 @@ class Pickup extends WC_Shipping_Method {
 				'default' => '',
 				'desc_tip' => true,
 				'sanitize_callback' => array( $this, 'sanitize_cost' ),
-			],
-			'available_carriers' => [
-				'title' => __( 'Available Carriers', 'wuunder-shipping' ),
-				'type' => 'carrier_checkboxes',
-				'description' => __( 'Select which carriers should be available for pick-up points.', 'wuunder-shipping' ),
-				'options' => $this->get_available_carriers(),
-				'default' => array_keys( $this->get_available_carriers() ),
-				'desc_tip' => true,
-				'sanitize_callback' => array( $this, 'sanitize_carriers' ),
 			],
 			'primary_color' => [
 				'title' => __( 'Primary Color', 'wuunder-shipping' ),
@@ -183,37 +194,10 @@ class Pickup extends WC_Shipping_Method {
 		$options  = [];
 
 		foreach ( $carriers as $carrier ) {
-			if ( ! isset( $options[ $carrier->carrier_code ] ) ) {
-				$options[ $carrier->carrier_code ] = $carrier->carrier_name;
-			}
+			$options[ $carrier->get_method_id() ] = $carrier->product_name;
 		}
 
 		return apply_filters( 'wuunder_pickup_available_carriers', $options );
-	}
-
-	/**
-	 * Build iframe URL for shop locator.
-	 *
-	 * @param string $address Address to center the map on.
-	 * @param array  $carriers Selected carriers.
-	 * @param string $color Primary color (hex).
-	 * @param string $language Language code.
-	 * @return string
-	 */
-	public function build_iframe_url( $address, array $carriers, $color, $language ): string {
-		$base_url = self::IFRAME_BASE_URL;
-
-		// Remove # from color if present
-		$color = ltrim( $color, '#' );
-
-		$params = [
-			'address' => $address,
-			'availableCarriers' => implode( ',', $carriers ),
-			'primary_color' => $color,
-			'language' => $language,
-		];
-
-		return add_query_arg( $params, $base_url );
 	}
 
 	/**
