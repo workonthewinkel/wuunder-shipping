@@ -28,13 +28,13 @@ abstract class Queueable implements Hookable {
 			\add_action( $this->hook, [ $this, 'handle' ], 100, 10 );
 		}
 	}
-    
-    /**
-     * Handle the job
-     */
-    public function handle(): void {
-        // implement this in the child class
-    }
+
+	/**
+	 * Handle the job
+	 */
+	public function handle(): void {
+		// implement this in the child class
+	}
 
 	/**
 	 * Return this queueables hook

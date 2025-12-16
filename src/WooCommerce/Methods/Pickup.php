@@ -81,7 +81,7 @@ class Pickup extends WC_Shipping_Method {
 	 */
 	public function init_form_fields(): void {
 		$available_carriers = $this->get_available_carriers();
-		$has_carriers = ! empty( $available_carriers );
+		$has_carriers       = ! empty( $available_carriers );
 
 		// If no carriers available, show notice with title field
 		if ( ! $has_carriers ) {
@@ -199,7 +199,7 @@ class Pickup extends WC_Shipping_Method {
 
 		return apply_filters( 'wuunder_pickup_available_carriers', $options );
 	}
-	
+
 	/**
 	 * Calculate shipping rate.
 	 *

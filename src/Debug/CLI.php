@@ -134,5 +134,4 @@ class CLI {
 			\WP_CLI::success( "Deleted {$deleted} order(s)." );
 		}
 	}
-
 }

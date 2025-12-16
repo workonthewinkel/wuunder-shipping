@@ -106,11 +106,11 @@ class DebugController implements Hookable {
 			return;
 		}
 
-		$client = new \Wuunder\Shipping\API\WuunderClient( $api_key );
+		$client   = new \Wuunder\Shipping\API\WuunderClient( $api_key );
 		$carriers = $client->get_carriers();
 
 		$shipping_carriers = [];
-		$pickup_carriers = [];
+		$pickup_carriers   = [];
 
 		if ( ! is_wp_error( $carriers ) ) {
 			foreach ( $carriers as $carrier_id => $carrier ) {
@@ -178,18 +178,18 @@ class DebugController implements Hookable {
 	 * Render shipping methods debug section
 	 */
 	private function render_shipping_methods_output(): void {
-		$zones = \WC_Shipping_Zones::get_zones();
+		$zones    = \WC_Shipping_Zones::get_zones();
 		$zones[0] = \WC_Shipping_Zones::get_zone_by( 'zone_id', 0 );
 
 		$shipping_methods = [];
-		$pickup_methods = [];
+		$pickup_methods   = [];
 
 		foreach ( $zones as $zone ) {
 			if ( is_array( $zone ) ) {
-				$zone_obj = \WC_Shipping_Zones::get_zone( $zone['id'] );
+				$zone_obj  = \WC_Shipping_Zones::get_zone( $zone['id'] );
 				$zone_name = $zone['zone_name'];
 			} else {
-				$zone_obj = $zone;
+				$zone_obj  = $zone;
 				$zone_name = $zone_obj->get_zone_name();
 			}
 
@@ -287,23 +287,23 @@ class DebugController implements Hookable {
 		$request->set_param( 'per_page', 10 );
 		$request->set_param( 'orderby', 'date' );
 		$request->set_param( 'order', 'desc' );
-		
+
 		$response = rest_do_request( $request );
-		
+
 		if ( is_wp_error( $response ) ) {
 			error_log( 'Wuunder Debug: REST API error: ' . $response->get_error_message() );
 			return [];
 		}
-		
+
 		$orders_data = $response->get_data();
-		
+
 		if ( ! is_array( $orders_data ) ) {
 			error_log( 'Wuunder Debug: Invalid REST API response format' );
 			return [];
 		}
-		
+
 		error_log( 'Wuunder Debug: Found ' . count( $orders_data ) . ' orders via REST API' );
-		
+
 		return $orders_data;
 	}
 

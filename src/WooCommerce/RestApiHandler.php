@@ -41,7 +41,7 @@ class RestApiHandler implements Hookable {
 		$preferred_service_level = $this->get_preferred_service_level_from_order( $order );
 
 		// Add as top-level properties in the response
-		$response->data['wuunder_parcelshop_id'] = $parcelshop_id;
+		$response->data['wuunder_parcelshop_id']           = $parcelshop_id;
 		$response->data['wuunder_preferred_service_level'] = $preferred_service_level;
 
 		// Also rename pickup_point_id to wuunder_parcelshop_id in shipping lines metadata
@@ -65,7 +65,7 @@ class RestApiHandler implements Hookable {
 			if ( strpos( $shipping_method->get_method_id(), 'wuunder_pickup' ) !== false ) {
 				// Get the parcelshop ID from internal meta key (consistent with other pickup point fields)
 				$parcelshop_id = $shipping_method->get_meta( 'pickup_point_id' );
-				
+
 				if ( $parcelshop_id ) {
 					return $parcelshop_id;
 				}
@@ -90,7 +90,7 @@ class RestApiHandler implements Hookable {
 			if ( strpos( $shipping_method->get_method_id(), 'wuunder_' ) !== false ) {
 				// Get the preferred service level from meta
 				$service_level = $shipping_method->get_meta( 'preferred_service_level' );
-				
+
 				if ( $service_level ) {
 					return $service_level;
 				}

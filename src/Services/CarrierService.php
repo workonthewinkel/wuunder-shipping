@@ -83,13 +83,12 @@ class CarrierService {
 
 		// After looping through all new carriers, loop through the old ones and see which we need to delete:
 		$existing_carrier_ids = array_keys( $existing_carriers );
-		foreach( $existing_carrier_ids as $carrier_id ){
+		foreach ( $existing_carrier_ids as $carrier_id ) {
 
 			// if this existing carrier was not sent over by the api:
-			if( !isset( $api_carriers[ $carrier_id ] ) ){
+			if ( ! isset( $api_carriers[ $carrier_id ] ) ) {
 				static::handle_carrier_deletion( $carrier_id );
 			}
-
 		}
 
 		return true;
@@ -106,7 +105,7 @@ class CarrierService {
 	public static function handle_carrier_deletion( string $carrier_id ): void {
 		// Load the actual Carrier object to delete it
 		$carrier = Carrier::find_by_method_id( $carrier_id );
-		
+
 		if ( ! $carrier ) {
 			// Carrier doesn't exist, nothing to delete
 			return;
@@ -130,16 +129,16 @@ class CarrierService {
 	 */
 	public static function disable_shipping_method_instances( array $carrier_ids ): void {
 		// Get all shipping zones
-		$zones = \WC_Shipping_Zones::get_zones();
+		$zones    = \WC_Shipping_Zones::get_zones();
 		$zones[0] = \WC_Shipping_Zones::get_zone_by( 'zone_id', 0 ); // Add 'Rest of the World' zone
 
 		foreach ( $zones as $zone ) {
 			if ( is_array( $zone ) ) {
 				$zone_obj = \WC_Shipping_Zones::get_zone( $zone['id'] );
-				$zone_id = $zone['id'];
+				$zone_id  = $zone['id'];
 			} else {
 				$zone_obj = $zone;
-				$zone_id = $zone_obj->get_id();
+				$zone_id  = $zone_obj->get_id();
 			}
 
 			if ( ! $zone_obj ) {

@@ -351,7 +351,7 @@ class SettingsController extends Controller implements Hookable {
 		}
 
 		// Get the shipping method instance
-		$zone = \WC_Shipping_Zones::get_zone( $zone_id );
+		$zone             = \WC_Shipping_Zones::get_zone( $zone_id );
 		$shipping_methods = $zone->get_shipping_methods();
 
 		if ( ! isset( $shipping_methods[ $instance_id ] ) ) {
@@ -383,7 +383,7 @@ class SettingsController extends Controller implements Hookable {
 			}
 
 			// Check if at least one carrier is enabled
-			$enabled_carriers = Carrier::get_parcelshop_carriers( true );
+			$enabled_carriers    = Carrier::get_parcelshop_carriers( true );
 			$has_enabled_carrier = false;
 			foreach ( $enabled_carriers as $carrier ) {
 				if ( in_array( $carrier->get_method_id(), $available_carriers, true ) ) {

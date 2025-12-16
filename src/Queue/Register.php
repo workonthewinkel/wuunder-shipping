@@ -36,10 +36,10 @@ class Register {
 	 * Register any recurring jobs for this plugin.
 	 */
 	public function register_recurring(): void {
-		
-        if ( \function_exists( 'as_has_scheduled_action' ) && \function_exists( 'as_schedule_recurring_action' ) ) {
-		
-            // daily check if our carriers are still available on the wuunder api.
+
+		if ( \function_exists( 'as_has_scheduled_action' ) && \function_exists( 'as_schedule_recurring_action' ) ) {
+
+			// daily check if our carriers are still available on the wuunder api.
 			if ( \as_has_scheduled_action( 'wuunder/update_carriers' ) === false ) {
 				\as_schedule_recurring_action(
 					\time() + \DAY_IN_SECONDS,
@@ -47,7 +47,6 @@ class Register {
 					'wuunder/update_carriers'
 				);
 			}
-
 		}
 	}
 

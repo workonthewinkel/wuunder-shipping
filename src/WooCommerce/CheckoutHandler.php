@@ -118,7 +118,7 @@ class CheckoutHandler implements Hookable {
 
 		// Use unified validation logic
 		$pickup_point = $this->get_pickup_point_for_validation();
-		
+
 		if ( ! $this->is_valid_pickup_point( $pickup_point ) ) {
 			$errors->add(
 				'pickup_point_required',
@@ -322,7 +322,7 @@ class CheckoutHandler implements Hookable {
 	public function validate_pickup_selection_block( $order, $request ): void {
 		// Get shipping methods from order
 		$shipping_methods = $order->get_shipping_methods();
-		
+
 		if ( empty( $shipping_methods ) ) {
 			return;
 		}
@@ -342,7 +342,7 @@ class CheckoutHandler implements Hookable {
 
 		// Use unified validation logic
 		$pickup_point = $this->get_pickup_point_for_validation();
-		
+
 		if ( ! $this->is_valid_pickup_point( $pickup_point ) ) {
 			throw new \WC_Data_Exception(
 				'pickup_point_required',
@@ -370,7 +370,7 @@ class CheckoutHandler implements Hookable {
 		if ( isset( $_POST['wuunder_selected_pickup_point'] ) && ! empty( $_POST['wuunder_selected_pickup_point'] ) ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Nonce verified by WooCommerce, sanitization happens after JSON decode.
 			$raw_data = $_POST['wuunder_selected_pickup_point'];
-			
+
 			// Try to decode the JSON data
 			$pickup_point = json_decode( $raw_data, true );
 			if ( ! $pickup_point ) {
@@ -424,8 +424,8 @@ class CheckoutHandler implements Hookable {
 	/**
 	 * Customize pickup point meta key display in admin.
 	 *
-	 * @param string                $display_key The display key.
-	 * @param \WC_Meta_Data         $meta Meta data object.
+	 * @param string                  $display_key The display key.
+	 * @param \WC_Meta_Data           $meta Meta data object.
 	 * @param \WC_Order_Item_Shipping $item Order item object.
 	 * @return string
 	 */
