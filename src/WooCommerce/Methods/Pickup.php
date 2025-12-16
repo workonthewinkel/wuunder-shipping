@@ -194,39 +194,12 @@ class Pickup extends WC_Shipping_Method {
 		$options  = [];
 
 		foreach ( $carriers as $carrier ) {
-			if ( ! isset( $options[ $carrier->carrier_code ] ) ) {
-				$options[ $carrier->carrier_code ] = $carrier->carrier_name;
-			}
+			$options[ $carrier->get_method_id() ] = $carrier->product_name;
 		}
 
 		return apply_filters( 'wuunder_pickup_available_carriers', $options );
 	}
-
-	/**
-	 * Build iframe URL for shop locator.
-	 *
-	 * @param string $address Address to center the map on.
-	 * @param array  $carriers Selected carriers.
-	 * @param string $color Primary color (hex).
-	 * @param string $language Language code.
-	 * @return string
-	 */
-	public function build_iframe_url( $address, array $carriers, $color, $language ): string {
-		$base_url = self::IFRAME_BASE_URL;
-
-		// Remove # from color if present
-		$color = ltrim( $color, '#' );
-
-		$params = [
-			'address' => $address,
-			'availableCarriers' => implode( ',', $carriers ),
-			'primary_color' => $color,
-			'language' => $language,
-		];
-
-		return add_query_arg( $params, $base_url );
-	}
-
+	
 	/**
 	 * Calculate shipping rate.
 	 *
