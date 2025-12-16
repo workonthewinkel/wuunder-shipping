@@ -34,10 +34,8 @@ class CarrierService {
 
 		// Get existing carriers to optionally preserve enabled state
 		$existing_carriers = [];
-		if ( $preserve_enabled ) {
-			foreach ( Carrier::get_all() as $carrier ) {
-				$existing_carriers[ $carrier->get_method_id() ] = $carrier->enabled;
-			}
+		foreach ( Carrier::get_all() as $carrier ) {
+			$existing_carriers[ $carrier->get_method_id() ] = $carrier->enabled;
 		}
 
 		// Save carriers from API
@@ -77,12 +75,184 @@ class CarrierService {
 			if ( $preserve_enabled && isset( $existing_carriers[ $key ] ) ) {
 				$carrier->enabled = $existing_carriers[ $key ];
 			} else {
-				$carrier->enabled = false; // Start with disabled by default
+				$carrier->enabled = true; // Enable new methods by default
 			}
 
 			$carrier->save();
 		}
 
+		// After looping through all new carriers, loop through the old ones and see which we need to delete:
+		$existing_carrier_ids = array_keys( $existing_carriers );
+		foreach( $existing_carrier_ids as $carrier_id ){
+
+			// if this existing carrier was not sent over by the api:
+			if( !isset( $api_carriers[ $carrier_id ] ) ){
+				static::handle_carrier_deletion( $carrier_id );
+			}
+
+		}
+
 		return true;
+	}
+
+	/**
+	 * Handle the deletion of a single carrier:
+	 * - Delete the carrier from the database
+	 * - Delete any WooCommerce shipping method instances that use this carrier
+	 *
+	 * @param string $carrier_id The carrier method ID (format: carrier_code:carrier_product_code).
+	 * @return void
+	 */
+	public static function handle_carrier_deletion( string $carrier_id ): void {
+		// Load the actual Carrier object to delete it
+		$carrier = Carrier::find_by_method_id( $carrier_id );
+		
+		if ( ! $carrier ) {
+			// Carrier doesn't exist, nothing to delete
+			return;
+		}
+
+		// Disable associated WooCommerce shipping method instances
+		static::disable_shipping_method_instances( [ $carrier_id ] );
+
+		// Delete the carrier from the database
+		$carrier->delete();
+	}
+
+	/**
+	 * Disable WooCommerce shipping method instances associated with unavailable carriers.
+	 *
+	 * For wuunder_shipping: disables the method.
+	 * For wuunder_pickup: removes the carrier from available_carriers, disables if none remain.
+	 *
+	 * @param array $carrier_ids Array of carrier method IDs (carrier_code:carrier_product_code).
+	 * @return void
+	 */
+	public static function disable_shipping_method_instances( array $carrier_ids ): void {
+		// Get all shipping zones
+		$zones = \WC_Shipping_Zones::get_zones();
+		$zones[0] = \WC_Shipping_Zones::get_zone_by( 'zone_id', 0 ); // Add 'Rest of the World' zone
+
+		foreach ( $zones as $zone ) {
+			if ( is_array( $zone ) ) {
+				$zone_obj = \WC_Shipping_Zones::get_zone( $zone['id'] );
+				$zone_id = $zone['id'];
+			} else {
+				$zone_obj = $zone;
+				$zone_id = $zone_obj->get_id();
+			}
+
+			if ( ! $zone_obj ) {
+				continue;
+			}
+
+			$shipping_methods = $zone_obj->get_shipping_methods();
+
+			foreach ( $shipping_methods as $instance_id => $shipping_method ) {
+				// Check wuunder_shipping methods
+				if ( $shipping_method->id === 'wuunder_shipping' ) {
+					$carrier_option = $shipping_method->get_option( 'wuunder_carrier', '' );
+
+					// Disable if no carrier is configured or if the carrier is disabled
+					if ( empty( $carrier_option ) || in_array( $carrier_option, $carrier_ids, true ) ) {
+						static::disable_shipping_method( $shipping_method, $instance_id, $zone_id );
+					}
+				}
+
+				// Check wuunder_pickup methods
+				if ( $shipping_method->id === 'wuunder_pickup' ) {
+					$available_carriers = $shipping_method->get_option( 'available_carriers', [] );
+
+					if ( ! is_array( $available_carriers ) || empty( $available_carriers ) ) {
+						static::disable_shipping_method( $shipping_method, $instance_id, $zone_id );
+						continue;
+					}
+
+					// Filter out unavailable carriers
+					$filtered_carriers = array_values( array_diff( $available_carriers, $carrier_ids ) );
+
+					// If carriers were removed, update the option
+					if ( count( $filtered_carriers ) !== count( $available_carriers ) ) {
+						// Update instance_settings directly (update_option doesn't work for instance settings)
+						$shipping_method->instance_settings['available_carriers'] = $filtered_carriers;
+
+						// Save using WooCommerce's pattern for instance settings
+						update_option(
+							$shipping_method->get_instance_option_key(),
+							apply_filters( 'woocommerce_shipping_' . $shipping_method->id . '_instance_settings_values', $shipping_method->instance_settings, $shipping_method ),
+							'yes'
+						);
+
+						// If no carriers remain, disable the method
+						if ( empty( $filtered_carriers ) ) {
+							static::disable_shipping_method( $shipping_method, $instance_id, $zone_id );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Disable a single shipping method instance.
+	 *
+	 * @param \WC_Shipping_Method $shipping_method The shipping method instance.
+	 * @param int                 $instance_id     The instance ID.
+	 * @param int                 $zone_id         The zone ID.
+	 * @return void
+	 */
+	public static function disable_shipping_method( \WC_Shipping_Method $shipping_method, int $instance_id, int $zone_id ): void {
+		global $wpdb;
+
+		$shipping_method->update_option( 'enabled', 'no' );
+
+		// Follow WooCommerce core pattern: update database directly
+		if ( $wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) ) ) {
+			do_action( 'woocommerce_shipping_zone_method_status_toggled', $instance_id, $shipping_method->id, $zone_id, 0 );
+		}
+	}
+
+	/**
+	 * Get settings for all pickup method instances across all zones.
+	 *
+	 * @return array Array of settings keyed by instance ID.
+	 */
+	public static function get_pickup_method_settings(): array {
+		$settings = [];
+
+		// Get all shipping zones
+		$zones    = \WC_Shipping_Zones::get_zones();
+		$zones[0] = \WC_Shipping_Zones::get_zone( 0 ); // Add default zone
+
+		foreach ( $zones as $zone ) {
+			if ( is_array( $zone ) ) {
+				$zone = \WC_Shipping_Zones::get_zone( $zone['zone_id'] );
+			}
+
+			$shipping_methods = $zone->get_shipping_methods();
+
+			foreach ( $shipping_methods as $method ) {
+				if ( $method->id === 'wuunder_pickup' ) {
+					$available_carriers = $method->get_option( 'available_carriers', [] );
+
+					// Extract carrier codes from method IDs (e.g., "DHL_PARCEL:PRODUCT" -> "DHL_PARCEL")
+					$carrier_codes = [];
+					foreach ( $available_carriers as $method_id ) {
+						$parts = explode( ':', $method_id );
+						if ( isset( $parts[0] ) ) {
+							$carrier_codes[] = $parts[0];
+						}
+					}
+
+					$settings[ $method->get_instance_id() ] = [
+						'primary_color'      => $method->get_option( 'primary_color', '#52ba69' ),
+						'available_carriers' => array_values( array_unique( $carrier_codes ) ),
+						'language'           => $method->get_option( 'language', 'nl' ),
+					];
+				}
+			}
+		}
+
+		return $settings;
 	}
 }

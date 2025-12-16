@@ -4,6 +4,7 @@ namespace Wuunder\Shipping\WooCommerce\Methods;
 
 use WC_Shipping_Method;
 use Wuunder\Shipping\Models\Carrier;
+use Wuunder\Shipping\Traits\NoCarriersNotice;
 use Wuunder\Shipping\Traits\ShippingMethodSanitization;
 
 /**
@@ -11,6 +12,7 @@ use Wuunder\Shipping\Traits\ShippingMethodSanitization;
  */
 class Shipping extends WC_Shipping_Method {
 
+	use NoCarriersNotice;
 	use ShippingMethodSanitization;
 
 	/**
@@ -28,7 +30,7 @@ class Shipping extends WC_Shipping_Method {
 	public function __construct( $instance_id = 0 ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$this->id           = 'wuunder_shipping';
 		$this->instance_id  = absint( $instance_id );
-		$this->method_title = __( 'Wuunder Shipping', 'wuunder-shipping' );
+		$this->method_title = __( 'Wuunder Delivery', 'wuunder-shipping' );
 
 		$this->supports = [
 			'shipping-zones',
@@ -49,7 +51,7 @@ class Shipping extends WC_Shipping_Method {
 		$this->init_form_fields();
 
 		// Get instance-specific title with carrier name
-		$this->title = $this->get_option( 'title' );
+		$this->title = $this->get_option( 'title', __( 'Wuunder Shipping', 'wuunder-shipping' ) );
 
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, [ $this, 'process_admin_options' ] );
 	}
@@ -58,7 +60,7 @@ class Shipping extends WC_Shipping_Method {
 	 * Set method description based on carrier status.
 	 */
 	private function set_method_description(): void {
-		$settings_url = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=carriers' );
+		$settings_url = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=shipping_methods' );
 		$carrier_id = $this->get_option( 'wuunder_carrier', '' );
 		
 		$this->method_description = sprintf(
@@ -86,7 +88,24 @@ class Shipping extends WC_Shipping_Method {
 			$enabled_field['custom_attributes'] = [ 'readonly' => 'readonly' ];
 		}
 
+		$available_carriers = $this->get_available_carriers();
+		$has_carriers = count( $available_carriers ) > 1; // More than just the "Select a carrier..." option
+
+		// If no carriers available, only show message with link to manage carriers
+		if ( ! $has_carriers ) {
+			$this->instance_form_fields = $this->get_no_carriers_notice_fields( 'shipping_methods' );
+			return;
+		}
+
 		$this->instance_form_fields = [
+			'wuunder_carrier' => [
+				'title' => __( 'Carrier', 'wuunder-shipping' ),
+				'type' => 'select',
+				'description' => __( 'Select which Wuunder carrier this method should use.', 'wuunder-shipping' ),
+				'options' => $available_carriers,
+				'desc_tip' => true,
+				'sanitize_callback' => array( $this, 'sanitize_carrier' ),
+			],
 			'title' => [
 				'title' => __( 'Method Title', 'wuunder-shipping' ),
 				'type' => 'text',
@@ -94,14 +113,6 @@ class Shipping extends WC_Shipping_Method {
 				'default' => '',
 				'desc_tip' => true,
 				'sanitize_callback' => array( $this, 'sanitize_title' ),
-			],
-			'wuunder_carrier' => [
-				'title' => __( 'Carrier', 'wuunder-shipping' ),
-				'type' => 'select',
-				'description' => __( 'Select which Wuunder carrier this method should use.', 'wuunder-shipping' ),
-				'options' => $this->get_available_carriers(),
-				'desc_tip' => true,
-				'sanitize_callback' => array( $this, 'sanitize_carrier' ),
 			],
 			'cost' => [
 				'title' => __( 'Cost', 'wuunder-shipping' ),

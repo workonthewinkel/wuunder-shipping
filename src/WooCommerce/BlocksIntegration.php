@@ -4,6 +4,7 @@ namespace Wuunder\Shipping\WooCommerce;
 
 use Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface;
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
+use Wuunder\Shipping\Services\CarrierService;
 use Wuunder\Shipping\WooCommerce\CheckoutHandler;
 use Wuunder\Shipping\WooCommerce\Methods\Pickup;
 use Wuunder\Shipping\WordPress\View;
@@ -139,7 +140,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 					'nonce' => wp_create_nonce( 'wuunder-pickup-block' ),
 					'savedPickupPoint' => WC()->session ? WC()->session->get( 'wuunder_selected_pickup_point', null ) : null,
-					'methodSettings' => $this->get_pickup_method_settings(),
+					'methodSettings' => CarrierService::get_pickup_method_settings(),
 					'iframeConfig' => [
 						'baseUrl' => Pickup::IFRAME_BASE_URL,
 						'origin' => Pickup::IFRAME_ORIGIN,
@@ -429,38 +430,5 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		} else {
 			wp_send_json_error( [ 'message' => __( 'WooCommerce session not available', 'wuunder-shipping' ) ] );
 		}
-	}
-
-	/**
-	 * Get pickup method settings for all instances.
-	 *
-	 * @return array
-	 */
-	private function get_pickup_method_settings(): array {
-		$settings = [];
-
-		// Get all shipping zones
-		$zones    = \WC_Shipping_Zones::get_zones();
-		$zones[0] = \WC_Shipping_Zones::get_zone( 0 ); // Add default zone
-
-		foreach ( $zones as $zone ) {
-			if ( is_array( $zone ) ) {
-				$zone = \WC_Shipping_Zones::get_zone( $zone['zone_id'] );
-			}
-
-			$shipping_methods = $zone->get_shipping_methods();
-
-			foreach ( $shipping_methods as $method ) {
-				if ( $method->id === 'wuunder_pickup' ) {
-					$settings[ $method->get_instance_id() ] = [
-						'primary_color' => $method->get_option( 'primary_color', '#52ba69' ),
-						'available_carriers' => $method->get_option( 'available_carriers', [ 'dhl', 'postnl', 'ups' ] ),
-						'language' => $method->get_option( 'language', 'nl' ),
-					];
-				}
-			}
-		}
-
-		return $settings;
 	}
 }

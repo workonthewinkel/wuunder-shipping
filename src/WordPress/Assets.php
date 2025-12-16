@@ -3,6 +3,7 @@
 namespace Wuunder\Shipping\WordPress;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
+use Wuunder\Shipping\Services\CarrierService;
 use Wuunder\Shipping\WooCommerce\Methods\Pickup;
 use Wuunder\Shipping\WordPress\View;
 
@@ -134,7 +135,7 @@ class Assets implements Hookable {
 			);
 
 			// Get pickup method settings for all instances (same as BlocksIntegration)
-			$pickup_settings = $this->get_pickup_method_settings();
+			$pickup_settings = CarrierService::get_pickup_method_settings();
 
 			// Localize script
 			\wp_localize_script(
@@ -167,38 +168,5 @@ class Assets implements Hookable {
 	public function render_pickup_template(): void {
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Template content is safe and controlled.
 		echo View::render( 'frontend/pickup-point-display' );
-	}
-
-	/**
-	 * Get pickup method settings for all instances.
-	 *
-	 * @return array
-	 */
-	private function get_pickup_method_settings(): array {
-		$settings = [];
-
-		// Get all shipping zones
-		$zones    = \WC_Shipping_Zones::get_zones();
-		$zones[0] = \WC_Shipping_Zones::get_zone( 0 ); // Add default zone
-
-		foreach ( $zones as $zone ) {
-			if ( is_array( $zone ) ) {
-				$zone = \WC_Shipping_Zones::get_zone( $zone['zone_id'] );
-			}
-
-			$shipping_methods = $zone->get_shipping_methods();
-
-			foreach ( $shipping_methods as $method ) {
-				if ( $method->id === 'wuunder_pickup' ) {
-					$settings[ $method->get_instance_id() ] = [
-						'primary_color' => $method->get_option( 'primary_color', '#52ba69' ),
-						'available_carriers' => $method->get_option( 'available_carriers', [ 'dhl', 'postnl', 'ups' ] ),
-						'language' => $method->get_option( 'language', 'nl' ),
-					];
-				}
-			}
-		}
-
-		return $settings;
 	}
 }

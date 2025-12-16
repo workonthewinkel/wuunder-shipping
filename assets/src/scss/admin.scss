@@ -1,5 +1,6 @@
 // Wuunder Admin Styles
 
+
 // Wuunder specific styles
 .wuunder-carriers-section {
     margin-top: 20px;
@@ -8,30 +9,70 @@
         margin-bottom: 15px;
     }
 
-    &__actions {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        width: 100%;
+    &__container {
+        border: 1px solid #dcdcde;
+        border-radius: 4px;
+        overflow: hidden;
+    }
 
-        button {
-            .spinner {
-                display: none;
-                &.is-active {
-                    display: block;
-                }
-            }
-        }
+    &__controls {
+        background: #fff;
+        padding: 12px 16px;
+        border-bottom: 1px solid #dcdcde;
 
-        &-filter {
+        &-inner {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
+        }
 
-            select {
-                max-width: 230px;
+        #wuunder-refresh-carriers {
+            margin-left: auto;
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            .spinner {
+                display: none;
+                margin: 0;
+                float: none;
+
+                &.is-active {
+                    display: inline-block;
+                }
             }
+        }
+    }
+
+    .wuunder-search-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 6px 12px;
+        border: 1px solid #dcdcde;
+        border-radius: 4px;
+        font-size: 14px;
+
+        &:focus {
+            border-color: #0073aa;
+            outline: none;
+            box-shadow: 0 0 0 1px #0073aa;
+        }
+    }
+
+    .wuunder-filter-select {
+        padding: 6px 12px;
+        border: 1px solid #dcdcde;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 150px;
+
+        &:focus {
+            border-color: #0073aa;
+            outline: none;
+            box-shadow: 0 0 0 1px #0073aa;
         }
     }
 
@@ -53,23 +94,83 @@
         }
     }
 
+    .wuunder-carriers-table-wrapper {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
     .wuunder-carriers-table {
-        margin-top: 20px;
-        margin-bottom: 20px;
+        margin-top: 0;
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        border: none;
 
-        th,
-        td {
-            padding: 12px;
-        }
+        // Header styles
+        thead {
+            background: #f6f7f7;
 
-        td {
-            &:first-child {
-                width: 100px;
+            th {
+                border-bottom: 0;
             }
         }
 
-        tbody tr:nth-child(odd) {
-            background-color: #f9f9f9;
+        th {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(to bottom, #f6f7f7 0%, #f6f7f7 calc(100% - 3px), rgba(0, 0, 0, 0.08) 100%);
+            z-index: 1;
+            padding: 12px;
+            font-weight: 600;
+            text-align: left;
+            vertical-align: middle;
+
+            &:first-child {
+                width: 16px;
+            }
+
+            &:nth-child(2) {
+                width: auto;
+            }
+
+            &:nth-child(3) {
+                width: 200px;
+            }
+        }
+
+        // Body styles
+        td {
+            padding: 12px;
+
+            &:first-child {
+                width: 16px;
+            }
+
+            &:nth-child(2) {
+                width: auto;
+            }
+
+            &:nth-child(3) {
+                width: 200px;
+            }
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f0f0f1;
+            cursor: pointer;
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            &:nth-child(odd) {
+                background-color: #f9f9f9;
+            }
+
+            &:hover {
+                background-color: #e8f4f8 !important;
+            }
         }
 
         input[type="checkbox"] {
@@ -84,31 +185,50 @@
         }
 
         &__checkbox-container {
-            &--inner {
-                display: flex;
-                align-items: center;
-                gap: 10px;
+            text-align: center;
+        }
 
-                .wuunder-carrier-logo {
-                    width: 40px;
-                    height: auto;
-                    margin-right: 8px;
-                    vertical-align: middle;
-                }
+        &__carrier-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            .wuunder-carrier-logo {
+                width: 40px;
+                height: auto;
+                flex-shrink: 0;
+            }
+
+            span {
+                flex: 1;
             }
         }
 
-        
+        .wuunder-type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
 
-        // Carrier logo styling
-        .wuunder-carrier-logo {
-            width: 40px;
-            height: auto;
-            margin-right: 8px;
-            vertical-align: middle;
+            &.wuunder-type-pickup {
+                background: #fff2e7;
+                color: #d63638;
+            }
+
+            &.wuunder-type-delivery {
+                background: #e7f3ff;
+                color: #0073aa;
+            }
         }
 
         // Service information styling
+        .wuunder-service-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
         .wuunder-service-description {
             color: #666;
             font-size: 0.9em;

@@ -55,8 +55,13 @@ import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, f
         },
 
         checkSelectedShipping: function() {
-            const selectedMethod = $('input[name="shipping_method[0]"]:checked').val();
-            
+            let selectedMethod = $('input[name="shipping_method[0]"]:checked').val();
+
+            // Also check if shipping is the only option, in that case it's a hidden field.
+            if (!selectedMethod) {
+               selectedMethod = jQuery('input[name="shipping_method[0]"]:hidden').val();
+            }
+
             if (selectedMethod && selectedMethod.indexOf('wuunder_pickup') !== -1) {
                 this.showPickupButton();
             } else {
@@ -65,8 +70,13 @@ import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, f
         },
 
         showPickupButton: function() {
-            const $shippingMethod = $('input[name="shipping_method[0]"]:checked').closest('li');
-            
+            let $shippingMethod = $('input[name="shipping_method[0]"]:checked').closest('li');
+
+            // If no checked input, check for hidden input (single option case)
+            if ($shippingMethod.length === 0) {
+                $shippingMethod = $('input[name="shipping_method[0]"]:hidden').closest('li');
+            }
+
             // Remove any existing button
             $('.wuunder-pickup-container').remove();
             
@@ -97,7 +107,13 @@ import { createIframeMessageHandler, transformPickupPointData, buildIframeUrl, f
         },
 
         getMethodData: function() {
-            const $checkedInput = $('input[name="shipping_method[0]"]:checked');
+            let $checkedInput = $('input[name="shipping_method[0]"]:checked');
+
+            // If no checked input, check for hidden input (single option case)
+            if ($checkedInput.length === 0) {
+                $checkedInput = $('input[name="shipping_method[0]"]:hidden');
+            }
+
             const methodId = $checkedInput.val();
             
             // Extract instance ID from method ID (e.g., "wuunder_pickup:5" -> instance ID 5)
