@@ -16,7 +16,7 @@ class CarrierService {
 	 * @param bool $preserve_enabled Whether to preserve enabled state for existing carriers.
 	 * @return true|\WP_Error True on success, WP_Error on failure.
 	 */
-	public static function refresh_from_api( bool $preserve_enabled = false ) {
+	public static function refresh_from_api( $preserve_enabled = false ) {
 
 		$api_key = get_option( 'wuunder_api_key', '' );
 
@@ -102,7 +102,7 @@ class CarrierService {
 	 * @param string $carrier_id The carrier method ID (format: carrier_code:carrier_product_code).
 	 * @return void
 	 */
-	public static function handle_carrier_deletion( string $carrier_id ): void {
+	public static function handle_carrier_deletion( $carrier_id ) {
 		// Load the actual Carrier object to delete it
 		$carrier = Carrier::find_by_method_id( $carrier_id );
 

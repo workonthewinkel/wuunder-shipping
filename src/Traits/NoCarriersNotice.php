@@ -13,7 +13,7 @@ trait NoCarriersNotice {
 	 * @param string $settings_section The settings section to link to (e.g., 'shipping_methods' or 'pickup_methods').
 	 * @return array Form fields array with title and no carriers notice.
 	 */
-	protected function get_no_carriers_notice_fields( string $settings_section ): array {
+	protected function get_no_carriers_notice_fields( $settings_section ) {
 		$settings_url = admin_url( 'admin.php?page=wc-settings&tab=wuunder&section=' . $settings_section );
 
 		return [
