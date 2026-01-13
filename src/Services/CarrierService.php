@@ -200,7 +200,7 @@ class CarrierService {
 	 * @param int                 $zone_id         The zone ID.
 	 * @return void
 	 */
-	public static function disable_shipping_method( \WC_Shipping_Method $shipping_method, int $instance_id, int $zone_id ): void {
+	public static function disable_shipping_method( \WC_Shipping_Method $shipping_method, $instance_id, $zone_id ): void {
 		global $wpdb;
 
 		$shipping_method->update_option( 'enabled', 'no' );
