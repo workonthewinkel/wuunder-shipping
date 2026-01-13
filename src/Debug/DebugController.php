@@ -4,6 +4,8 @@ namespace Wuunder\Shipping\Debug;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 /**
  * Debug Controller - Development only
  * Adds debug tab to WooCommerce settings showing REST API output

@@ -7,6 +7,8 @@ use Wuunder\Shipping\Models\Carrier;
 use Wuunder\Shipping\Traits\NoCarriersNotice;
 use Wuunder\Shipping\Traits\ShippingMethodSanitization;
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 /**
  * Simple Wuunder shipping method that uses instance settings.
  */

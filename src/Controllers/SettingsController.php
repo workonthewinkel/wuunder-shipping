@@ -9,6 +9,8 @@ use Wuunder\Shipping\Models\Carrier;
 use Wuunder\Shipping\Services\CarrierService;
 use Wuunder\Shipping\WordPress\View;
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 /**
  * Settings Controller for managing Wuunder settings in WooCommerce.
  */

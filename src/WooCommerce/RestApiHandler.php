@@ -4,6 +4,8 @@ namespace Wuunder\Shipping\WooCommerce;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 /**
  * Handles REST API customizations for WooCommerce orders.
  */
