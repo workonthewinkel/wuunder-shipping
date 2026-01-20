@@ -4,7 +4,9 @@ namespace Wuunder\Shipping\Debug;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Debug Controller - Development only

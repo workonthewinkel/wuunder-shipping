@@ -4,7 +4,9 @@ namespace Wuunder\Shipping\WooCommerce;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Register class for dynamically registering carrier-specific shipping methods.

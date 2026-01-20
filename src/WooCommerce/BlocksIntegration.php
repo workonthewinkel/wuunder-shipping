@@ -9,7 +9,9 @@ use Wuunder\Shipping\WooCommerce\CheckoutHandler;
 use Wuunder\Shipping\WooCommerce\Methods\Pickup;
 use Wuunder\Shipping\WordPress\View;
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Class for integrating with WooCommerce Blocks.

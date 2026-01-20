@@ -2,7 +2,9 @@
 
 namespace Wuunder\Shipping\Queue;
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Class Register
