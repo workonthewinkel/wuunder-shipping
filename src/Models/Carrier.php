@@ -251,7 +251,7 @@ class Carrier extends Model {
 	 * @param string $method_id Method ID.
 	 * @return self|null
 	 */
-	public static function find_by_method_id( $method_id ): ?self { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public static function find_by_method_id( $method_id ): ?self {
 		global $wpdb;
 		$table = self::get_table_name();
 
@@ -260,9 +260,9 @@ class Carrier extends Model {
 			return null;
 		}
 
-		$row = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$row = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
-				'SELECT * FROM %i WHERE carrier_code = %s AND carrier_product_code = %s', // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+				'SELECT * FROM %i WHERE carrier_code = %s AND carrier_product_code = %s',
 				$table,
 				$parts[0],
 				$parts[1]
@@ -291,7 +291,7 @@ class Carrier extends Model {
 	 * @param bool|null $accepts_parcelshop Filter by parcelshop delivery flag: true for only parcelshop, false to exclude, null for all.
 	 * @return array
 	 */
-	public static function get_all( $enabled_only = false, ?bool $accepts_parcelshop = null ): array { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public static function get_all( $enabled_only = false, ?bool $accepts_parcelshop = null ): array {
 		global $wpdb;
 		$table = self::get_table_name();
 
@@ -319,7 +319,7 @@ class Carrier extends Model {
 		$sql .= ' ORDER BY carrier_name, product_name';
 
 		// Query is dynamically built but uses proper placeholders (%i, %d) throughout.
-		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare( $sql, $params ), // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 			ARRAY_A
 		);
@@ -388,9 +388,9 @@ class Carrier extends Model {
 		];
 
 		// Check if exists
-		$exists = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$exists = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
-				'SELECT COUNT(*) FROM %i WHERE carrier_code = %s AND carrier_product_code = %s', // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+				'SELECT COUNT(*) FROM %i WHERE carrier_code = %s AND carrier_product_code = %s',
 				$table,
 				$this->carrier_code,
 				$this->carrier_product_code
@@ -398,7 +398,7 @@ class Carrier extends Model {
 		);
 
 		if ( $exists ) {
-			return $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			return $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
 				$table,
 				$data,
 				[
@@ -407,7 +407,7 @@ class Carrier extends Model {
 				]
 			) !== false;
 		} else {
-			return $wpdb->insert( $table, $data ) !== false; // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			return $wpdb->insert( $table, $data ) !== false;
 		}
 	}
 
@@ -420,7 +420,7 @@ class Carrier extends Model {
 		global $wpdb;
 		$table = self::get_table_name();
 
-		return $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
 			$table,
 			[
 				'carrier_code'         => $this->carrier_code,

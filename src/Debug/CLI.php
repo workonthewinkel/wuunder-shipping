@@ -68,7 +68,9 @@ class CLI {
 		// Clear carriers table.
 		global $wpdb;
 		$table = Carrier::get_table_name();
-		$count = $wpdb->query( "TRUNCATE TABLE `{$table}`" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$count = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare( 'TRUNCATE TABLE %i', $table )
+		);
 		\WP_CLI::log( "  Truncated table: {$table}" );
 
 		\WP_CLI::success( 'All Wuunder data has been cleared.' );

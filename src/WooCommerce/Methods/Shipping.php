@@ -31,7 +31,7 @@ class Shipping extends WC_Shipping_Method {
 	 *
 	 * @param int $instance_id Instance ID.
 	 */
-	public function __construct( $instance_id = 0 ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public function __construct( $instance_id = 0 ) {
 		$this->id           = 'wuunder_shipping';
 		$this->instance_id  = absint( $instance_id );
 		$this->method_title = __( 'Wuunder Delivery', 'wuunder-shipping' );

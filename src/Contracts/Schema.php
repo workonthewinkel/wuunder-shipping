@@ -31,11 +31,7 @@ abstract class Schema {
 	public function exists(): bool {
 		global $wpdb;
 
-		// phpcs:ignore
-		$query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $this->get_table_name() ) );
-
-		// phpcs:ignore
-		if ( $wpdb->get_var( $query ) == $this->get_table_name() ) {
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $this->get_table_name() ) ) ) === $this->get_table_name() ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
 			return true;
 		}
 
