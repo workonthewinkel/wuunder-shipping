@@ -205,7 +205,8 @@ class CarrierService {
 
 		$shipping_method->update_option( 'enabled', 'no' );
 
-		// Follow WooCommerce core pattern: update database directly
+		// Follow WooCommerce core pattern: update database directly.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- UPDATE operation, caching not applicable for writes.
 		if ( $wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) ) ) {
 			do_action( 'woocommerce_shipping_zone_method_status_toggled', $instance_id, $shipping_method->id, $zone_id, 0 );
 		}

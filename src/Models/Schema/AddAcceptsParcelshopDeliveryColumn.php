@@ -26,10 +26,14 @@ class AddAcceptsParcelshopDeliveryColumn extends Schema {
 
 		global $wpdb;
 
-		$table_name = \esc_sql( $this->get_table_name() );
-		$sql        = "ALTER TABLE `{$table_name}` ADD COLUMN `accepts_parcelshop_delivery` TINYINT(1) NOT NULL DEFAULT 0 AFTER `is_parcelshop_drop_off`";
+		$table_name = $this->get_table_name();
 
-		$wpdb->query( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				'ALTER TABLE %i ADD COLUMN `accepts_parcelshop_delivery` TINYINT(1) NOT NULL DEFAULT 0 AFTER `is_parcelshop_drop_off`', // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
+				$table_name
+			)
+		);
 	}
 
 	/**
@@ -44,12 +48,14 @@ class AddAcceptsParcelshopDeliveryColumn extends Schema {
 
 		global $wpdb;
 
-		$table_name = \esc_sql( $this->get_table_name() );
-		$query      = $wpdb->prepare(
-			"SHOW COLUMNS FROM `{$table_name}` LIKE %s",
-			'accepts_parcelshop_delivery'
-		);
+		$table_name = $this->get_table_name();
 
-		return (bool) $wpdb->get_var( $query ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (bool) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				'SHOW COLUMNS FROM %i LIKE %s',
+				$table_name,
+				'accepts_parcelshop_delivery'
+			)
+		);
 	}
 }

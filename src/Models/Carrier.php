@@ -318,8 +318,9 @@ class Carrier extends Model {
 
 		$sql .= ' ORDER BY carrier_name, product_name';
 
+		// Query is dynamically built but uses proper placeholders (%i, %d) throughout.
 		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-			$wpdb->prepare( $sql, $params ),
+			$wpdb->prepare( $sql, $params ), // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 			ARRAY_A
 		);
 
