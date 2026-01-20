@@ -4,6 +4,10 @@ namespace Wuunder\Shipping\Contracts;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Class Queueable
  *

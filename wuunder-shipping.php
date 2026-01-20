@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Wuunder Shipping
- * Plugin URI: wearewuunder.com
+ * Plugin URI: wuunder.com
  * Description: WooCommerce integration for Wuunder parcel delivery platform
  * Version: 0.8.1
  * Author: Work on The Winkel
@@ -15,6 +15,8 @@
  */
 
 use Wuunder\Shipping\Plugin;
+
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 define( 'WUUNDER_PLUGIN_FILE', __FILE__ );
 define( 'WUUNDER_PLUGIN_PATH', dirname( WUUNDER_PLUGIN_FILE ) );

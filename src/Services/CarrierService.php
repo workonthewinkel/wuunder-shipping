@@ -16,7 +16,7 @@ class CarrierService {
 	 * @param bool $preserve_enabled Whether to preserve enabled state for existing carriers.
 	 * @return true|\WP_Error True on success, WP_Error on failure.
 	 */
-	public static function refresh_from_api( bool $preserve_enabled = false ) {
+	public static function refresh_from_api( $preserve_enabled = false ) {
 
 		$api_key = get_option( 'wuunder_api_key', '' );
 
@@ -102,7 +102,7 @@ class CarrierService {
 	 * @param string $carrier_id The carrier method ID (format: carrier_code:carrier_product_code).
 	 * @return void
 	 */
-	public static function handle_carrier_deletion( string $carrier_id ): void {
+	public static function handle_carrier_deletion( $carrier_id ) {
 		// Load the actual Carrier object to delete it
 		$carrier = Carrier::find_by_method_id( $carrier_id );
 
@@ -200,12 +200,13 @@ class CarrierService {
 	 * @param int                 $zone_id         The zone ID.
 	 * @return void
 	 */
-	public static function disable_shipping_method( \WC_Shipping_Method $shipping_method, int $instance_id, int $zone_id ): void {
+	public static function disable_shipping_method( \WC_Shipping_Method $shipping_method, $instance_id, $zone_id ): void {
 		global $wpdb;
 
 		$shipping_method->update_option( 'enabled', 'no' );
 
-		// Follow WooCommerce core pattern: update database directly
+		// Follow WooCommerce core pattern: update database directly.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- UPDATE operation, caching not applicable for writes.
 		if ( $wpdb->update( "{$wpdb->prefix}woocommerce_shipping_zone_methods", array( 'is_enabled' => 0 ), array( 'instance_id' => absint( $instance_id ) ) ) ) {
 			do_action( 'woocommerce_shipping_zone_method_status_toggled', $instance_id, $shipping_method->id, $zone_id, 0 );
 		}

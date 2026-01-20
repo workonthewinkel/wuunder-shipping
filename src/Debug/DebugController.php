@@ -4,6 +4,10 @@ namespace Wuunder\Shipping\Debug;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Debug Controller - Development only
  * Adds debug tab to WooCommerce settings showing REST API output
@@ -136,6 +140,7 @@ class DebugController implements Hookable {
 							if ( is_wp_error( $carriers ) ) {
 								echo esc_html( 'Error: ' . $carriers->get_error_message() );
 							} else {
+								/* translators: %d: Number of shipping carriers */
 								printf( esc_html__( '%d carriers', 'wuunder-shipping' ), count( $shipping_carriers ) );
 							}
 							?>
@@ -160,6 +165,7 @@ class DebugController implements Hookable {
 							if ( is_wp_error( $carriers ) ) {
 								echo esc_html( 'Error: ' . $carriers->get_error_message() );
 							} else {
+								/* translators: %d: Number of pickup carriers */
 								printf( esc_html__( '%d carriers', 'wuunder-shipping' ), count( $pickup_carriers ) );
 							}
 							?>
@@ -228,7 +234,10 @@ class DebugController implements Hookable {
 			<td class="forminp">
 				<div class="wuunder-debug-container">
 					<div class="debug-header">
-						<?php printf( esc_html__( '%d shipping methods configured', 'wuunder-shipping' ), count( $shipping_methods ) ); ?>
+						<?php
+						/* translators: %d: Number of shipping methods configured */
+						printf( esc_html__( '%d shipping methods configured', 'wuunder-shipping' ), count( $shipping_methods ) );
+						?>
 					</div>
 					<div class="debug-output" style="max-height: 300px; overflow-y: auto;">
 						<pre><?php echo esc_html( wp_json_encode( $shipping_methods, JSON_PRETTY_PRINT ) ); ?></pre>
@@ -243,7 +252,10 @@ class DebugController implements Hookable {
 			<td class="forminp">
 				<div class="wuunder-debug-container">
 					<div class="debug-header">
-						<?php printf( esc_html__( '%d pickup methods configured', 'wuunder-shipping' ), count( $pickup_methods ) ); ?>
+						<?php
+						/* translators: %d: Number of pickup methods configured */
+						printf( esc_html__( '%d pickup methods configured', 'wuunder-shipping' ), count( $pickup_methods ) );
+						?>
 					</div>
 					<div class="debug-output" style="max-height: 300px; overflow-y: auto;">
 						<pre><?php echo esc_html( wp_json_encode( $pickup_methods, JSON_PRETTY_PRINT ) ); ?></pre>

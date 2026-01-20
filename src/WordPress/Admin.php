@@ -2,6 +2,10 @@
 
 namespace Wuunder\Shipping\WordPress;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Plugin God class.
  */
