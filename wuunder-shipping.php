@@ -3,7 +3,7 @@
  * Plugin Name: Wuunder Shipping
  * Plugin URI: wuunder.com
  * Description: WooCommerce integration for Wuunder parcel delivery platform
- * Version: 0.8.1
+ * Version: 1.0.0
  * Author: Work on The Winkel
  * Author URI: https://workonthewinkel.nl/
  * License: GPL v2 or later
@@ -22,7 +22,7 @@ define( 'WUUNDER_PLUGIN_FILE', __FILE__ );
 define( 'WUUNDER_PLUGIN_PATH', dirname( WUUNDER_PLUGIN_FILE ) );
 define( 'WUUNDER_PLUGIN_URL', plugin_dir_url( WUUNDER_PLUGIN_FILE ) );
 define( 'WUUNDER_PLUGIN_SLUG', 'wuunder-shipping' );
-define( 'WUUNDER_PLUGIN_VERSION', '0.8.1' );
+define( 'WUUNDER_PLUGIN_VERSION', '1.0.0' );
 
 if ( ! file_exists( WUUNDER_PLUGIN_PATH . '/vendor/autoload.php' ) ) {
 	return;
