@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Wuunder Shipping
- * Plugin URI: wuunder.com
+ * Plugin URI: https://wuunder.com
  * Description: WooCommerce integration for Wuunder parcel delivery platform
  * Version: 1.0.0
  * Author: Work on The Winkel
