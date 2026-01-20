@@ -34,7 +34,6 @@ abstract class Model {
 	public static function table_exists(): bool {
 		global $wpdb;
 		$table = static::get_table_name();
-		$query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		return $wpdb->get_var( $query ) === $table; // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+		return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table; // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
 	}
 }

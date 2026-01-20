@@ -26,7 +26,7 @@ class WuunderClient {
 	 *
 	 * @param string $api_key API key for authentication.
 	 */
-	public function __construct( $api_key = '' ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public function __construct( $api_key = '' ) {
 		$option_value  = get_option( 'wuunder_api_key', '' );
 		$this->api_key = $api_key ? $api_key : ( is_string( $option_value ) ? $option_value : '' );
 	}
@@ -39,7 +39,7 @@ class WuunderClient {
 	 * @param array<string, mixed> $data Request data.
 	 * @return array<string, mixed>|\WP_Error
 	 */
-	private function request( $endpoint, $method = 'GET', array $data = [] ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	private function request( $endpoint, $method = 'GET', array $data = [] ) {
 		$url = $this->api_url . $endpoint;
 
 		// Check if API key is set
