@@ -3,9 +3,9 @@ Contributors: mklasen, lucp, alleenremy, wuunder
 Donate link: https://wearewuunder.com
 Tags: woocommerce, shipping, parcel delivery, carriers, logistics
 Requires at least: 6.4
-Tested up to: 6.6
-Requires PHP: 7.4
-Stable tag: 0.7.7
+Tested up to: 6.9
+Requires PHP: 8.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

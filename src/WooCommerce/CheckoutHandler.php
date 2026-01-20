@@ -4,6 +4,10 @@ namespace Wuunder\Shipping\WooCommerce;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Handles checkout processing for Wuunder shipping methods.
  */
@@ -346,7 +350,7 @@ class CheckoutHandler implements Hookable {
 		if ( ! $this->is_valid_pickup_point( $pickup_point ) ) {
 			throw new \WC_Data_Exception(
 				'pickup_point_required',
-				__( 'Please select a pickup location for your delivery.', 'wuunder-shipping' )
+				esc_html__( 'Please select a pickup location for your delivery.', 'wuunder-shipping' )
 			);
 		}
 	}
@@ -435,7 +439,7 @@ class CheckoutHandler implements Hookable {
 			// Check if this is a pickup shipping method
 			if ( strpos( $item->get_method_id(), 'wuunder_pickup' ) !== false ) {
 				// Return simple 'ID' label
-				return __( 'Method ID', 'wuunder-shipping' );
+				return esc_html__( 'Method ID', 'wuunder-shipping' );
 			}
 		}
 

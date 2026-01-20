@@ -7,6 +7,10 @@ use Wuunder\Shipping\Models\Carrier;
 use Wuunder\Shipping\Traits\NoCarriersNotice;
 use Wuunder\Shipping\Traits\ShippingMethodSanitization;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Simple Wuunder shipping method that uses instance settings.
  */
@@ -27,7 +31,7 @@ class Shipping extends WC_Shipping_Method {
 	 *
 	 * @param int $instance_id Instance ID.
 	 */
-	public function __construct( $instance_id = 0 ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public function __construct( $instance_id = 0 ) {
 		$this->id           = 'wuunder_shipping';
 		$this->instance_id  = absint( $instance_id );
 		$this->method_title = __( 'Wuunder Delivery', 'wuunder-shipping' );
@@ -151,7 +155,7 @@ class Shipping extends WC_Shipping_Method {
 	 * @param string $carrier_id Carrier method ID.
 	 * @return bool True if carrier is disabled, false otherwise.
 	 */
-	private function is_carrier_disabled( string $carrier_id ): bool {
+	private function is_carrier_disabled( $carrier_id ) {
 		if ( empty( $carrier_id ) ) {
 			return false;
 		}

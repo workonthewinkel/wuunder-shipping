@@ -14,7 +14,7 @@ class View {
 	 * @param array  $data     Data to pass to template.
 	 * @return string Rendered content.
 	 */
-	public static function render( $template, array $data = [] ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public static function render( $template, array $data = [] ) {
 		$template_path = WUUNDER_PLUGIN_PATH . '/src/Views/' . $template . '.php';
 
 		if ( ! file_exists( $template_path ) ) {
@@ -42,7 +42,7 @@ class View {
 	 * @param array  $data     Data to pass to template.
 	 * @return void
 	 */
-	public static function display( $template, array $data = [] ): void { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+	public static function display( $template, array $data = [] ): void {
 		echo self::render( $template, $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 }
