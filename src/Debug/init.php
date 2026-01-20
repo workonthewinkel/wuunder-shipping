@@ -6,7 +6,9 @@
  * @package Wuunder\Shipping
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	return;
+}
 
 if ( ! function_exists( 'add_action' ) ) {
 	return;
