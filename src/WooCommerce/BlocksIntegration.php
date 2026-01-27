@@ -5,6 +5,7 @@ namespace Wuunder\Shipping\WooCommerce;
 use Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface;
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
 use Wuunder\Shipping\Services\CarrierService;
+use Wuunder\Shipping\Traits\PickupPointSanitization;
 use Wuunder\Shipping\WooCommerce\CheckoutHandler;
 use Wuunder\Shipping\WooCommerce\Methods\Pickup;
 use Wuunder\Shipping\WordPress\View;
@@ -17,6 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class for integrating with WooCommerce Blocks.
  */
 class BlocksIntegration implements IntegrationInterface, Hookable {
+
+	use PickupPointSanitization;
 
 	/**
 	 * The name of the integration.
@@ -352,7 +355,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 	 */
 	public function handle_pickup_point_update( $data ): void {
 		if ( ! empty( $data['pickup_point'] ) && is_array( $data['pickup_point'] ) ) {
-			$pickup_point = $data['pickup_point'];
+			$pickup_point = $this->sanitize_pickup_point_data( $data['pickup_point'] );
 
 			// Validate pickup point data
 			if ( ! empty( $pickup_point['id'] ) ) {
@@ -379,7 +382,7 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 		$extensions = $request->get_param( 'extensions' );
 
 		if ( ! empty( $extensions['wuunder-pickup']['pickup_point'] ) ) {
-			$pickup_point = $extensions['wuunder-pickup']['pickup_point'];
+			$pickup_point = $this->sanitize_pickup_point_data( $extensions['wuunder-pickup']['pickup_point'] );
 
 			// Validate pickup point data
 			if ( is_array( $pickup_point ) && ! empty( $pickup_point['id'] ) ) {
@@ -409,13 +412,16 @@ class BlocksIntegration implements IntegrationInterface, Hookable {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON string will be sanitized after decoding.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON string decoded and sanitized below.
 		$pickup_point = json_decode( wp_unslash( $_POST['pickup_point'] ), true );
 
 		if ( ! $pickup_point || ! is_array( $pickup_point ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid pickup point data', 'wuunder-shipping' ) ] );
 			return;
 		}
+
+		// Sanitize pickup point data
+		$pickup_point = $this->sanitize_pickup_point_data( $pickup_point );
 
 		// Store in WooCommerce session
 		if ( WC()->session ) {

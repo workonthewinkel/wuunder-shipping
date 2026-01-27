@@ -3,6 +3,7 @@
 namespace Wuunder\Shipping\WooCommerce;
 
 use Wuunder\Shipping\Contracts\Interfaces\Hookable;
+use Wuunder\Shipping\Traits\PickupPointSanitization;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles checkout processing for Wuunder shipping methods.
  */
 class CheckoutHandler implements Hookable {
+
+	use PickupPointSanitization;
 
 	/**
 	 * Register WordPress hooks.
@@ -292,13 +295,16 @@ class CheckoutHandler implements Hookable {
 		}
 
 		// Decode pickup point data
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON string will be sanitized after decoding.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON string decoded and sanitized below.
 		$pickup_point = json_decode( wp_unslash( $_POST['pickup_point'] ), true );
 
 		if ( ! $pickup_point || ! is_array( $pickup_point ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid pickup point data', 'wuunder-shipping' ) ] );
 			return;
 		}
+
+		// Sanitize pickup point data
+		$pickup_point = $this->sanitize_pickup_point_data( $pickup_point );
 
 		// Store in WooCommerce session
 		if ( WC()->session ) {
@@ -385,7 +391,8 @@ class CheckoutHandler implements Hookable {
 			}
 
 			if ( $pickup_point && is_array( $pickup_point ) ) {
-				return $pickup_point;
+				// Sanitize the decoded data
+				return $this->sanitize_pickup_point_data( $pickup_point );
 			}
 		}
 
