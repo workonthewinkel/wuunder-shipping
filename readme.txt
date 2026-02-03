@@ -56,7 +56,7 @@ Yes, the plugin supports both classic shortcode checkout and the new WooCommerce
 == External services ==
 
 This plugin connects to the Wuunder shipping API to obtain all shipping methods connected to your account. It needs this to provide a bridge between the api and your WooCommerce store.
-It only fetches information from the external API and doesn't send any of your information back.
+It only fetches information from the external API and doesn't send any of your information back, apart from your Wuunder API credentials, which we require to authenticate your user.
 
 == Screenshots ==
 
