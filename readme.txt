@@ -39,6 +39,10 @@ Through Wuunder's platform, you can access various shipping carriers including p
 5. Configure available carriers in the Carriers tab
 6. Set up shipping methods in WooCommerce > Settings > Shipping
 
+== Source Code ==
+
+The source code for this plugin is available on GitHub: https://github.com/workonthewinkel/wuunder-shipping
+
 == Frequently Asked Questions ==
 
 = Do I need a Wuunder account? =
