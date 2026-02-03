@@ -39,6 +39,10 @@ Through Wuunder's platform, you can access various shipping carriers including p
 5. Configure available carriers in the Carriers tab
 6. Set up shipping methods in WooCommerce > Settings > Shipping
 
+== Source Code ==
+
+The source code for this plugin is available on GitHub: https://github.com/workonthewinkel/wuunder-shipping
+
 == Frequently Asked Questions ==
 
 = Do I need a Wuunder account? =
@@ -52,6 +56,11 @@ The plugin supports all carriers available through your Wuunder account. Availab
 = Does this work with WooCommerce blocks? =
 
 Yes, the plugin supports both classic shortcode checkout and the new WooCommerce checkout blocks.
+
+== External services ==
+
+This plugin connects to the Wuunder shipping API to obtain all shipping methods connected to your account. It needs this to provide a bridge between the api and your WooCommerce store.
+It only fetches information from the external API and doesn't send any of your information back, apart from your Wuunder API credentials, which we require to authenticate your user.
 
 == Screenshots ==
 
