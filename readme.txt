@@ -53,6 +53,11 @@ The plugin supports all carriers available through your Wuunder account. Availab
 
 Yes, the plugin supports both classic shortcode checkout and the new WooCommerce checkout blocks.
 
+== External services ==
+
+This plugin connects to the Wuunder shipping API to obtain all shipping methods connected to your account. It needs this to provide a bridge between the api and your WooCommerce store.
+It only fetches information from the external API and doesn't send any of your information back.
+
 == Screenshots ==
 
 == Changelog ==
