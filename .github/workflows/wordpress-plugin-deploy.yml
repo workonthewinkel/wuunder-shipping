@@ -72,7 +72,7 @@ jobs:
         id: check_svn
         run: |
           # Check if the SVN repository exists
-          if curl -s --head "https://plugins.svn.wordpress.org/wuunder-shipping/" | head -n 1 | grep -q "200 OK"; then
+          if curl -s --head "https://plugins.svn.wordpress.org/${SLUG}/" | head -n 1 | grep -q " 200"; then
             echo "svn_exists=true" >> $GITHUB_OUTPUT
             echo "SVN repository exists"
           else
