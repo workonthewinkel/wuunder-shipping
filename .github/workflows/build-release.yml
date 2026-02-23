@@ -48,12 +48,12 @@ jobs:
       - name: Setup WP-CLI with dist-archive
         run: |
           # Download and install WP-CLI
-          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          curl -L -o wp-cli.phar https://github.com/wp-cli/wp-cli/releases/download/v2.12.0/wp-cli-2.12.0.phar
           chmod +x wp-cli.phar
           sudo mv wp-cli.phar /usr/local/bin/wp
 
           # Install the dist-archive package for creating distribution packages
-          wp package install wp-cli/dist-archive-command:@stable --allow-root
+          wp package install wp-cli/dist-archive-command:3.1.0 --allow-root
 
       - name: Install dependencies and build assets
         run: |
