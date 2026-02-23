@@ -53,7 +53,7 @@ jobs:
           sudo mv wp-cli.phar /usr/local/bin/wp
 
           # Install the dist-archive package for creating distribution packages
-          wp package install wp-cli/dist-archive-command --allow-root
+          wp package install wp-cli/dist-archive-command:@stable --allow-root
 
       - name: Install dependencies and build assets
         run: |

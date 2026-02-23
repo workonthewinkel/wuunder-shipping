@@ -5,6 +5,9 @@
 .github
 .distignore
 
+# WordPress.org assets (banners, icons, screenshots — niet in plugin zip)
+assets/wordpress-org
+
 # source files
 assets/src
 
