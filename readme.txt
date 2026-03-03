@@ -64,6 +64,9 @@ It only fetches information from the external API and doesn't send any of your i
 
 == Screenshots ==
 
+1. Wuunder Settings page - Configure your API key and test the connection.
+2. Pick-up point selection - Customers can choose a pick-up point from an interactive map.
+
 == Changelog ==
 
 = 1.0.0 =
