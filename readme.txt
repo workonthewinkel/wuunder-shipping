@@ -5,7 +5,7 @@ Tags: woocommerce, shipping, parcel delivery, carriers, logistics
 Requires at least: 6.4
 Tested up to: 6.9
 Requires PHP: 8.0
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,12 +64,21 @@ It only fetches information from the external API and doesn't send any of your i
 
 == Screenshots ==
 
+1. Wuunder Settings page - Configure your API key and test the connection.
+2. Pick-up point selection - Customers can choose a pick-up point from an interactive map.
+
 == Changelog ==
+
+= 1.0.1 =
+* Add screenshots to WordPress.org
 
 = 1.0.0 =
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Add screenshots to WordPress.org.
 
 = 1.0.0 =
 Initial release of Wuunder Shipping plugin.
