@@ -85,7 +85,7 @@ jobs:
         if: steps.check_svn.outputs.svn_exists == 'true'
         uses: 10up/action-wordpress-plugin-deploy@stable
         with:
-          dry-run: true
+          dry-run: false
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME || 'dummy' }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD || 'dummy' }}
