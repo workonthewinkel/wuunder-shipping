@@ -1,7 +1,7 @@
 {
   "name": "wuunder-shipping",
-  "version": "0.7.3",
-  "author": "",
+  "version": "1.0.0",
+  "author": "Work on the Winkel",
   "main": "index.js",
   "devDependencies": {
     "@babel/preset-react": "^7.27.1",
