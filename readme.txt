@@ -18,6 +18,7 @@ Wuunder Shipping integrates your WooCommerce store with the Wuunder parcel deliv
 **Key Features:**
 
 * Easily add Wuunder's shipping methods to WooCommerce
+* Use Wuunder’s Parelshop Locator in checkout, allowing customers to selecting pickup points for parcel pickup
 
 **Supported Carriers:**
 
@@ -29,6 +30,10 @@ Through Wuunder's platform, you can access various shipping carriers including p
 * Wuunder account and API key
 * PHP 7.4 or higher
 * WordPress 6.4 or higher
+
+**Known Incompatibilities:**
+
+* Octolize Flexible Shipping PRO
 
 == Installation ==
 
@@ -69,6 +74,9 @@ It only fetches information from the external API and doesn't send any of your i
 
 == Changelog ==
 
+= 1.0.2 =
+* Update Readme for WordPress.org
+
 = 1.0.1 =
 * Add screenshots to WordPress.org
 
@@ -77,9 +85,11 @@ It only fetches information from the external API and doesn't send any of your i
 
 == Upgrade Notice ==
 
+= 1.0.2 =
+General Readme update for WordPress.org
+
 = 1.0.1 =
 Add screenshots to WordPress.org.
 
 = 1.0.0 =
 Initial release of Wuunder Shipping plugin.
-
